@@ -1,5 +1,5 @@
 import { getUserAction } from "@/actions/auth-actions";
-import { isJTUsername } from "@/lib/user-access";
+import { isAlignUsername } from "@/lib/user-access";
 import DashboardPage from "./dashboard";
 
 interface DashPageProps {
@@ -13,11 +13,11 @@ interface DashPageProps {
 const SlugPage = async ({ params }: DashPageProps) => {
 	const param = await params;
 	const { data, success } = await getUserAction();
-	const isJTUser = success ? isJTUsername(data?.username) : false;
+	const isAlignUser = success ? isAlignUsername(data?.username) : false;
 
 	return (
 		<>
-			<DashboardPage mode={param.mode} dash={param.dash} isJTUser={isJTUser} />
+			<DashboardPage mode={param.mode} dash={param.dash} isAlignUser={isAlignUser} />
 		</>
 	);
 };

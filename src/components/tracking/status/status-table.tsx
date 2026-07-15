@@ -14,7 +14,7 @@ import { StatusDetailDrawer } from "./status-detail-drawer";
 const disabledActionClassName =
 	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100";
 
-export function StatusTable({ ...props }: { type: string; isJTUser: boolean }) {
+export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }) {
 	const params = useParams<ParamType>();
 
 	const sortCreatedFn: SortingFn<StatusColumnType> = (rowA, rowB, _columnId) => {
@@ -147,7 +147,7 @@ export function StatusTable({ ...props }: { type: string; isJTUser: boolean }) {
 		},
 	];
 
-	if (props.isJTUser) {
+	if (props.isAlignUser) {
 		columns.push({
 			id: "edit",
 			accessorKey: "edit",

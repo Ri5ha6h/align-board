@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ParamType, SummaryType } from "@/utils/common-types";
 import { useSummaryQuery } from "@/utils/query";
 
-export function SummaryTable({ isJTUser }: { isJTUser: boolean }) {
+export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 	const params = useParams<ParamType>();
 	const searchParams = useSearchParams();
 	const queryCarriers = React.useMemo(
@@ -359,7 +359,7 @@ export function SummaryTable({ isJTUser }: { isJTUser: boolean }) {
 		},
 	];
 
-	const summaryQuery = useSummaryQuery(params, newCarrOpt, searchParams, isJTUser);
+	const summaryQuery = useSummaryQuery(params, newCarrOpt, searchParams, isAlignUser);
 
 	if (summaryQuery.isPending) {
 		return (
