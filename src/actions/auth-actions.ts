@@ -6,6 +6,9 @@ import { cookies } from "next/headers";
 import type { AuthType } from "@/utils/common-types";
 import { mainRequestAction } from "./main-actions";
 
+const TEST_USER_ALIAS_USERNAME = "testuser";
+const TEST_USER_ALIAS_PASSWORD = "user@test123";
+
 // auth actions
 
 // sign up action
@@ -47,14 +50,30 @@ export const signUpAction = async ({ username, password }: AuthType) => {
 export const signInAction = async ({ username, password }: AuthType) => {
 	try {
 		const cookieStore = await cookies();
+		const isTestUserAlias =
+			username === TEST_USER_ALIAS_USERNAME && password === TEST_USER_ALIAS_PASSWORD;
+		let requestUsername = username;
+		let passwordToCompare = password;
 
 		if (username === "JT_DEMO") {
-			username = "FK_JT_DEMO";
+			requestUsername = "FK_JT_DEMO";
+		}
+
+		if (isTestUserAlias) {
+			const testUserBackendUsername = process.env.TEST_USER_BACKEND_USERNAME;
+			const testUserBackendPassword = process.env.TEST_USER_BACKEND_PASSWORD;
+
+			if (!testUserBackendUsername || !testUserBackendPassword) {
+				throw new Error("Test user credentials are not configured.");
+			}
+
+			requestUsername = testUserBackendUsername;
+			passwordToCompare = testUserBackendPassword;
 		}
 
 		const reqData = {
 			type: "SIGN_IN",
-			username: username,
+			username: requestUsername,
 		};
 
 		const res: any = await mainRequestAction(reqData);
@@ -68,7 +87,7 @@ export const signInAction = async ({ username, password }: AuthType) => {
 		}
 
 		// check if password matches
-		const validPassword = await bcryptjs.compare(password, res?.data?.password);
+		const validPassword = await bcryptjs.compare(passwordToCompare, res?.data?.password);
 		if (!validPassword) {
 			throw new Error("Incorrect password. Please try again.");
 		}
