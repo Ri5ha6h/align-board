@@ -16,7 +16,7 @@ const DualSplitTitle = React.forwardRef<
 	<h3
 		ref={ref}
 		className={cn(
-			"font-semibold text-4xl text-white uppercase leading-none tracking-wider",
+			"text-4xl leading-none font-semibold tracking-wider text-white uppercase",
 			className,
 		)}
 		{...props}

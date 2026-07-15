@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
+
 import { TableDataDefaultComponent } from "@/components/data-table-default";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +17,7 @@ export function ReferenceSubscriptionTable() {
 
 	if (!searchParams.get("subscriptionId")) {
 		return (
-			<div className="mt-10 flex items-center justify-center font-bold text-xl">
+			<div className="mt-10 flex items-center justify-center text-xl font-bold">
 				Enter a subscription id to view data.
 			</div>
 		);

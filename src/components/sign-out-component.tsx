@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
 import { signOutAction } from "@/actions/auth-actions";
+
 import { Button } from "./ui/button";
 
 export const SignOutComponent = () => {

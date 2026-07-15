@@ -4,6 +4,7 @@ import { format, startOfDay, subDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
+
 import MultipleSelector from "@/components/multi-select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -152,7 +153,7 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 										hidePlaceholderWhenSelected
 										maxSelected={5}
 										emptyIndicator={
-											<p className="text-center text-gray-600 text-lg leading-10 dark:text-gray-400">
+											<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
 												no results found.
 											</p>
 										}

@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
+
 import ChartComponent from "@/components/data-chart";
 import type { ParamType } from "@/utils/common-types";
 import { useInducedQuery } from "@/utils/query";
@@ -28,7 +29,7 @@ export function InducedChart() {
 
 	if (!searchParams.get("carriers")) {
 		return (
-			<div className="mt-10 flex items-center justify-center font-bold text-xl">
+			<div className="mt-10 flex items-center justify-center text-xl font-bold">
 				Select a carrier to view chart.
 			</div>
 		);

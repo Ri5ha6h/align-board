@@ -14,6 +14,7 @@ import {
 	type VisibilityState,
 } from "@tanstack/react-table";
 import * as React from "react";
+
 import MultipleSelector from "@/components/multi-select";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+
 import { Input } from "./ui/input";
 
 // Custom static data table built using shadcn/ui table and button components.
@@ -118,7 +120,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 				</div>
 			)}
 			<div className="flex items-start justify-end space-x-2 py-4">
-				<div className="flex-1 text-muted-foreground text-sm">
+				<div className="flex-1 text-sm text-muted-foreground">
 					Total Items: {data.length}
 				</div>
 				<div>
@@ -137,7 +139,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 					>
 						Previous
 					</Button>
-					<div className="text-muted-foreground text-sm">
+					<div className="text-sm text-muted-foreground">
 						{table.getState().pagination.pageIndex + 1} /{" "}
 						{table.getPageCount().toLocaleString()}
 					</div>
@@ -169,7 +171,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 												<div
 													className={
 														header.column.getCanSort()
-															? "flex cursor-pointer select-none items-center justify-center"
+															? "flex cursor-pointer items-center justify-center select-none"
 															: ""
 													}
 													onClick={header.column.getToggleSortingHandler()}
@@ -180,7 +182,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 																"asc"
 																? "Sort ascending"
 																: header.column.getNextSortingOrder() ===
-																		"desc"
+																	  "desc"
 																	? "Sort descending"
 																	: "Clear sort"
 															: undefined
@@ -233,7 +235,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 				</Table>
 			</div>
 			<div className="flex items-center justify-end space-x-2 py-4">
-				<div className="flex-1 text-muted-foreground text-sm">
+				<div className="flex-1 text-sm text-muted-foreground">
 					Total Items: {data.length}
 				</div>
 				<div className="flex items-center justify-center space-x-2">
@@ -245,7 +247,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 					>
 						Previous
 					</Button>
-					<div className="text-muted-foreground text-sm">
+					<div className="text-sm text-muted-foreground">
 						{table.getState().pagination.pageIndex + 1} /{" "}
 						{table.getPageCount().toLocaleString()}
 					</div>
@@ -309,7 +311,7 @@ export function TableDataStaticComponent({ ...props }) {
 	return (
 		<div className="mt-6 w-full">
 			<div className="flex items-start justify-end space-x-2 py-4">
-				<div className="flex-1 text-muted-foreground text-sm">
+				<div className="flex-1 text-sm text-muted-foreground">
 					Total Items: {data.length}
 				</div>
 				<div>
@@ -328,7 +330,7 @@ export function TableDataStaticComponent({ ...props }) {
 					>
 						Previous
 					</Button>
-					<div className="text-muted-foreground text-sm">
+					<div className="text-sm text-muted-foreground">
 						{table.getState().pagination.pageIndex + 1} /{" "}
 						{table.getPageCount().toLocaleString()}
 					</div>
@@ -360,7 +362,7 @@ export function TableDataStaticComponent({ ...props }) {
 												<div
 													className={
 														header.column.getCanSort()
-															? "flex cursor-pointer select-none items-center justify-center"
+															? "flex cursor-pointer items-center justify-center select-none"
 															: ""
 													}
 													onClick={header.column.getToggleSortingHandler()}
@@ -371,7 +373,7 @@ export function TableDataStaticComponent({ ...props }) {
 																"asc"
 																? "Sort ascending"
 																: header.column.getNextSortingOrder() ===
-																		"desc"
+																	  "desc"
 																	? "Sort descending"
 																	: "Clear sort"
 															: undefined
@@ -424,7 +426,7 @@ export function TableDataStaticComponent({ ...props }) {
 				</Table>
 			</div>
 			<div className="flex items-center justify-end space-x-2 py-4">
-				<div className="flex-1 text-muted-foreground text-sm">
+				<div className="flex-1 text-sm text-muted-foreground">
 					Total Items: {data.length}
 				</div>
 				<div className="flex items-center justify-center space-x-2">
@@ -436,7 +438,7 @@ export function TableDataStaticComponent({ ...props }) {
 					>
 						Previous
 					</Button>
-					<div className="text-muted-foreground text-sm">
+					<div className="text-sm text-muted-foreground">
 						{table.getState().pagination.pageIndex + 1} /{" "}
 						{table.getPageCount().toLocaleString()}
 					</div>
@@ -496,7 +498,7 @@ const MultiSelectPage = ({
 			hidePlaceholderWhenSelected
 			maxSelected={1}
 			emptyIndicator={
-				<p className="text-center text-gray-600 text-lg leading-10 dark:text-gray-400">
+				<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
 					no results found.
 				</p>
 			}

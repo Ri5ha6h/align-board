@@ -5,6 +5,7 @@ import { format, toDate } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
+
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
@@ -42,7 +43,7 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 				</TableHeadCustom>
 			),
 			cell: ({ row }) => (
-				<TableCellCustom className="font-semibold text-[15px]">
+				<TableCellCustom className="text-[15px] font-semibold">
 					{row.original.jtCarrierCode}
 				</TableCellCustom>
 			),
@@ -161,10 +162,9 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 				return (
 					<TableCellCustom
 						className={`${
-							(
-								(params.mode === "ocean" && rnfRatio > 20) ||
-									(params.mode === "air" && rnfRatio > 5)
-							) && !queue.includes("RNF")
+							((params.mode === "ocean" && rnfRatio > 20) ||
+								(params.mode === "air" && rnfRatio > 5)) &&
+							!queue.includes("RNF")
 								? "text-red-500"
 								: "text-inherit"
 						}`}

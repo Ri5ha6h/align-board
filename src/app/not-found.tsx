@@ -4,8 +4,8 @@ export default function NotFound() {
 	return (
 		<div className="flex h-screen flex-col items-center justify-center gap-2 p-5">
 			<div className="flex flex-col items-center justify-center sm:flex-row">
-				<h3 className="font-bold text-2xl">Oops!</h3>
-				<p className="ml-2 text-pretty font-semibold text-base text-gray-700">
+				<h3 className="text-2xl font-bold">Oops!</h3>
+				<p className="ml-2 text-base font-semibold text-pretty text-gray-700">
 					We can&apos;t seem to find the page you&apos;re looking for.
 				</p>
 			</div>

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { ReadonlyURLSearchParams } from "next/navigation";
+
 import { getFetchHistoryAction, getHistoryAction } from "@/actions/history-actions";
 import { getInducedAction, getLatencyAction } from "@/actions/latency-induced-actions";
 import {

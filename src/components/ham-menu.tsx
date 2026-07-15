@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
 import Link from "next/link";
+
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
 	Sheet,
@@ -9,6 +10,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
+
 import { Button } from "./ui/button";
 
 export function HamburgerMenuComponent() {
@@ -55,12 +57,12 @@ export function HamburgerMenuComponent() {
 			</SheetTrigger>
 			<SheetContent side="left" className="h-full w-[300px]">
 				<SheetHeader>
-					<SheetTitle className="font-medium text-xl tracking-wide">
+					<SheetTitle className="text-xl font-medium tracking-wide">
 						<Link href="/dashboard">ALIGNBITS</Link>
 					</SheetTitle>
 				</SheetHeader>
 				<div className="mt-5">
-					<nav className="flex flex-col items-start justify-center gap-6 font-medium text-lg">
+					<nav className="flex flex-col items-start justify-center gap-6 text-lg font-medium">
 						<PopoverMenu components={trackingComponents} />
 					</nav>
 				</div>
@@ -84,7 +86,7 @@ function PopoverMenu({ ...props }) {
 							<SheetClose asChild>
 								<Link
 									href={component.path}
-									className="font-medium text-[14px] text-muted-foreground hover:text-foreground"
+									className="text-[14px] font-medium text-muted-foreground hover:text-foreground"
 								>
 									{component.title}
 								</Link>

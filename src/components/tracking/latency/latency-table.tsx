@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
+
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import type { LatencyTableType, ParamType } from "@/utils/common-types";
@@ -29,7 +30,7 @@ export function LatencyTable() {
 
 	if (params.mode !== "air" && !searchParams.get("carriers")) {
 		return (
-			<div className="mt-10 flex items-center justify-center font-bold text-xl">
+			<div className="mt-10 flex items-center justify-center text-xl font-bold">
 				Select a carrier to view latency.
 			</div>
 		);
@@ -51,7 +52,7 @@ const LatencyData = ({ ...props }) => {
 				</TableHeadCustom>
 			),
 			cell: ({ row }) => (
-				<TableCellCustom className="font-semibold text-[15px]">
+				<TableCellCustom className="text-[15px] font-semibold">
 					{row.original.carrier}
 				</TableCellCustom>
 			),

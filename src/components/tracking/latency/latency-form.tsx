@@ -2,6 +2,7 @@
 
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
+
 import MultipleSelector from "@/components/multi-select";
 import { Button } from "@/components/ui/button";
 import {
@@ -117,7 +118,7 @@ export const LatencyForm = () => {
 										hidePlaceholderWhenSelected
 										maxSelected={5}
 										emptyIndicator={
-											<p className="text-center text-gray-600 text-lg leading-10 dark:text-gray-400">
+											<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
 												no results found.
 											</p>
 										}
