@@ -1,0 +1,65 @@
+import JsonView from "@uiw/react-json-view";
+import { vscodeTheme } from "@uiw/react-json-view/vscode";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useReferenceInfoQuery } from "@/utils/query";
+import { ScrollArea } from "../../ui/scroll-area";
+
+export function ReferenceDrawer({ ...props }) {
+	return (
+		<div className="flex items-center justify-center">
+			<Sheet>
+				<SheetTrigger asChild>
+					<Button variant={props.variant}>{props.buttonTitle}</Button>
+				</SheetTrigger>
+				<SheetContent>
+					<SheetHeader>
+						<SheetTitle>{props.title}</SheetTitle>
+					</SheetHeader>
+					<SheetCustomContent {...props} />
+				</SheetContent>
+			</Sheet>
+		</div>
+	);
+}
+
+function SheetCustomContent({ ...props }) {
+	const resId = props.resource;
+
+	const referenceInfoQuery = useReferenceInfoQuery(props.params, props.searchParams, resId);
+
+	if (referenceInfoQuery.isPending) {
+		return (
+			<div className="mt-6 flex h-full flex-col items-center justify-center">
+				<Loader2 className="animate-spin text-lg" />
+			</div>
+		);
+	}
+
+	if (referenceInfoQuery.isError || referenceInfoQuery.error) {
+		return (
+			<div className="mt-6 flex h-full flex-col items-center justify-center">
+				<p className="text-red-500">Error: {referenceInfoQuery.error?.message}</p>
+			</div>
+		);
+	}
+
+	if (referenceInfoQuery.data && !referenceInfoQuery.data?.success) {
+		return (
+			<div className="mt-10 flex h-full flex-col items-center justify-center">
+				<p className="text-red-500">{referenceInfoQuery.data?.data}</p>
+			</div>
+		);
+	}
+
+	return <CustomView data={referenceInfoQuery.data} />;
+}
+
+function CustomView({ ...props }) {
+	return (
+		<ScrollArea className="my-scroll mt-5 w-full rounded-md">
+			<JsonView value={props.data.data} style={vscodeTheme} className="rounded-md p-2" />
+		</ScrollArea>
+	);
+}

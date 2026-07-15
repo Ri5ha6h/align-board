@@ -1,0 +1,299 @@
+// dashboard queries
+
+import { useQuery } from "@tanstack/react-query";
+import type { ReadonlyURLSearchParams } from "next/navigation";
+import { getFetchHistoryAction, getHistoryAction } from "@/actions/history-actions";
+import { getInducedAction, getLatencyAction } from "@/actions/latency-induced-actions";
+import {
+	getReferenceAction,
+	getReferenceAllAction,
+	getReferenceInfoAction,
+	getReferenceSubscriptionAction,
+} from "@/actions/reference-actions";
+import { getStatusAction, getSummaryAction } from "@/actions/status-summary-actions";
+import type { ParamType } from "@/utils/common-types";
+
+// status query
+export const useStatusQuery = (status: string, params: ParamType) => {
+	const query = useQuery({
+		queryKey: ["status", params.env, params.mode, status],
+		queryFn: async () => {
+			const response = await getStatusAction({
+				env: params.env,
+				mode: params.mode,
+				status: status,
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 60,
+		staleTime: 1000 * 60 * 60,
+	});
+
+	return query;
+};
+
+// summary query
+export const useSummaryQuery = (
+	params: ParamType,
+	newCarrOpt: string[],
+	searchParams: ReadonlyURLSearchParams,
+	isJTUser: boolean,
+) => {
+	const queue = searchParams.get("queue") || "NORMAL";
+	const startTime = isJTUser ? searchParams.get("from") || "" : "";
+	const endTime = isJTUser ? searchParams.get("to") || "" : "";
+
+	const query = useQuery({
+		queryKey: [
+			"summary",
+			`${params.mode}`,
+			`${params.env}`,
+			newCarrOpt,
+			queue,
+			startTime,
+			endTime,
+		],
+		queryFn: async () => {
+			const response = await getSummaryAction({
+				env: params.env,
+				mode: params.mode,
+				carriers: newCarrOpt,
+				queue: queue,
+				startTime: startTime,
+				endTime: endTime,
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 30,
+		staleTime: 1000 * 60 * 30,
+	});
+
+	return query;
+};
+
+// history query
+export const useHistoryQuery = (params: ParamType, searchParams: any) => {
+	const query = useQuery({
+		queryKey: [
+			"history",
+			`${params.mode}`,
+			`${params.env}`,
+			`${searchParams.get("subId")}`,
+			`${searchParams.get("historyType")}`,
+			`${searchParams.get("includeRange")}`,
+			`${searchParams.get("from")}`,
+			`${searchParams.get("to")}`,
+		],
+		queryFn: async () => {
+			const response = await getHistoryAction({
+				env: params.env,
+				mode: params.mode,
+				subscriptionId: searchParams.get("subId").toUpperCase(),
+				historyType: searchParams.get("historyType"),
+				startTime: searchParams.get("from") || "",
+				endTime: searchParams.get("to") || "",
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 60,
+		staleTime: 1000 * 60 * 60,
+	});
+
+	return query;
+};
+
+// history fetch query
+export const useHistoryFetchQuery = (
+	params: ParamType,
+	schedulerId: string,
+	subscriptionId: string,
+	resourceId: string,
+) => {
+	const query = useQuery({
+		queryKey: [
+			"history-fetch",
+			`${params.mode}`,
+			`${params.env}`,
+			`${schedulerId}`,
+			`${resourceId}`,
+		],
+		queryFn: async () => {
+			const response = await getFetchHistoryAction({
+				env: params.env,
+				mode: params.mode,
+				subscriptionId: subscriptionId,
+				resourceId: resourceId,
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 60 * 24,
+		staleTime: 1000 * 60 * 60 * 24,
+	});
+
+	return query;
+};
+
+// latency fetch query
+export const useLatencyQuery = (params: ParamType, newCarrOpt: string[], searchParams: any) => {
+	const query = useQuery({
+		queryKey: [
+			"latency",
+			`${params.mode}`,
+			`${params.env}`,
+			newCarrOpt,
+			`${searchParams.get("queue")}`,
+			`${searchParams.get("refType")}`,
+		],
+		queryFn: async () => {
+			const response = await getLatencyAction({
+				env: params.env,
+				mode: params.mode,
+				carriers: newCarrOpt,
+				queue: searchParams.get("queue"),
+				referenceType: searchParams.get("refType"),
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 30,
+		staleTime: 1000 * 60 * 30,
+	});
+
+	return query;
+};
+
+// reference all query
+export const useReferenceAllQuery = (params: ParamType, searchParams: any) => {
+	const query = useQuery({
+		queryKey: [
+			"reference-all",
+			`${params.mode}`,
+			`${params.env}`,
+			`${searchParams.get("category")}`,
+			`${searchParams.get("carrier")}`,
+			`${searchParams.get("queue")}`,
+			`${searchParams.get("refType")}`,
+			`${searchParams.get("refStatus")}`,
+			`${searchParams.get("bucket")}`,
+		],
+		queryFn: async () => {
+			const response = await getReferenceAllAction({
+				env: params.env,
+				mode: params.mode,
+				carrier: searchParams.get("carrier"),
+				queue: searchParams.get("queue"),
+				referenceType: searchParams.get("refType"),
+				refStatus: searchParams.get("refStatus"),
+				bucket: searchParams.get("bucket"),
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 60,
+		staleTime: 1000 * 60 * 60,
+	});
+
+	return query;
+};
+
+// reference info query
+export const useReferenceInfoQuery = (params: ParamType, searchParams: any, reference: string) => {
+	const query = useQuery({
+		queryKey: [
+			"reference-info",
+			`${params.mode}`,
+			`${params.env}`,
+			`${reference}`,
+			`${searchParams.get("carrier")}`,
+			`${searchParams.get("refType")}`,
+			`${searchParams.get("refStatus")}`,
+		],
+		queryFn: async () => {
+			const response = await getReferenceInfoAction({
+				env: params.env,
+				mode: params.mode,
+				carrier: searchParams.get("carrier"),
+				referenceType: searchParams.get("refType"),
+				refStatus: searchParams.get("refStatus"),
+				reference: reference,
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 60,
+		staleTime: 1000 * 60 * 60,
+	});
+
+	return query;
+};
+
+// reference query
+export const useReferenceQuery = (params: ParamType, category: string, referenceId: string) => {
+	const query = useQuery({
+		queryKey: [
+			"reference-reference",
+			`${params.mode}`,
+			`${params.env}`,
+			`${category}`,
+			`${referenceId}`,
+		],
+		queryFn: async () => {
+			const response = await getReferenceAction({
+				env: params.env,
+				mode: params.mode,
+				referenceId: referenceId,
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 60,
+		staleTime: 1000 * 60 * 60,
+	});
+
+	return query;
+};
+
+// reference subscription query
+export const useReferenceSubscriptionQuery = (
+	params: ParamType,
+	category: string,
+	subscriptionId: string,
+) => {
+	const query = useQuery({
+		queryKey: [
+			"reference-subscription",
+			`${params.mode}`,
+			`${params.env}`,
+			`${category}`,
+			`${subscriptionId}`,
+		],
+		queryFn: async () => {
+			const response = await getReferenceSubscriptionAction({
+				env: params.env,
+				mode: params.mode,
+				subscriptionId: subscriptionId,
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 60,
+		staleTime: 1000 * 60 * 60,
+	});
+
+	return query;
+};
+
+// induced query
+export const useInducedQuery = (params: ParamType, newCarrOpt: string[], year: string) => {
+	const query = useQuery({
+		queryKey: ["summary", `${params.mode}`, `${params.env}`, newCarrOpt, year],
+		queryFn: async () => {
+			const response = await getInducedAction({
+				env: params.env,
+				mode: params.mode,
+				carriers: newCarrOpt,
+				year: year,
+			});
+			return response;
+		},
+		gcTime: 1000 * 60 * 60 * 12,
+		staleTime: 1000 * 60 * 60 * 12,
+	});
+
+	return query;
+};
