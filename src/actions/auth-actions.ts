@@ -55,10 +55,6 @@ export const signInAction = async ({ username, password }: AuthType) => {
 		let requestUsername = username;
 		let passwordToCompare = password;
 
-		if (username === "JT_DEMO") {
-			requestUsername = "FK_JT_DEMO";
-		}
-
 		if (isTestUserAlias) {
 			const testUserBackendUsername = process.env.TEST_USER_BACKEND_USERNAME;
 			const testUserBackendPassword = process.env.TEST_USER_BACKEND_PASSWORD;
