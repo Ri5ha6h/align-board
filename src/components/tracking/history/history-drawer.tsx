@@ -1,11 +1,13 @@
 import JsonView from "@uiw/react-json-view";
 import { vscodeTheme } from "@uiw/react-json-view/vscode";
 import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useHistoryFetchQuery } from "@/utils/query";
+import { sanitizeHistoryDataForDisplay } from "@/utils/sanitize-history-data";
 
 export function HistoryDrawer({ ...props }) {
 	return (
@@ -66,9 +68,14 @@ function SheetCustomContent({ ...props }) {
 }
 
 function CustomView({ ...props }) {
+	const displayData = useMemo(
+		() => sanitizeHistoryDataForDisplay(props.data.data),
+		[props.data.data],
+	);
+
 	return (
 		<ScrollArea className="my-scroll mt-5 w-full rounded-md">
-			<JsonView value={props.data.data} style={vscodeTheme} className="rounded-md p-2" />
+			<JsonView value={displayData} style={vscodeTheme} className="rounded-md p-2" />
 		</ScrollArea>
 	);
 }
