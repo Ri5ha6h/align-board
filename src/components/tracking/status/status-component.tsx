@@ -2,9 +2,12 @@
 
 import React from "react";
 import { StatusAccordion } from "@/components/accord-util";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreateEditStatusDrawer } from "./create-edit-drawer";
 import { StatusTable } from "./status-table";
+
+const disabledActionClassName =
+	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100";
 
 const MainStatusComponent = ({ isJTUser }: { isJTUser: boolean }) => {
 	const [tabVal, setTabVal] = React.useState("active");
@@ -26,13 +29,25 @@ const MainStatusComponent = ({ isJTUser }: { isJTUser: boolean }) => {
 						<TabsTrigger value="closed">Status History</TabsTrigger>
 					</TabsList>
 					{isJTUser ? (
-						<CreateEditStatusDrawer
-							variant="secondary"
-							buttonTitle="New Status"
-							title="Add a new status"
-							state="CREATE"
-							tableType={tabVal.toUpperCase()}
-						/>
+						<>
+							{/* Status creation is temporarily disabled.
+							<CreateEditStatusDrawer
+								variant="secondary"
+								buttonTitle="New Status"
+								title="Add a new status"
+								state="CREATE"
+								tableType={tabVal.toUpperCase()}
+							/>
+							*/}
+							<Button
+								type="button"
+								variant="secondary"
+								disabled
+								className={disabledActionClassName}
+							>
+								New Status
+							</Button>
+						</>
 					) : null}
 				</div>
 				<TabsContent

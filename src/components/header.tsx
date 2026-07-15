@@ -8,7 +8,7 @@ const Header = () => {
 		<header className="flex h-[70px] items-center justify-between border-b px-4">
 			<div className="hidden items-center gap-4 md:flex">
 				<h2 className="font-medium text-2xl tracking-wide">
-					<Link href="/dashboard">JUSTRANSFORM</Link>
+					<Link href="/dashboard">ALIGNBITS</Link>
 				</h2>
 				<NavigationMenuComponent />
 			</div>
@@ -16,10 +16,10 @@ const Header = () => {
 				<HamburgerMenuComponent />
 				<h2 className="font-medium text-2xl tracking-wide">
 					<Link href="/dashboard" className="hidden sm:block">
-						JUSTRANSFORM
+						ALIGNBITS
 					</Link>
 					<Link href="/dashboard" className="block sm:hidden">
-						JT
+						ALIGNBITS
 					</Link>
 				</h2>
 			</div>
