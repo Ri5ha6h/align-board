@@ -2,17 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The development server is expected to already be running. Do not start another
+server with `npm run dev`, `next dev`, or an equivalent command.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

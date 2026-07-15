@@ -19,7 +19,7 @@ const Header = () => {
 						ALIGNBITS
 					</Link>
 					<Link href="/dashboard" className="block sm:hidden">
-						JT
+						ALIGNBITS
 					</Link>
 				</h2>
 			</div>
