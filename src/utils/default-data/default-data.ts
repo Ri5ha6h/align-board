@@ -180,6 +180,10 @@ const year = [
 		label: "2025",
 		value: "2025",
 	},
+	{
+		label: "2026",
+		value: "2026",
+	},
 ];
 
 const days = [
