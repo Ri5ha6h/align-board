@@ -16,12 +16,24 @@ export const sanitizeHistoryDataForDisplay = <T>(value: T): T => {
 	}
 
 	if (value !== null && typeof value === "object") {
-		return Object.fromEntries(
-			Object.entries(value).map(([key, nestedValue]) => [
-				replaceJustTransformReferences(key),
-				sanitizeHistoryDataForDisplay(nestedValue),
-			]),
-		) as T;
+		const sanitizedEntries: [string, unknown][] = [];
+		const usedKeys = new Set<string>();
+
+		for (const [key, nestedValue] of Object.entries(value)) {
+			const sanitizedKey = replaceJustTransformReferences(key);
+			let uniqueKey = sanitizedKey;
+			let suffix = 2;
+
+			while (usedKeys.has(uniqueKey)) {
+				uniqueKey = `${sanitizedKey} (${suffix})`;
+				suffix += 1;
+			}
+
+			usedKeys.add(uniqueKey);
+			sanitizedEntries.push([uniqueKey, sanitizeHistoryDataForDisplay(nestedValue)]);
+		}
+
+		return Object.fromEntries(sanitizedEntries) as T;
 	}
 
 	return value;
