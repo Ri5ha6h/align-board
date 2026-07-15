@@ -9,7 +9,7 @@ import { StatusTable } from "./status-table";
 const disabledActionClassName =
 	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100";
 
-const MainStatusComponent = ({ isJTUser }: { isJTUser: boolean }) => {
+const MainStatusComponent = ({ isAlignUser }: { isAlignUser: boolean }) => {
 	const [tabVal, setTabVal] = React.useState("active");
 	return (
 		<div className="w-full">
@@ -28,7 +28,7 @@ const MainStatusComponent = ({ isJTUser }: { isJTUser: boolean }) => {
 						<TabsTrigger value="active">Current Status</TabsTrigger>
 						<TabsTrigger value="closed">Status History</TabsTrigger>
 					</TabsList>
-					{isJTUser ? (
+					{isAlignUser ? (
 						<>
 							{/* Status creation is temporarily disabled.
 							<CreateEditStatusDrawer
@@ -54,13 +54,13 @@ const MainStatusComponent = ({ isJTUser }: { isJTUser: boolean }) => {
 					value="active"
 					className="mt-6 mb-6 flex-1 rounded-md bg-white p-4 text-primary"
 				>
-					<StatusTable type="active" isJTUser={isJTUser} />
+					<StatusTable type="active" isAlignUser={isAlignUser} />
 				</TabsContent>
 				<TabsContent
 					value="closed"
 					className="mt-6 mb-6 flex-1 rounded-md bg-white p-4 text-primary"
 				>
-					<StatusTable type="closed" isJTUser={isJTUser} />
+					<StatusTable type="closed" isAlignUser={isAlignUser} />
 				</TabsContent>
 			</Tabs>
 		</div>

@@ -1,57 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Alignbits Dashboard
 
 ## Getting Started
 
-The development server is expected to already be running. Do not start another
-server with `npm run dev`, `next dev`, or an equivalent command.
+### Prerequisites
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Node.js 24 or later
+- npm 11 or later
+- Access to the REST service and its credentials
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Install and configure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Clone the repository and enter the project directory:
 
-## Project Structure & Best Practices
+   ```bash
+   git clone https://github.com/Ri5ha6h/align-board.git
+   cd align-board
+   ```
 
-This project follows modern best practices for React, Next.js, Tailwind CSS, and shadcn/ui. Key conventions:
+2. Install dependencies:
 
-```
+   ```bash
+   npm install
+   ```
+
+3. Create `.env.local` in the project root and provide the required values:
+
+   ```dotenv
+   REST_URL=<rest-service-url>
+   REST_USERNAME=<rest-service-username>
+   REST_PASSWORD=<rest-service-password>
+   TOKEN_SECRET=<jwt-signing-secret>
+   TEST_USER_BACKEND_USERNAME=<test-user-backend-username>
+   TEST_USER_BACKEND_PASSWORD=<test-user-backend-password>
+   ```
+
+   Obtain the real values through the project's approved secure channel. Do not commit
+   `.env.local` or share its secrets.
+
+4. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in a browser.
+
+## Project Structure
+
+```text
 src/
-  app/                # Next.js app directory (routes, layouts, pages)
-  components/         # Shared React components
-    ui/               # shadcn/ui components (unmodified, canonical)
-    ...               # Other custom/shared components
-  hooks/              # Custom React hooks (e.g., useDebounce)
-  lib/                # Utility functions, API clients, helpers
-  utils/              # Common types, helpers, and default data
-    default-data/     # Static data for tables, charts, etc.
-  actions/            # Server actions and business logic
-  custom-wrappers/    # Providers and wrappers for context, query, etc.
-  middleware.ts       # Next.js middleware
-public/               # Static assets
-styles/               # Tailwind and global CSS
+  actions/             # Server actions and API-facing business logic
+  app/                 # Next.js routes, pages, and layouts
+  components/          # Shared and feature-specific React components
+    ui/                # Canonical shadcn/ui components
+  custom-wrappers/     # Application providers and wrappers
+  hooks/               # Reusable React hooks
+  lib/                 # Shared libraries and access helpers
+  utils/               # Schemas, types, queries, mutations, and default data
+public/                 # Static assets
+styles/                 # Global styles
 ```
 
-- **shadcn/ui components** are only in `src/components/ui` and should not be modified directly. Extend via wrappers if needed.
-- **Custom hooks** go in `src/hooks`.
-- **Utilities** and helpers are in `src/lib` or `src/utils`.
-- **Feature-specific components** are organized in subfolders under `src/components`.
-- **All theming and design tokens** are managed in `tailwind.config.js`.
-- **Global styles** are minimal and use Tailwind's recommended base styles.
+## Best Practices
 
-For more details, see comments in the relevant files.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Use npm for dependency management and project scripts.
+- Keep secrets in `.env.local`; never commit credentials or tokens.
+- Keep canonical shadcn/ui primitives in `src/components/ui` unchanged and extend them
+  through feature components or wrappers.
+- Place feature-specific components in focused subdirectories under `src/components`.
+- Put reusable hooks in `src/hooks` and shared utilities in `src/lib` or `src/utils`.
+- Run `npm run lint` and `npm run build` before submitting changes.

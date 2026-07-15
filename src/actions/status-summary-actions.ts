@@ -1,6 +1,6 @@
 "use server";
 
-import { getStatusManagementDeniedMessage, isJTUsername } from "@/lib/user-access";
+import { getStatusManagementDeniedMessage, isAlignUsername } from "@/lib/user-access";
 import { getUserAction } from "./auth-actions";
 import { mainRequestAction } from "./main-actions";
 
@@ -97,7 +97,7 @@ export const createUpdateStatusAction = async ({
 		if (!success) {
 			throw new Error("User not found.");
 		}
-		if (!isJTUsername(data?.username)) {
+		if (!isAlignUsername(data?.username)) {
 			return {
 				data: getStatusManagementDeniedMessage(),
 				success: false,
@@ -186,7 +186,7 @@ export const closeStatusAction = async ({
 		if (!success) {
 			throw new Error("User not found.");
 		}
-		if (!isJTUsername(data?.username)) {
+		if (!isAlignUsername(data?.username)) {
 			return {
 				data: getStatusManagementDeniedMessage(),
 				success: false,
@@ -246,7 +246,7 @@ export const deleteStatusAction = async ({
 		if (!success) {
 			throw new Error("User not found.");
 		}
-		if (!isJTUsername(data?.username)) {
+		if (!isAlignUsername(data?.username)) {
 			return {
 				data: getStatusManagementDeniedMessage(),
 				success: false,

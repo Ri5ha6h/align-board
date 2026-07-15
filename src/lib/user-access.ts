@@ -1,4 +1,4 @@
-export const isJTUsername = (username?: string | null): boolean => {
+export const isAlignUsername = (username?: string | null): boolean => {
 	return username?.includes("_JT_") ?? false;
 };
 

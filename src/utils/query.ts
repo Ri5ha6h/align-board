@@ -37,11 +37,11 @@ export const useSummaryQuery = (
 	params: ParamType,
 	newCarrOpt: string[],
 	searchParams: ReadonlyURLSearchParams,
-	isJTUser: boolean,
+	isAlignUser: boolean,
 ) => {
 	const queue = searchParams.get("queue") || "NORMAL";
-	const startTime = isJTUser ? searchParams.get("from") || "" : "";
-	const endTime = isJTUser ? searchParams.get("to") || "" : "";
+	const startTime = isAlignUser ? searchParams.get("from") || "" : "";
+	const endTime = isAlignUser ? searchParams.get("to") || "" : "";
 
 	const query = useQuery({
 		queryKey: [

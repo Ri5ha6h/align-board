@@ -10,11 +10,11 @@ import MainSummaryComponent from "@/components/tracking/summary/summary-componen
 const DashboardPage = ({
 	mode,
 	dash,
-	isJTUser,
+	isAlignUser,
 }: {
 	mode: string;
 	dash: string;
-	isJTUser: boolean;
+	isAlignUser: boolean;
 }) => {
 	if (
 		(mode === "air" ||
@@ -35,9 +35,9 @@ const DashboardPage = ({
 	return (
 		<div className="h-full w-full rounded-md bg-white p-4 text-primary">
 			{dash === "status" ? (
-				<MainStatusComponent isJTUser={isJTUser} />
+				<MainStatusComponent isAlignUser={isAlignUser} />
 			) : dash === "summary" ? (
-				<MainSummaryComponent isJTUser={isJTUser} />
+				<MainSummaryComponent isAlignUser={isAlignUser} />
 			) : dash === "history" ? (
 				<MainHistoryComponent />
 			) : dash === "latency" ? (

@@ -42,7 +42,7 @@ type SummaryFormValues = {
 	};
 };
 
-export const SummaryForm = ({ isJTUser }: { isJTUser: boolean }) => {
+export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 	const id = useId();
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
@@ -74,7 +74,7 @@ export const SummaryForm = ({ isJTUser }: { isJTUser: boolean }) => {
 	const onSubmit = (data: SummaryFormValues) => {
 		setBtnLoad(true);
 		if (
-			isJTUser &&
+			isAlignUser &&
 			data.carriers.length === 1 &&
 			(!data.range || !data.range.from || !data.range.to)
 		) {
@@ -111,7 +111,7 @@ export const SummaryForm = ({ isJTUser }: { isJTUser: boolean }) => {
 				summaryParams.set("carriers", "");
 			}
 			summaryParams.set("queue", data.queue);
-			if (isJTUser && data.carriers.length === 1 && data.range) {
+			if (isAlignUser && data.carriers.length === 1 && data.range) {
 				summaryParams.set("from", format(data.range.from, "yyyy-MM-dd"));
 				summaryParams.set("to", format(data.range.to, "yyyy-MM-dd"));
 			} else {
@@ -121,7 +121,7 @@ export const SummaryForm = ({ isJTUser }: { isJTUser: boolean }) => {
 
 			return summaryParams.toString();
 		},
-		[searchParams, isJTUser],
+		[searchParams, isAlignUser],
 	);
 
 	return (
@@ -186,7 +186,7 @@ export const SummaryForm = ({ isJTUser }: { isJTUser: boolean }) => {
 							</FormItem>
 						)}
 					/>
-					{isJTUser ? (
+					{isAlignUser ? (
 						<FormField
 							control={form.control}
 							name="range"
