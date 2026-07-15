@@ -4,6 +4,7 @@ import { Command as CommandPrimitive, useCommandState } from "cmdk";
 import { X } from "lucide-react";
 import * as React from "react";
 import { forwardRef, useEffect } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -338,7 +339,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
 			>
 				<div
 					className={cn(
-						"group rounded-md border border-input px-3 py-2 text-sm ring-offset-background- focus-within:ring-2- focus-within:ring-ring- focus-within:ring-offset-2-",
+						"group ring-offset-background- focus-within:ring-2- focus-within:ring-ring- focus-within:ring-offset-2- rounded-md border border-input px-3 py-2 text-sm",
 						className,
 					)}
 				>
@@ -359,7 +360,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
 									<button
 										type="button"
 										className={cn(
-											"ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2",
+											"ml-1 rounded-full ring-offset-background outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
 											(disabled || option.fixed) && "hidden",
 										)}
 										onKeyDown={(e) => {

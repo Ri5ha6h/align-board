@@ -3,6 +3,7 @@ import type { ColumnDef, SortingFn } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
+
 import { TableDataStaticStateComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
@@ -22,7 +23,7 @@ export function HistoryTable() {
 
 	if (!searchParams.get("subId")) {
 		return (
-			<div className="mt-10 flex items-center justify-center font-bold text-xl">
+			<div className="mt-10 flex items-center justify-center text-xl font-bold">
 				Enter the Subscription Id to see history!
 			</div>
 		);

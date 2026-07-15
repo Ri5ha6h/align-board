@@ -13,11 +13,11 @@ export function CommonAccordion({ children }: { children: React.ReactNode }) {
 	return (
 		<Accordion type="single" collapsible className="w-full">
 			<AccordionItem value="item-1">
-				<AccordionTrigger className="font-bold text-lg text-primary">
+				<AccordionTrigger className="text-lg font-bold text-primary">
 					Things to Remember
 				</AccordionTrigger>
 				<AccordionContent>
-					<ul className="list-inside list-decimal font-medium text-base text-neutral-500">
+					<ul className="list-inside list-decimal text-base font-medium text-neutral-500">
 						{children}
 					</ul>
 				</AccordionContent>

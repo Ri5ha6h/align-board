@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+
 import "../../styles/globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProviderWrapper from "@/custom-wrappers/query-provider-wrapper";

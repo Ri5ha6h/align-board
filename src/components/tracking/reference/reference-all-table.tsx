@@ -4,12 +4,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
+
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ParamType, ReferenceTableType } from "@/utils/common-types";
 import { useReferenceAllQuery } from "@/utils/query";
+
 import { ReferenceDrawer } from "./reference-all-drawer";
 
 export function ReferenceAllTable() {
@@ -18,7 +20,7 @@ export function ReferenceAllTable() {
 
 	if (!searchParams.get("carrier")) {
 		return (
-			<div className="mt-10 flex items-center justify-center font-bold text-xl">
+			<div className="mt-10 flex items-center justify-center text-xl font-bold">
 				Select a carrier to view references.
 			</div>
 		);

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import {
 	NavigationMenu,
 	NavigationMenuContent,
@@ -63,12 +64,12 @@ export function NavigationMenuComponent() {
 								<li key={component.title}>
 									<Link
 										href={component.path}
-										className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+										className="block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
 									>
-										<div className="font-medium text-sm leading-none">
+										<div className="text-sm leading-none font-medium">
 											{component.title}
 										</div>
-										<p className="line-clamp-2 text-muted-foreground text-sm leading-snug">
+										<p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
 											{component.description}
 										</p>
 									</Link>

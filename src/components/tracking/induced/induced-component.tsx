@@ -1,4 +1,5 @@
 import { InducedAccordion } from "@/components/accord-util";
+
 import { InducedChart } from "./induced-chart";
 import { InducedForm } from "./induced-form";
 

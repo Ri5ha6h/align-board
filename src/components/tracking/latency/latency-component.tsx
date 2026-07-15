@@ -1,4 +1,5 @@
 import { LatencyAccordion } from "@/components/accord-util";
+
 import { LatencyForm } from "./latency-form";
 import { LatencyTable } from "./latency-table";
 

@@ -1,9 +1,11 @@
 import JsonView from "@uiw/react-json-view";
 import { vscodeTheme } from "@uiw/react-json-view/vscode";
 import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useReferenceInfoQuery } from "@/utils/query";
+
 import { ScrollArea } from "../../ui/scroll-area";
 
 export function ReferenceDrawer({ ...props }) {

@@ -5,6 +5,7 @@ import { format, toDate } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
+
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,7 @@ export function ReferenceTable() {
 
 	if (!searchParams.get("refCarrier") && !searchParams.get("reference")) {
 		return (
-			<div className="mt-10 flex items-center justify-center font-bold text-xl">
+			<div className="mt-10 flex items-center justify-center text-xl font-bold">
 				Select a carrier and enter a reference to view data.
 			</div>
 		);

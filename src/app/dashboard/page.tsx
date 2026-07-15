@@ -8,6 +8,7 @@ import {
 	TruckIcon,
 } from "lucide-react";
 import Link from "next/link";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Dashboard = () => {
@@ -73,7 +74,7 @@ const Dashboard = () => {
 									)}
 									<p className="ml-2 text-lg">{item.mode.toUpperCase()}</p>
 								</div>
-								<MoveRightIcon className="font-bold text-2xl" />
+								<MoveRightIcon className="text-2xl font-bold" />
 							</div>
 						</Link>
 					))}

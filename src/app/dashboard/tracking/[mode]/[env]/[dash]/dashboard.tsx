@@ -26,7 +26,7 @@ const DashboardPage = ({
 		dash === "induced"
 	) {
 		return (
-			<div className="mt-10 flex items-center justify-center font-semibold text-xl">
+			<div className="mt-10 flex items-center justify-center text-xl font-semibold">
 				Not available for AIR, TERMINAL, ROAD, INTERMODAL, FREIGHT, LOAD dashboards.
 			</div>
 		);

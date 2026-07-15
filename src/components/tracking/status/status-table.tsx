@@ -3,12 +3,14 @@ import type { ColumnDef, SortingFn } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
+
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ParamType, StatusColumnType } from "@/utils/common-types";
 import { useStatusQuery } from "@/utils/query";
+
 import { StatusDetailDrawer } from "./status-detail-drawer";
 
 const disabledActionClassName =
@@ -273,7 +275,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 					<div className="flex h-full flex-col items-center justify-center">
 						<p
 							className={cn(
-								"font-bold text-2xl capitalize",
+								"text-2xl font-bold capitalize",
 								statusQuery.data?.data.includes("carriers are operational")
 									? "text-green-400"
 									: "",

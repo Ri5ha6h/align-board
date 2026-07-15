@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ const TrackingEnvHeader = ({ params }: { params: { mode: string; env: string; da
 	return (
 		<>
 			<div className="flex flex-col items-center justify-between sm:flex-row sm:justify-around">
-				<h2 className="font-semibold text-xl tracking-wider">
+				<h2 className="text-xl font-semibold tracking-wider">
 					{params.mode?.toUpperCase()} DASHBOARDS
 				</h2>
 				<div className="flex items-center justify-center">
