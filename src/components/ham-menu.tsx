@@ -56,19 +56,11 @@ export function HamburgerMenuComponent() {
 			<SheetContent side="left" className="h-full w-[300px]">
 				<SheetHeader>
 					<SheetTitle className="font-medium text-xl tracking-wide">
-						<Link href="/dashboard">JUSTRANSFORM</Link>
+						<Link href="/dashboard">ALIGNBITS</Link>
 					</SheetTitle>
 				</SheetHeader>
 				<div className="mt-5">
 					<nav className="flex flex-col items-start justify-center gap-6 font-medium text-lg">
-						<SheetClose asChild>
-							<Link
-								href="/dashboard/profile"
-								className="text-muted-foreground hover:text-foreground"
-							>
-								Profile
-							</Link>
-						</SheetClose>
 						<PopoverMenu components={trackingComponents} />
 					</nav>
 				</div>

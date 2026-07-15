@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ParamType, StatusColumnType } from "@/utils/common-types";
 import { useStatusQuery } from "@/utils/query";
-import { CloseStatusForm } from "./close-dialog";
-import { CreateEditStatusDrawer } from "./create-edit-drawer";
-import { DeleteStatusForm } from "./delete-dialog";
 import { StatusDetailDrawer } from "./status-detail-drawer";
+
+const disabledActionClassName =
+	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100";
 
 export function StatusTable({ ...props }: { type: string; isJTUser: boolean }) {
 	const params = useParams<ParamType>();
@@ -152,17 +152,29 @@ export function StatusTable({ ...props }: { type: string; isJTUser: boolean }) {
 			id: "edit",
 			accessorKey: "edit",
 			header: () => <TableHeadCustom>Edit</TableHeadCustom>,
-			cell: ({ row }) => {
+			cell: () => {
 				return (
-					<CreateEditStatusDrawer
-						variant="outline"
-						buttonTitle="Edit"
-						title="Edit a status"
-						state="EDIT"
-						tableType={props.type.toUpperCase()}
-						statusKey={row.original.statusKey}
-						statusValue={row.original.value}
-					/>
+					<>
+						{/* Status editing is temporarily disabled.
+						<CreateEditStatusDrawer
+							variant="outline"
+							buttonTitle="Edit"
+							title="Edit a status"
+							state="EDIT"
+							tableType={props.type.toUpperCase()}
+							statusKey={row.original.statusKey}
+							statusValue={row.original.value}
+						/>
+						*/}
+						<Button
+							type="button"
+							variant="outline"
+							disabled
+							className={disabledActionClassName}
+						>
+							Edit
+						</Button>
+					</>
 				);
 			},
 			enableSorting: false,
@@ -172,12 +184,24 @@ export function StatusTable({ ...props }: { type: string; isJTUser: boolean }) {
 				id: "close",
 				accessorKey: "close",
 				header: () => <TableHeadCustom>Close</TableHeadCustom>,
-				cell: ({ row }) => {
+				cell: () => {
 					return (
-						<CloseStatusForm
-							statusKey={row.original.statusKey}
-							carrier={row.original.value.carrier}
-						/>
+						<>
+							{/* Status closing is temporarily disabled.
+							<CloseStatusForm
+								statusKey={row.original.statusKey}
+								carrier={row.original.value.carrier}
+							/>
+							*/}
+							<Button
+								type="button"
+								variant="outline"
+								disabled
+								className={disabledActionClassName}
+							>
+								Close
+							</Button>
+						</>
 					);
 				},
 				enableSorting: false,
@@ -187,13 +211,25 @@ export function StatusTable({ ...props }: { type: string; isJTUser: boolean }) {
 			id: "delete",
 			accessorKey: "delete",
 			header: () => <TableHeadCustom>Delete</TableHeadCustom>,
-			cell: ({ row }) => {
+			cell: () => {
 				return (
-					<DeleteStatusForm
-						statusKey={row.original.statusKey}
-						carrier={row.original.value.carrier}
-						tableType={props.type.toUpperCase()}
-					/>
+					<>
+						{/* Status deletion is temporarily disabled.
+						<DeleteStatusForm
+							statusKey={row.original.statusKey}
+							carrier={row.original.value.carrier}
+							tableType={props.type.toUpperCase()}
+						/>
+						*/}
+						<Button
+							type="button"
+							variant="outline"
+							disabled
+							className={disabledActionClassName}
+						>
+							Delete
+						</Button>
+					</>
 				);
 			},
 			enableSorting: false,

@@ -7,9 +7,7 @@ import {
 	NavigationMenuItem,
 	NavigationMenuList,
 	NavigationMenuTrigger,
-	navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Separator } from "./ui/separator";
 
 export function NavigationMenuComponent() {
 	const components: {
@@ -78,15 +76,6 @@ export function NavigationMenuComponent() {
 							))}
 						</ul>
 					</NavigationMenuContent>
-				</NavigationMenuItem>
-				<Separator
-					orientation="vertical"
-					className="my-4 border data-[orientation=vertical]:h-5"
-				/>
-				<NavigationMenuItem>
-					<Link href="/dashboard/profile" className={navigationMenuTriggerStyle()}>
-						Profile
-					</Link>
 				</NavigationMenuItem>
 			</NavigationMenuList>
 		</NavigationMenu>

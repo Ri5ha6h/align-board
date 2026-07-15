@@ -37,13 +37,13 @@ const SignIn = () => {
 	return (
 		<DualSplit>
 			<DualSplitSection className="1lg:flex hidden bg-black">
-				<DualSplitTitle>JUSTRANSFORM</DualSplitTitle>
+				<DualSplitTitle>ALIGNBITS</DualSplitTitle>
 			</DualSplitSection>
 			<DualSplitSection>
 				<div className="flex flex-col">
 					<div>
 						<div className="flex 1lg:hidden items-center justify-between font-bold">
-							<p className="text-lg">JUSTRANSFORM</p>
+							<p className="text-lg">ALIGNBITS</p>
 							<span className="text-2xl">SignIn</span>
 						</div>
 						<p className="1lg:block hidden font-bold text-2xl">Sign in</p>
