@@ -9,15 +9,11 @@ const getRedirectOrigin = (request: NextRequest) => {
 		return new URL(process.env.APP_ORIGIN).origin;
 	}
 
-	const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-	if (!forwardedHost) {
-		return request.nextUrl.origin;
+	if (process.env.NODE_ENV === "production") {
+		throw new Error("APP_ORIGIN is required in production.");
 	}
 
-	const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
-	const protocol = forwardedProto === "http" ? "http" : "https";
-
-	return `${protocol}://${forwardedHost}`;
+	return request.nextUrl.origin;
 };
 
 const redirectTo = (pathname: string, request: NextRequest) =>

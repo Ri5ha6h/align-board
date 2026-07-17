@@ -4,7 +4,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 
 import { refreshSessionAction, signOutAction } from "@/actions/auth-actions";
-import { SESSION_ACTIVITY_STORAGE_KEY, SESSION_IDLE_TIMEOUT_MS } from "@/lib/session-constants";
+import {
+	SESSION_ACTIVITY_STORAGE_KEY,
+	SESSION_IDLE_TIMEOUT_MS,
+	SESSION_LOGOUT_EVENT,
+} from "@/lib/session-constants";
 
 const ACTIVITY_WRITE_THROTTLE_MS = 1000;
 const SESSION_REFRESH_INTERVAL_MS = 15_000;
@@ -75,6 +79,10 @@ export const SessionActivityController = () => {
 		writeActivityState(initialState);
 
 		const recordActivity = () => {
+			if (isSigningOutRef.current) {
+				return;
+			}
+
 			const activityAt = Date.now();
 			if (activityAt - stateRef.current.lastActivityAt >= SESSION_IDLE_TIMEOUT_MS) {
 				void expireSession();
@@ -116,6 +124,10 @@ export const SessionActivityController = () => {
 		};
 
 		const checkSession = async () => {
+			if (isSigningOutRef.current) {
+				return;
+			}
+
 			const currentTime = Date.now();
 			const state = stateRef.current;
 
@@ -159,6 +171,7 @@ export const SessionActivityController = () => {
 		window.addEventListener("scroll", recordActivity, { passive: true });
 		window.addEventListener("touchstart", recordActivity, { passive: true });
 		window.addEventListener("focus", recordActivity);
+		window.addEventListener(SESSION_LOGOUT_EVENT, expireSession);
 		window.addEventListener("storage", syncActivity);
 		document.addEventListener("visibilitychange", recordVisibleActivity);
 
@@ -173,6 +186,7 @@ export const SessionActivityController = () => {
 			window.removeEventListener("scroll", recordActivity);
 			window.removeEventListener("touchstart", recordActivity);
 			window.removeEventListener("focus", recordActivity);
+			window.removeEventListener(SESSION_LOGOUT_EVENT, expireSession);
 			window.removeEventListener("storage", syncActivity);
 			document.removeEventListener("visibilitychange", recordVisibleActivity);
 		};
