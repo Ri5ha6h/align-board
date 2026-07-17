@@ -26,6 +26,7 @@
 3. Create `.env.local` in the project root and provide the required values:
 
    ```dotenv
+   APP_ORIGIN=http://localhost:3000
    REST_URL=<rest-service-url>
    REST_USERNAME=<rest-service-username>
    REST_PASSWORD=<rest-service-password>
@@ -33,6 +34,10 @@
    TEST_USER_BACKEND_USERNAME=<test-user-backend-username>
    TEST_USER_BACKEND_PASSWORD=<test-user-backend-password>
    ```
+
+   Set `APP_ORIGIN` to the browser-facing application origin in deployed environments, for
+   example `https://tracking.alignbits.com`. This keeps authentication redirects on the public
+   host when Next.js runs behind a reverse proxy.
 
    Obtain the real values through the project's approved secure channel. Do not commit
    `.env.local` or share its secrets.
