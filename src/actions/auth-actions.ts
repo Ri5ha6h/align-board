@@ -1,15 +1,17 @@
 "use server";
 
 import bcryptjs from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
+import { createSessionToken, verifySessionToken, type SessionPayload } from "@/lib/session";
 import type { AuthType } from "@/utils/common-types";
 
 import { mainRequestAction } from "./main-actions";
 
 const TEST_USER_ALIAS_USERNAME = "testuser";
 const TEST_USER_ALIAS_PASSWORD = "user@test123";
+
+type GetUserResult = { data: SessionPayload; success: true } | { data: string; success: false };
 
 // auth actions
 
@@ -97,9 +99,7 @@ export const signInAction = async ({ username, password }: AuthType) => {
 		};
 
 		// create token
-		const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET!, {
-			expiresIn: "1d",
-		});
+		const token = await createSessionToken(tokenData);
 
 		// generate cookies
 		cookieStore.set("token", token, {
@@ -120,18 +120,18 @@ export const signInAction = async ({ username, password }: AuthType) => {
 };
 
 // get user action
-export const getUserAction = async () => {
+export const getUserAction = async (): Promise<GetUserResult> => {
 	try {
 		const cookieStore = await cookies();
 		if (!cookieStore.has("token")) {
 			throw new Error("User not found.");
 		}
 		const data = cookieStore.get("token");
-		const user = jwt.decode(`${data?.value}`);
+		const user = await verifySessionToken(`${data?.value}`);
 		return { data: user, success: true };
-	} catch (error: any) {
+	} catch {
 		return {
-			data: error.message,
+			data: "User not found.",
 			success: false,
 		};
 	}
