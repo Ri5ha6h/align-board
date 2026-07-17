@@ -1,15 +1,24 @@
 "use server";
 
 import bcryptjs from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
+import {
+	clearSessionCookie,
+	createSessionToken,
+	setSessionCookie,
+	verifySessionToken,
+	type SessionPayload,
+} from "@/lib/session";
+import { SESSION_COOKIE_NAME } from "@/lib/session-constants";
 import type { AuthType } from "@/utils/common-types";
 
 import { mainRequestAction } from "./main-actions";
 
 const TEST_USER_ALIAS_USERNAME = "testuser";
 const TEST_USER_ALIAS_PASSWORD = "user@test123";
+
+type GetUserResult = { data: SessionPayload; success: true } | { data: string; success: false };
 
 // auth actions
 
@@ -97,15 +106,10 @@ export const signInAction = async ({ username, password }: AuthType) => {
 		};
 
 		// create token
-		const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET!, {
-			expiresIn: "1d",
-		});
+		const token = await createSessionToken(tokenData);
 
 		// generate cookies
-		cookieStore.set("token", token, {
-			httpOnly: true,
-			maxAge: 60 * 60 * 24,
-		});
+		setSessionCookie(cookieStore, token);
 
 		return {
 			data: "Sign in Successful.",
@@ -120,21 +124,43 @@ export const signInAction = async ({ username, password }: AuthType) => {
 };
 
 // get user action
-export const getUserAction = async () => {
+export const getUserAction = async (): Promise<GetUserResult> => {
 	try {
 		const cookieStore = await cookies();
-		if (!cookieStore.has("token")) {
+		if (!cookieStore.has(SESSION_COOKIE_NAME)) {
 			throw new Error("User not found.");
 		}
-		const data = cookieStore.get("token");
-		const user = jwt.decode(`${data?.value}`);
+		const data = cookieStore.get(SESSION_COOKIE_NAME);
+		const user = await verifySessionToken(`${data?.value}`);
 		return { data: user, success: true };
-	} catch (error: any) {
+	} catch {
 		return {
-			data: error.message,
+			data: "User not found.",
 			success: false,
 		};
 	}
+};
+
+// refresh session action
+export const refreshSessionAction = async () => {
+	const cookieStore = await cookies();
+	const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+	if (!token) {
+		return { data: "Session expired.", success: false };
+	}
+
+	let session: SessionPayload;
+	try {
+		session = await verifySessionToken(token);
+	} catch {
+		return { data: "Session expired.", success: false };
+	}
+
+	const refreshedToken = await createSessionToken(session);
+	setSessionCookie(cookieStore, refreshedToken);
+
+	return { data: "Session refreshed.", success: true };
 };
 
 // sign out action
@@ -142,7 +168,7 @@ export const signOutAction = async () => {
 	try {
 		const cookieStore = await cookies();
 		// delete cookie
-		cookieStore.set("token", "", { httpOnly: true, expires: new Date(0) });
+		clearSessionCookie(cookieStore);
 		return {
 			data: "Sign out Successful.",
 			success: true,
