@@ -4,11 +4,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 
 import { refreshSessionAction, signOutAction } from "@/actions/auth-actions";
-import {
-	SESSION_ACTIVITY_STORAGE_KEY,
-	SESSION_IDLE_TIMEOUT_MS,
-	SESSION_LOGOUT_EVENT,
-} from "@/lib/session-constants";
+import { registerSessionLogoutPreparation } from "@/lib/session-activity-client";
+import { SESSION_ACTIVITY_STORAGE_KEY, SESSION_IDLE_TIMEOUT_MS } from "@/lib/session-constants";
 
 const ACTIVITY_WRITE_THROTTLE_MS = 1000;
 const SESSION_REFRESH_INTERVAL_MS = 15_000;
@@ -42,13 +39,16 @@ export const SessionActivityController = () => {
 	const lastActivityWriteRef = useRef(0);
 	const isRefreshingRef = useRef(false);
 	const isSigningOutRef = useRef(false);
+	const hasPendingExpirationRef = useRef(false);
 	const refreshPromiseRef = useRef<ReturnType<typeof refreshSessionAction> | null>(null);
 
 	const expireSession = useCallback(async () => {
 		if (isSigningOutRef.current) {
+			hasPendingExpirationRef.current = true;
 			return;
 		}
 
+		hasPendingExpirationRef.current = false;
 		isSigningOutRef.current = true;
 		try {
 			await refreshPromiseRef.current;
@@ -77,6 +77,33 @@ export const SessionActivityController = () => {
 		stateRef.current = initialState;
 		lastActivityWriteRef.current = now;
 		writeActivityState(initialState);
+
+		const unregisterLogoutPreparation = registerSessionLogoutPreparation(async () => {
+			if (isSigningOutRef.current) {
+				try {
+					await refreshPromiseRef.current;
+				} catch {
+					// Server logout can continue after a failed refresh.
+				}
+
+				return () => undefined;
+			}
+
+			isSigningOutRef.current = true;
+			try {
+				await refreshPromiseRef.current;
+			} catch {
+				// Server logout can continue after a failed refresh.
+			}
+
+			return () => {
+				isSigningOutRef.current = false;
+				if (hasPendingExpirationRef.current) {
+					hasPendingExpirationRef.current = false;
+					void expireSession();
+				}
+			};
+		});
 
 		const recordActivity = () => {
 			if (isSigningOutRef.current) {
@@ -171,7 +198,6 @@ export const SessionActivityController = () => {
 		window.addEventListener("scroll", recordActivity, { passive: true });
 		window.addEventListener("touchstart", recordActivity, { passive: true });
 		window.addEventListener("focus", recordActivity);
-		window.addEventListener(SESSION_LOGOUT_EVENT, expireSession);
 		window.addEventListener("storage", syncActivity);
 		document.addEventListener("visibilitychange", recordVisibleActivity);
 
@@ -180,13 +206,13 @@ export const SessionActivityController = () => {
 		}, SESSION_CHECK_INTERVAL_MS);
 
 		return () => {
+			unregisterLogoutPreparation();
 			window.clearInterval(sessionCheck);
 			window.removeEventListener("keydown", recordActivity);
 			window.removeEventListener("pointerdown", recordActivity);
 			window.removeEventListener("scroll", recordActivity);
 			window.removeEventListener("touchstart", recordActivity);
 			window.removeEventListener("focus", recordActivity);
-			window.removeEventListener(SESSION_LOGOUT_EVENT, expireSession);
 			window.removeEventListener("storage", syncActivity);
 			document.removeEventListener("visibilitychange", recordVisibleActivity);
 		};
