@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { clearSessionCookie, SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/session";
+import { clearSessionCookie, verifySessionToken } from "@/lib/session";
+import { SESSION_COOKIE_NAME } from "@/lib/session-constants";
 
 const getRedirectOrigin = (request: NextRequest) => {
 	if (process.env.APP_ORIGIN) {

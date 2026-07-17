@@ -6,11 +6,11 @@ import { cookies } from "next/headers";
 import {
 	clearSessionCookie,
 	createSessionToken,
-	SESSION_COOKIE_NAME,
 	setSessionCookie,
 	verifySessionToken,
 	type SessionPayload,
 } from "@/lib/session";
+import { SESSION_COOKIE_NAME } from "@/lib/session-constants";
 import type { AuthType } from "@/utils/common-types";
 
 import { mainRequestAction } from "./main-actions";
@@ -139,6 +139,28 @@ export const getUserAction = async (): Promise<GetUserResult> => {
 			success: false,
 		};
 	}
+};
+
+// refresh session action
+export const refreshSessionAction = async () => {
+	const cookieStore = await cookies();
+	const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+	if (!token) {
+		return { data: "Session expired.", success: false };
+	}
+
+	let session: SessionPayload;
+	try {
+		session = await verifySessionToken(token);
+	} catch {
+		return { data: "Session expired.", success: false };
+	}
+
+	const refreshedToken = await createSessionToken(session);
+	setSessionCookie(cookieStore, refreshedToken);
+
+	return { data: "Session refreshed.", success: true };
 };
 
 // sign out action

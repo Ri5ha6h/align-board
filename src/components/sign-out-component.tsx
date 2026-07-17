@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { signOutAction } from "@/actions/auth-actions";
+import { SESSION_ACTIVITY_STORAGE_KEY } from "@/lib/session-constants";
 
 import { Button } from "./ui/button";
 
@@ -16,7 +17,13 @@ export const SignOutComponent = () => {
 				description: data,
 			});
 		} else {
-			router.push("/signin");
+			try {
+				localStorage.removeItem(SESSION_ACTIVITY_STORAGE_KEY);
+			} catch {
+				// Continue redirecting when browser storage is unavailable.
+			}
+			router.replace("/signin");
+			router.refresh();
 			toast.success("Sign out successful");
 		}
 	};

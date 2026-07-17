@@ -2,6 +2,8 @@ import type { JWTPayload } from "jose";
 import { SignJWT } from "jose/jwt/sign";
 import { jwtVerify } from "jose/jwt/verify";
 
+import { SESSION_COOKIE_NAME, SESSION_IDLE_TIMEOUT_SECONDS } from "@/lib/session-constants";
+
 export interface SessionPayload extends JWTPayload {
 	username: string;
 	createdAt?: unknown;
@@ -22,9 +24,6 @@ type SessionCookieStore = {
 	set: (name: string, value: string, options: SessionCookieOptions) => unknown;
 };
 
-export const SESSION_COOKIE_NAME = "token";
-export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24;
-
 const getSessionSecret = () => {
 	const secret = process.env.TOKEN_SECRET;
 
@@ -37,7 +36,7 @@ const getSessionSecret = () => {
 
 const getSessionCookieOptions = (): SessionCookieOptions => ({
 	httpOnly: true,
-	maxAge: SESSION_MAX_AGE_SECONDS,
+	maxAge: SESSION_IDLE_TIMEOUT_SECONDS,
 	path: "/",
 	sameSite: "lax",
 	secure: process.env.NODE_ENV === "production",
@@ -57,7 +56,7 @@ export const createSessionToken = async ({ username, createdAt }: SessionClaims)
 	new SignJWT({ username, createdAt })
 		.setProtectedHeader({ alg: "HS256" })
 		.setIssuedAt()
-		.setExpirationTime("1d")
+		.setExpirationTime(Math.floor(Date.now() / 1000) + SESSION_IDLE_TIMEOUT_SECONDS)
 		.sign(getSessionSecret());
 
 export const verifySessionToken = async (token: string): Promise<SessionPayload> => {
