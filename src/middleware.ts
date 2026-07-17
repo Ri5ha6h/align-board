@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { verifySessionToken } from "@/lib/session";
+import { clearSessionCookie, SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/session";
 
 const getRedirectOrigin = (request: NextRequest) => {
 	if (process.env.APP_ORIGIN) {
@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
 	const path = request.nextUrl.pathname;
 	const authPaths = ["/signin", "/signup"];
 	const isAuthPath = authPaths.includes(path);
-	const token = request.cookies.get("token")?.value;
+	const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
 	let hasValidSession = false;
 
 	if (token) {
@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
 	}
 
 	if (token && !hasValidSession) {
-		response.cookies.delete("token");
+		clearSessionCookie(response.cookies);
 	}
 
 	return response;

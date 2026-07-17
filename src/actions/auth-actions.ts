@@ -3,7 +3,14 @@
 import bcryptjs from "bcryptjs";
 import { cookies } from "next/headers";
 
-import { createSessionToken, verifySessionToken, type SessionPayload } from "@/lib/session";
+import {
+	clearSessionCookie,
+	createSessionToken,
+	SESSION_COOKIE_NAME,
+	setSessionCookie,
+	verifySessionToken,
+	type SessionPayload,
+} from "@/lib/session";
 import type { AuthType } from "@/utils/common-types";
 
 import { mainRequestAction } from "./main-actions";
@@ -102,10 +109,7 @@ export const signInAction = async ({ username, password }: AuthType) => {
 		const token = await createSessionToken(tokenData);
 
 		// generate cookies
-		cookieStore.set("token", token, {
-			httpOnly: true,
-			maxAge: 60 * 60 * 24,
-		});
+		setSessionCookie(cookieStore, token);
 
 		return {
 			data: "Sign in Successful.",
@@ -123,10 +127,10 @@ export const signInAction = async ({ username, password }: AuthType) => {
 export const getUserAction = async (): Promise<GetUserResult> => {
 	try {
 		const cookieStore = await cookies();
-		if (!cookieStore.has("token")) {
+		if (!cookieStore.has(SESSION_COOKIE_NAME)) {
 			throw new Error("User not found.");
 		}
-		const data = cookieStore.get("token");
+		const data = cookieStore.get(SESSION_COOKIE_NAME);
 		const user = await verifySessionToken(`${data?.value}`);
 		return { data: user, success: true };
 	} catch {
@@ -142,7 +146,7 @@ export const signOutAction = async () => {
 	try {
 		const cookieStore = await cookies();
 		// delete cookie
-		cookieStore.set("token", "", { httpOnly: true, expires: new Date(0) });
+		clearSessionCookie(cookieStore);
 		return {
 			data: "Sign out Successful.",
 			success: true,
