@@ -1,4 +1,6 @@
-import { jwtVerify, SignJWT, type JWTPayload } from "jose";
+import type { JWTPayload } from "jose";
+import { SignJWT } from "jose/jwt/sign";
+import { jwtVerify } from "jose/jwt/verify";
 
 export interface SessionPayload extends JWTPayload {
 	username: string;
