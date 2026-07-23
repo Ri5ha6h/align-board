@@ -1,4 +1,4 @@
-import { HistoryAccordion } from "@/components/accord-util";
+import { DashboardFilter } from "@/components/dashboard/dashboard-filter";
 
 import { HistoryForm } from "./history-form";
 import { HistoryTable } from "./history-table";
@@ -6,8 +6,9 @@ import { HistoryTable } from "./history-table";
 const MainHistoryComponent = () => {
 	return (
 		<div className="flex flex-col">
-			<HistoryAccordion />
-			<HistoryForm />
+			<DashboardFilter>
+				<HistoryForm />
+			</DashboardFilter>
 			<HistoryTable />
 		</div>
 	);

@@ -2,10 +2,11 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import { useDashboardQueryReport } from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
@@ -360,13 +361,16 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 	];
 
 	const summaryQuery = useSummaryQuery(params, newCarrOpt, searchParams, isAlignUser);
+	useDashboardQueryReport({
+		data: summaryQuery.data,
+		error: summaryQuery.error,
+		isFetching: summaryQuery.isFetching,
+		isPending: summaryQuery.isPending,
+		success: summaryQuery.data?.success,
+	});
 
 	if (summaryQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (summaryQuery.isError || summaryQuery.error) {
@@ -385,5 +389,19 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 		);
 	}
 
-	return <TableDataStaticComponent data={summaryQuery.data} columns={columns} />;
+	return (
+		<TableDataStaticComponent
+			data={summaryQuery.data}
+			columns={columns}
+			defaultVisibleColumnIds={[
+				params.mode === "terminal" ? "terminal" : "carrier",
+				"queue",
+				"active",
+				"success",
+				"rnf",
+				"fail",
+				"last-run",
+			]}
+		/>
+	);
 }

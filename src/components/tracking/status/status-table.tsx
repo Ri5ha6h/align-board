@@ -1,9 +1,10 @@
 "use client";
 import type { ColumnDef, SortingFn } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import { useDashboardQueryReport } from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { useStatusQuery } from "@/utils/query";
 import { StatusDetailDrawer } from "./status-detail-drawer";
 
 const disabledActionClassName =
-	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100";
+	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-[#444449] disabled:bg-[#2d2d31] disabled:text-[#71717a] disabled:opacity-100";
 
 export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }) {
 	const params = useParams<ParamType>();
@@ -239,13 +240,16 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 	}
 
 	const statusQuery = useStatusQuery(props.type.toUpperCase(), params);
+	useDashboardQueryReport({
+		data: statusQuery.data,
+		error: statusQuery.error,
+		isFetching: statusQuery.isFetching,
+		isPending: statusQuery.isPending,
+		success: statusQuery.data?.success,
+	});
 
 	if (statusQuery.isPending) {
-		return (
-			<div className="flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (statusQuery.isError || statusQuery.error) {
@@ -267,24 +271,18 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 						{statusQuery.isFetching ? "Fetching..." : "Refresh"}
 					</Button>
 				</div>
-				{statusQuery.isFetching ? (
-					<div className="flex h-full flex-col items-center justify-center">
-						<Loader2 className="animate-spin text-lg" />
-					</div>
-				) : (
-					<div className="flex h-full flex-col items-center justify-center">
-						<p
-							className={cn(
-								"text-2xl font-bold capitalize",
-								statusQuery.data?.data.includes("carriers are operational")
-									? "text-green-400"
-									: "",
-							)}
-						>
-							{statusQuery.data?.data}
-						</p>
-					</div>
-				)}
+				<div className="dashboard-empty-state">
+					<p
+						className={cn(
+							"capitalize",
+							statusQuery.data?.data.includes("carriers are operational")
+								? "text-green-400"
+								: "",
+						)}
+					>
+						{statusQuery.data?.data}
+					</p>
+				</div>
 			</div>
 		);
 	}
@@ -300,13 +298,22 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 						{statusQuery.isFetching ? "Fetching..." : "Refresh"}
 					</Button>
 				</div>
-				{statusQuery.isFetching ? (
-					<div className="flex h-full flex-col items-center justify-center">
-						<Loader2 className="animate-spin text-lg" />
-					</div>
-				) : (
-					<TableDataStaticComponent data={statusQuery.data} columns={columns} />
-				)}
+				<TableDataStaticComponent
+					data={statusQuery.data}
+					columns={columns}
+					defaultVisibleColumnIds={[
+						params.mode === "terminal" ? "terminal" : "carrier",
+						"status",
+						"issue",
+						"impact",
+						"status-type",
+						"eta",
+						"more-detail",
+						...(props.isAlignUser
+							? ["edit", ...(props.type === "closed" ? [] : ["close"]), "delete"]
+							: []),
+					]}
+				/>
 			</div>
 		</>
 	);

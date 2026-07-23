@@ -1,10 +1,14 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import {
+	DashboardWaitingState,
+	useDashboardQueryReport,
+} from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import type { LatencyTableType, ParamType } from "@/utils/common-types";
@@ -29,11 +33,7 @@ export function LatencyTable() {
 	}
 
 	if (params.mode !== "air" && !searchParams.get("carriers")) {
-		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-bold">
-				Select a carrier to view latency.
-			</div>
-		);
+		return <DashboardWaitingState>Select a carrier to view latency.</DashboardWaitingState>;
 	}
 
 	return <LatencyData params={params} carriers={newCarrOpt} searchParams={searchParams} />;
@@ -41,6 +41,13 @@ export function LatencyTable() {
 
 const LatencyData = ({ ...props }) => {
 	const latencyQuery = useLatencyQuery(props.params, props.carriers, props.searchParams);
+	useDashboardQueryReport({
+		data: latencyQuery.data,
+		error: latencyQuery.error,
+		isFetching: latencyQuery.isFetching,
+		isPending: latencyQuery.isPending,
+		success: latencyQuery.data?.success,
+	});
 
 	const columns: ColumnDef<LatencyTableType>[] = [
 		{
@@ -127,6 +134,43 @@ const LatencyData = ({ ...props }) => {
 					(row.original.tenth || 0);
 				return <TableCellCustom>{totalC}</TableCellCustom>;
 			},
+			enableSorting: false,
+		},
+		{
+			id: "range-0-4",
+			header: () => <TableHeadCustom>0–4h</TableHeadCustom>,
+			cell: ({ row }) => (
+				<TableCellCustom>
+					{(row.original.first || 0) +
+						(row.original.second || 0) +
+						(row.original.third || 0)}
+				</TableCellCustom>
+			),
+			enableSorting: false,
+		},
+		{
+			id: "range-4-24",
+			header: () => <TableHeadCustom>4–24h</TableHeadCustom>,
+			cell: ({ row }) => (
+				<TableCellCustom>
+					{(row.original.fourth || 0) +
+						(row.original.fifth || 0) +
+						(row.original.sixth || 0) +
+						(row.original.seventh || 0)}
+				</TableCellCustom>
+			),
+			enableSorting: false,
+		},
+		{
+			id: "range-over-24",
+			header: () => <TableHeadCustom>Over 24h</TableHeadCustom>,
+			cell: ({ row }) => (
+				<TableCellCustom>
+					{(row.original.eight || 0) +
+						(row.original.ninth || 0) +
+						(row.original.tenth || 0)}
+				</TableCellCustom>
+			),
 			enableSorting: false,
 		},
 		{
@@ -244,11 +288,7 @@ const LatencyData = ({ ...props }) => {
 	];
 
 	if (latencyQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (latencyQuery.isError || latencyQuery.error) {
@@ -267,5 +307,19 @@ const LatencyData = ({ ...props }) => {
 		);
 	}
 
-	return <TableDataStaticComponent data={latencyQuery.data} columns={columns} />;
+	return (
+		<TableDataStaticComponent
+			data={latencyQuery.data}
+			columns={columns}
+			defaultVisibleColumnIds={[
+				props.params.mode === "terminal" ? "terminal" : "carrier",
+				"ref-type",
+				"queue",
+				"total",
+				"range-0-4",
+				"range-4-24",
+				"range-over-24",
+			]}
+		/>
+	);
 };

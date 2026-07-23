@@ -2,9 +2,13 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import {
+	DashboardWaitingState,
+	useDashboardQueryReport,
+} from "@/components/dashboard/dashboard-runtime";
 import { TableDataDefaultComponent } from "@/components/data-table-default";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
@@ -16,11 +20,7 @@ export function ReferenceSubscriptionTable() {
 	const searchParams = useSearchParams();
 
 	if (!searchParams.get("subscriptionId")) {
-		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-bold">
-				Enter a subscription id to view data.
-			</div>
-		);
+		return <DashboardWaitingState>Enter a subscription id to view data.</DashboardWaitingState>;
 	}
 
 	return <ReferenceSubscriptionData params={params} searchParams={searchParams} />;
@@ -156,13 +156,16 @@ export function ReferenceSubscriptionData({ ...props }) {
 		props.searchParams.get("category"),
 		props.searchParams.get("subscriptionId"),
 	);
+	useDashboardQueryReport({
+		data: referenceQuery.data,
+		error: referenceQuery.error,
+		isFetching: referenceQuery.isFetching,
+		isPending: referenceQuery.isPending,
+		success: referenceQuery.data?.success,
+	});
 
 	if (referenceQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (referenceQuery.isError || referenceQuery.error) {
@@ -181,5 +184,18 @@ export function ReferenceSubscriptionData({ ...props }) {
 		);
 	}
 
-	return <TableDataDefaultComponent data={referenceQuery.data} columns={columns} />;
+	return (
+		<TableDataDefaultComponent
+			data={referenceQuery.data}
+			columns={columns}
+			defaultVisibleColumnIds={[
+				"subscription-id",
+				props.params.mode === "terminal" ? "terminal" : "carrier",
+				"ref-type",
+				"ref-num",
+				"status",
+				"last-crawled-at",
+			]}
+		/>
+	);
 }

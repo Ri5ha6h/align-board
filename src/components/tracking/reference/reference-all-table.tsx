@@ -2,9 +2,13 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import {
+	DashboardWaitingState,
+	useDashboardQueryReport,
+} from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
@@ -19,11 +23,7 @@ export function ReferenceAllTable() {
 	const searchParams = useSearchParams();
 
 	if (!searchParams.get("carrier")) {
-		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-bold">
-				Select a carrier to view references.
-			</div>
-		);
+		return <DashboardWaitingState>Select a carrier to view references.</DashboardWaitingState>;
 	}
 
 	return <ReferenceAllData params={params} searchParams={searchParams} />;
@@ -181,13 +181,16 @@ const ReferenceAllData = ({ ...props }) => {
 	}
 
 	const referenceAllQuery = useReferenceAllQuery(props.params, props.searchParams);
+	useDashboardQueryReport({
+		data: referenceAllQuery.data,
+		error: referenceAllQuery.error,
+		isFetching: referenceAllQuery.isFetching,
+		isPending: referenceAllQuery.isPending,
+		success: referenceAllQuery.data?.success,
+	});
 
 	if (referenceAllQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (referenceAllQuery.isError || referenceAllQuery.error) {
@@ -206,5 +209,19 @@ const ReferenceAllData = ({ ...props }) => {
 		);
 	}
 
-	return <TableDataStaticComponent data={referenceAllQuery.data} columns={columns} />;
+	return (
+		<TableDataStaticComponent
+			data={referenceAllQuery.data}
+			columns={columns}
+			defaultVisibleColumnIds={[
+				"subscription-id",
+				props.params.mode === "terminal" ? "terminal" : "carrier",
+				"ref-type",
+				"ref-num",
+				"status",
+				"last-crawled-at",
+				"more-info",
+			]}
+		/>
+	);
 };

@@ -1,9 +1,13 @@
 "use client";
 import type { ColumnDef, SortingFn } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import {
+	DashboardWaitingState,
+	useDashboardQueryReport,
+} from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticStateComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
@@ -23,9 +27,7 @@ export function HistoryTable() {
 
 	if (!searchParams.get("subId")) {
 		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-bold">
-				Enter the Subscription Id to see history!
-			</div>
+			<DashboardWaitingState>Enter the Subscription Id to see history!</DashboardWaitingState>
 		);
 	}
 
@@ -34,6 +36,13 @@ export function HistoryTable() {
 
 const HistoryData = ({ ...props }) => {
 	const historyQuery = useHistoryQuery(props.params, props.searchParams);
+	useDashboardQueryReport({
+		data: historyQuery.data,
+		error: historyQuery.error,
+		isFetching: historyQuery.isFetching,
+		isPending: historyQuery.isPending,
+		success: historyQuery.data?.success,
+	});
 
 	const sortSchedulerFn: SortingFn<HistoryType> = (rowA, rowB, _columnId) => {
 		const statusA = +rowA.original.k;
@@ -301,11 +310,7 @@ const HistoryData = ({ ...props }) => {
 	];
 
 	if (historyQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (historyQuery.isError || historyQuery.error) {
@@ -329,6 +334,14 @@ const HistoryData = ({ ...props }) => {
 			tableType="history"
 			data={historyQuery.data}
 			columns={columns}
+			defaultVisibleColumnIds={[
+				"created-at",
+				"crawl-status",
+				"queue-name",
+				"transaction-id",
+				"response-sent",
+				"crawled-output",
+			]}
 		/>
 	);
 };

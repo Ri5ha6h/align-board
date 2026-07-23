@@ -1,4 +1,4 @@
-import { SummaryAccordion } from "@/components/accord-util";
+import { DashboardFilter } from "@/components/dashboard/dashboard-filter";
 
 import { SummaryForm } from "./summary-form";
 import { SummaryTable } from "./summary-table";
@@ -6,8 +6,9 @@ import { SummaryTable } from "./summary-table";
 const MainSummaryComponent = ({ isAlignUser }: { isAlignUser: boolean }) => {
 	return (
 		<div className="flex flex-col">
-			<SummaryAccordion />
-			<SummaryForm isAlignUser={isAlignUser} />
+			<DashboardFilter>
+				<SummaryForm isAlignUser={isAlignUser} />
+			</DashboardFilter>
 			<SummaryTable isAlignUser={isAlignUser} />
 		</div>
 	);

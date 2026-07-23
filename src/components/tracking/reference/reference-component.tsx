@@ -4,11 +4,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import React from "react";
 
-import {
-	AllReferenceAccordion,
-	ReferenceAccordion,
-	SubscriptionAccordion,
-} from "@/components/accord-util";
+import { DashboardFilter } from "@/components/dashboard/dashboard-filter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ReferenceAllForm } from "./reference-all-form";
@@ -90,22 +86,25 @@ export default function MainReferenceComponent() {
 			</TabsList>
 			<TabsContent value="all">
 				<div className="flex flex-col">
-					<AllReferenceAccordion />
-					<ReferenceAllForm />
+					<DashboardFilter>
+						<ReferenceAllForm />
+					</DashboardFilter>
 					<ReferenceAllTable />
 				</div>
 			</TabsContent>
 			<TabsContent value="subscription">
 				<div className="flex flex-col">
-					<SubscriptionAccordion />
-					<ReferenceSubscriptionForm />
+					<DashboardFilter>
+						<ReferenceSubscriptionForm />
+					</DashboardFilter>
 					<ReferenceSubscriptionTable />
 				</div>
 			</TabsContent>
 			<TabsContent value="reference">
 				<div className="flex flex-col">
-					<ReferenceAccordion />
-					<ReferenceForm />
+					<DashboardFilter>
+						<ReferenceForm />
+					</DashboardFilter>
 					<ReferenceTable />
 				</div>
 			</TabsContent>

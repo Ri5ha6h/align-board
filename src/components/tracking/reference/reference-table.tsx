@@ -2,10 +2,14 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import {
+	DashboardWaitingState,
+	useDashboardQueryReport,
+} from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
@@ -18,9 +22,9 @@ export function ReferenceTable() {
 
 	if (!searchParams.get("refCarrier") && !searchParams.get("reference")) {
 		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-bold">
+			<DashboardWaitingState>
 				Select a carrier and enter a reference to view data.
-			</div>
+			</DashboardWaitingState>
 		);
 	}
 
@@ -168,13 +172,16 @@ const ReferenceData = ({ ...props }) => {
 		props.searchParams.get("category"),
 		referenceId,
 	);
+	useDashboardQueryReport({
+		data: referenceQuery.data,
+		error: referenceQuery.error,
+		isFetching: referenceQuery.isFetching,
+		isPending: referenceQuery.isPending,
+		success: referenceQuery.data?.success,
+	});
 
 	if (referenceQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (referenceQuery.isError || referenceQuery.error) {
@@ -193,5 +200,18 @@ const ReferenceData = ({ ...props }) => {
 		);
 	}
 
-	return <TableDataStaticComponent data={referenceQuery.data} columns={columns} />;
+	return (
+		<TableDataStaticComponent
+			data={referenceQuery.data}
+			columns={columns}
+			defaultVisibleColumnIds={[
+				"subscription-id",
+				props.params.mode === "terminal" ? "terminal" : "carrier",
+				"ref-type",
+				"ref-num",
+				"status",
+				"last-crawled-at",
+			]}
+		/>
+	);
 };
