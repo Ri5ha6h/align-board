@@ -1,67 +1,107 @@
-import JsonView from "@uiw/react-json-view";
-import { vscodeTheme } from "@uiw/react-json-view/vscode";
-import { Loader2 } from "lucide-react";
+import * as React from "react";
 
+import {
+	DashboardDetailBody,
+	findDetailValue,
+} from "@/components/dashboard/dashboard-detail-sheet";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet";
 import { useReferenceInfoQuery } from "@/utils/query";
-
-import { ScrollArea } from "../../ui/scroll-area";
+import { sanitizeHistoryDataForDisplay } from "@/utils/sanitize-history-data";
 
 export function ReferenceDrawer({ ...props }) {
+	const [open, setOpen] = React.useState(false);
 	return (
 		<div className="flex items-center justify-center">
-			<Sheet>
+			<Sheet onOpenChange={setOpen} open={open}>
 				<SheetTrigger asChild>
 					<Button variant={props.variant}>{props.buttonTitle}</Button>
 				</SheetTrigger>
-				<SheetContent>
+				<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
 					<SheetHeader>
 						<SheetTitle>{props.title}</SheetTitle>
+						<SheetDescription>
+							Tracking reference summary and source payload.
+						</SheetDescription>
 					</SheetHeader>
-					<SheetCustomContent {...props} />
+					<ReferenceDetailContent {...props} enabled={open} />
 				</SheetContent>
 			</Sheet>
 		</div>
 	);
 }
 
-function SheetCustomContent({ ...props }) {
-	const resId = props.resource;
+function ReferenceDetailContent({ ...props }) {
+	const query = useReferenceInfoQuery(
+		props.params,
+		props.searchParams,
+		props.resource,
+		props.enabled,
+	);
+	const responseError =
+		query.error?.message || (query.data && !query.data.success ? String(query.data.data) : "");
+	const rawValue = query.data?.success ? query.data.data : undefined;
+	const data = sanitizeHistoryDataForDisplay(rawValue);
 
-	const referenceInfoQuery = useReferenceInfoQuery(props.params, props.searchParams, resId);
-
-	if (referenceInfoQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
-	}
-
-	if (referenceInfoQuery.isError || referenceInfoQuery.error) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<p className="text-red-500">Error: {referenceInfoQuery.error?.message}</p>
-			</div>
-		);
-	}
-
-	if (referenceInfoQuery.data && !referenceInfoQuery.data?.success) {
-		return (
-			<div className="mt-10 flex h-full flex-col items-center justify-center">
-				<p className="text-red-500">{referenceInfoQuery.data?.data}</p>
-			</div>
-		);
-	}
-
-	return <CustomView data={referenceInfoQuery.data} />;
-}
-
-function CustomView({ ...props }) {
 	return (
-		<ScrollArea className="my-scroll mt-5 w-full rounded-md">
-			<JsonView value={props.data.data} style={vscodeTheme} className="rounded-md p-2" />
-		</ScrollArea>
+		<DashboardDetailBody
+			error={responseError}
+			fields={[
+				{
+					label: "Subscription ID",
+					value:
+						findDetailValue(data, ["subscriptionId", "subscription_id"]) ??
+						props.resource,
+				},
+				{
+					label: props.params.mode === "terminal" ? "Terminal" : "Carrier",
+					value:
+						findDetailValue(data, ["carrier", "carrierCode", "terminal"]) ??
+						props.searchParams.get("carrier"),
+				},
+				{
+					label: "Reference Type",
+					value: findDetailValue(data, ["referenceType", "refType"]),
+				},
+				{
+					label: "Reference Number",
+					value: findDetailValue(data, ["referenceNumber", "reference", "refNum"]),
+				},
+				{
+					label: "Queue",
+					value:
+						findDetailValue(data, ["queue", "queueName"]) ??
+						props.searchParams.get("queue"),
+				},
+				{
+					label: "Status",
+					value:
+						findDetailValue(data, ["status", "referenceStatus"]) ??
+						props.searchParams.get("refStatus"),
+				},
+				{
+					label: "Created",
+					value: findDetailValue(data, ["createdAt", "created_at"]),
+				},
+				{
+					label: "Updated",
+					value: findDetailValue(data, ["updatedAt", "modifiedAt", "updated_at"]),
+				},
+				{
+					label: "Last Crawled",
+					value: findDetailValue(data, ["lastCrawledAt", "last_crawled_at"]),
+				},
+				{ label: "Error", value: findDetailValue(data, ["error", "errorMessage"]) },
+			]}
+			isLoading={query.isPending}
+			rawValue={data}
+		/>
 	);
 }

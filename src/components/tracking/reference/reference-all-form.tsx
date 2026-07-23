@@ -1,9 +1,12 @@
 "use client";
 
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
-import { Button } from "@/components/ui/button";
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
 import {
 	Form,
 	FormControl,
@@ -29,28 +32,20 @@ export const ReferenceAllForm = () => {
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const queueOptions = React.useMemo(() => getQueueList(params.mode), [params.mode]);
 	const refOptions = React.useMemo(() => getRefList(params.mode), [params.mode]);
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
+	const filterNavigation = useDashboardFilterNavigation();
 
 	const form = useReferenceAllForm(params, searchParams);
 
 	const onSubmit = (data: any) => {
 		//console.log("submit data", data);
-		setBtnLoad(true);
 		if (data.carrier.length === 0) {
 			form.setError("carrier", {
 				type: "custom",
 				message: "At least one carrier should be selected.",
 			});
-			setBtnLoad(false);
 		} else {
-			setTimeout(() => {
-				const q = createQueryString(data);
-				router.push(pathname + "?" + q);
-				setBtnLoad(false);
-			}, 400);
+			filterNavigation.apply(createQueryString(data));
 		}
 	};
 
@@ -88,11 +83,7 @@ export const ReferenceAllForm = () => {
 								<FormLabel htmlFor={`${id}-carrier`}>
 									{params.mode === "terminal" ? "Terminals" : "Carriers"}
 								</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									defaultValue={field.value}
-									required
-								>
+								<Select onValueChange={field.onChange} value={field.value} required>
 									<FormControl id={`${id}-carrier`}>
 										<SelectTrigger className="w-full">
 											<SelectValue
@@ -104,7 +95,7 @@ export const ReferenceAllForm = () => {
 											/>
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{carriersOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -122,17 +113,13 @@ export const ReferenceAllForm = () => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-refStatus`}>Status</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									defaultValue={field.value}
-									required
-								>
+								<Select onValueChange={field.onChange} value={field.value} required>
 									<FormControl id={`${id}-refStatus`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a status..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										<SelectItem value="ACTIVE">Active</SelectItem>
 										<SelectItem value="CLOSED">Closed</SelectItem>
 									</SelectContent>
@@ -149,7 +136,7 @@ export const ReferenceAllForm = () => {
 								<FormLabel htmlFor={`${id}-refType`}>Reference Type</FormLabel>
 								<Select
 									onValueChange={field.onChange}
-									defaultValue={field.value}
+									value={field.value}
 									required
 									disabled={form.watch("refStatus") === "CLOSED"}
 								>
@@ -158,7 +145,7 @@ export const ReferenceAllForm = () => {
 											<SelectValue placeholder="Select a reference type..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{refOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -178,7 +165,7 @@ export const ReferenceAllForm = () => {
 								<FormLabel htmlFor={`${id}-queue`}>Queue</FormLabel>
 								<Select
 									onValueChange={field.onChange}
-									defaultValue={field.value}
+									value={field.value}
 									disabled={form.watch("refStatus") === "CLOSED"}
 								>
 									<FormControl id={`${id}-queue`}>
@@ -186,7 +173,7 @@ export const ReferenceAllForm = () => {
 											<SelectValue placeholder="Select a queue..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{queueOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -198,11 +185,20 @@ export const ReferenceAllForm = () => {
 							</FormItem>
 						)}
 					/>
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() =>
+								form.reset({
+									carrier: "",
+									queue: "NORMAL",
+									refType: refOptions[0]?.value ?? "",
+									refStatus: "ACTIVE",
+								}),
+							)
+						}
+					/>
 				</form>
 			</Form>
 		</>

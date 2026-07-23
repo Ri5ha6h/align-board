@@ -15,7 +15,7 @@ export function StatusDetailDrawer({ ...props }) {
 				<SheetTrigger asChild>
 					<Button variant={props.variant}>{props.buttonTitle}</Button>
 				</SheetTrigger>
-				<SheetContent>
+				<SheetContent className="dashboard-sheet overflow-y-auto">
 					<SheetHeader>
 						<SheetTitle>{props.title}</SheetTitle>
 					</SheetHeader>
@@ -84,14 +84,14 @@ const CustomLinkInput = ({ value }: { value: any }) => {
 					<Link key={link} href={link} target="_blank">
 						<li className="p-2">
 							{index + 1}.{" "}
-							<span className="underline hover:text-indigo-500">{link}</span>
+							<span className="underline hover:text-[#a1a1aa]">{link}</span>
 						</li>
 					</Link>
 				))
 			) : (
 				<Link href={value} target="_blank">
 					<li className="p-2">
-						1. <span className="underline hover:text-indigo-500">{value}</span>
+						1. <span className="underline hover:text-[#a1a1aa]">{value}</span>
 					</li>
 				</Link>
 			)}

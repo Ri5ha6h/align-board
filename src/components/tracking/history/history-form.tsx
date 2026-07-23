@@ -2,9 +2,13 @@
 
 import { format, millisecondsToHours, startOfDay, subDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -34,22 +38,18 @@ export const HistoryForm = () => {
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const historyOptions = getHistoryType();
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
+	const filterNavigation = useDashboardFilterNavigation();
 
 	const form = useHistoryForm(searchParams);
 
 	const onSubmit = (data: any) => {
 		//console.log("submit data", data);
-		setBtnLoad(true);
 		if (!data.range || !data.range.from || !data.range.to) {
 			form.setError("range", {
 				type: "custom",
 				message: "Start date and End date are required.",
 			});
-			setBtnLoad(false);
 			return;
 		}
 
@@ -66,7 +66,6 @@ export const HistoryForm = () => {
 					type: "custom",
 					message: "Invalid carrier present in subscription id.",
 				});
-				setBtnLoad(false);
 				return;
 			}
 		}
@@ -78,13 +77,8 @@ export const HistoryForm = () => {
 				type: "custom",
 				message: "Date range should be less than or equal to 15 days.",
 			});
-			setBtnLoad(false);
 		} else {
-			setTimeout(() => {
-				const q = createQueryString(data);
-				router.push(`${pathname}?${q}`);
-				setBtnLoad(false);
-			}, 400);
+			filterNavigation.apply(createQueryString(data));
 		}
 	};
 
@@ -141,13 +135,13 @@ export const HistoryForm = () => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-historyType`}>Crawl Status</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl id={`${id}-historyType`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a history type..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{historyOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label} HISTORY
@@ -168,16 +162,13 @@ export const HistoryForm = () => {
 									<FormLabel htmlFor={`${id}-includeRange`}>
 										Include Range
 									</FormLabel>
-									<Select
-										onValueChange={field.onChange}
-										defaultValue={field.value}
-									>
+									<Select onValueChange={field.onChange} value={field.value}>
 										<FormControl id={`${id}-includeRange`}>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Does range needed..." />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent>
+										<SelectContent className="dashboard-select-content">
 											<SelectItem value="NO">No</SelectItem>
 											<SelectItem value="YES">Yes</SelectItem>
 										</SelectContent>
@@ -229,7 +220,10 @@ export const HistoryForm = () => {
 												</Button>
 											</FormControl>
 										</PopoverTrigger>
-										<PopoverContent className="w-auto p-0" align="start">
+										<PopoverContent
+											className="dashboard-popover w-auto p-0"
+											align="start"
+										>
 											<Calendar
 												mode="range"
 												max={90}
@@ -250,11 +244,23 @@ export const HistoryForm = () => {
 							)}
 						/>
 					)}
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() =>
+								form.reset({
+									subId: "",
+									historyType: "DIFF",
+									includeRange: "NO",
+									range: {
+										from: subDays(new Date(), 1),
+										to: new Date(),
+									},
+								}),
+							)
+						}
+					/>
 				</form>
 			</Form>
 		</>

@@ -358,6 +358,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
 								>
 									{option.label}
 									<button
+										aria-label={`Remove ${option.label}`}
 										type="button"
 										className={cn(
 											"ml-1 rounded-full ring-offset-background outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -412,7 +413,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
 				</div>
 				<div className="relative">
 					{open && (
-						<CommandList className="absolute top-0 z-10 w-full animate-in rounded-md border bg-popover text-popover-foreground shadow-md outline-none">
+						<CommandList className="dashboard-multi-selector-list absolute top-0 z-60 w-full animate-in rounded-md border bg-popover text-popover-foreground shadow-md outline-none">
 							{isLoading ? (
 								<>{loadingIndicator}</>
 							) : (

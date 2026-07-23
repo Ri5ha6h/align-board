@@ -1,9 +1,12 @@
 "use client";
 
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
-import { Button } from "@/components/ui/button";
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
 import {
 	Form,
 	FormControl,
@@ -21,16 +24,13 @@ export const ReferenceSubscriptionForm = () => {
 	const id = useId();
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
+	const filterNavigation = useDashboardFilterNavigation();
 
 	const form = useReferenceSubscriptionForm(searchParams);
 
 	const onSubmit = (data: any) => {
 		//console.log("submit data", data);
-		setBtnLoad(true);
 		if (data.subscriptionId) {
 			let carrierCheck = data.subscriptionId.split("_")[0];
 			if (data.subscriptionId.includes("EXPORT") || data.subscriptionId.includes("IMPORT")) {
@@ -44,17 +44,12 @@ export const ReferenceSubscriptionForm = () => {
 					type: "custom",
 					message: "Invalid carrier present in subscription id.",
 				});
-				setBtnLoad(false);
 				return;
 			}
 		}
 
 		if (data.subscriptionId) {
-			setTimeout(() => {
-				const q = createQueryString(data);
-				router.push(`${pathname}?${q}`);
-				setBtnLoad(false);
-			}, 400);
+			filterNavigation.apply(createQueryString(data));
 		}
 	};
 
@@ -94,11 +89,13 @@ export const ReferenceSubscriptionForm = () => {
 							</FormItem>
 						)}
 					/>
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() => form.reset({ subscriptionId: "" }))
+						}
+					/>
 				</form>
 			</Form>
 		</>

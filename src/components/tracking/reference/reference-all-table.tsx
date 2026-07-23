@@ -41,8 +41,9 @@ const ReferenceAllData = ({ ...props }) => {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: false,
 		},
 		{
@@ -86,11 +87,9 @@ const ReferenceAllData = ({ ...props }) => {
 														? "FTL"
 														: "IMPORT";
 
-				const rType = "bg-blue-500";
-
 				return (
 					<TableCellCustom>
-						<Badge className={`${rType}`}>{ref}</Badge>
+						<Badge className="dashboard-data-tag">{ref}</Badge>
 					</TableCellCustom>
 				);
 			},
@@ -113,11 +112,7 @@ const ReferenceAllData = ({ ...props }) => {
 				const status = props.searchParams.get("refStatus")!;
 
 				return (
-					<TableCellCustom
-						className={cn(status === "ACTIVE" ? "text-green-500" : "text-red-500")}
-					>
-						{status}
-					</TableCellCustom>
+					<TableCellCustom className={cn("dashboard-data-tag")}>{status}</TableCellCustom>
 				);
 			},
 			enableSorting: false,
@@ -213,6 +208,7 @@ const ReferenceAllData = ({ ...props }) => {
 		<TableDataStaticComponent
 			data={referenceAllQuery.data}
 			columns={columns}
+			preferenceKey={`references-all-${props.params.mode}`}
 			defaultVisibleColumnIds={[
 				"subscription-id",
 				props.params.mode === "terminal" ? "terminal" : "carrier",

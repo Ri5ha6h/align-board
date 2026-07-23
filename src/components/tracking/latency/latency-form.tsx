@@ -1,10 +1,13 @@
 "use client";
 
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
 import MultipleSelector from "@/components/multi-select";
-import { Button } from "@/components/ui/button";
 import {
 	Form,
 	FormControl,
@@ -30,10 +33,8 @@ export const LatencyForm = () => {
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const queueOptions = React.useMemo(() => getQueueList(params.mode), [params.mode]);
 	const refOptions = React.useMemo(() => getRefList(params.mode), [params.mode]);
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
+	const filterNavigation = useDashboardFilterNavigation();
 	const queryCarriers = React.useMemo(
 		() => (searchParams.get("carriers") ? searchParams.get("carriers")?.split(",") : []),
 		[searchParams],
@@ -55,13 +56,7 @@ export const LatencyForm = () => {
 	const form = useLatencyForm(newCarrOpt, searchParams);
 
 	const onSubmit = (data: any) => {
-		//console.log("submit data", data);
-		setBtnLoad(true);
-		setTimeout(() => {
-			const q = createQueryString(data);
-			router.push(`${pathname}?${q}`);
-			setBtnLoad(false);
-		}, 400);
+		filterNavigation.apply(createQueryString(data));
 	};
 
 	const createQueryString = React.useCallback(
@@ -134,13 +129,13 @@ export const LatencyForm = () => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-queue`}>Queue</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl id={`${id}-queue`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a queue..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{queueOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -158,13 +153,13 @@ export const LatencyForm = () => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-refType`}>Reference Type</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl id={`${id}-refType`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a reference type..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										<SelectItem value="ALL">All</SelectItem>
 										{refOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
@@ -177,11 +172,15 @@ export const LatencyForm = () => {
 							</FormItem>
 						)}
 					/>
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() =>
+								form.reset({ carriers: [], queue: "NORMAL", refType: "ALL" }),
+							)
+						}
+					/>
 				</form>
 			</Form>
 		</>

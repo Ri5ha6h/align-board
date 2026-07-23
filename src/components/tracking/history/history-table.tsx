@@ -8,7 +8,7 @@ import {
 	DashboardWaitingState,
 	useDashboardQueryReport,
 } from "@/components/dashboard/dashboard-runtime";
-import { TableDataStaticStateComponent } from "@/components/data-table-static";
+import { TableDataStaticComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
 	TableCellTooltip,
@@ -68,8 +68,9 @@ const HistoryData = ({ ...props }) => {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: false,
 		},
 		{
@@ -119,7 +120,10 @@ const HistoryData = ({ ...props }) => {
 					<TableCellCustom>
 						<TableCellTooltip tip={tip}>
 							<Badge
-								className={cn(status === "SUCCESS" ? "bg-green-400" : "bg-red-500")}
+								className={cn(
+									"dashboard-data-tag",
+									status !== "SUCCESS" && "dashboard-data-tag--danger",
+								)}
 							>
 								{status}
 							</Badge>
@@ -330,11 +334,13 @@ const HistoryData = ({ ...props }) => {
 	}
 
 	return (
-		<TableDataStaticStateComponent
+		<TableDataStaticComponent
 			tableType="history"
 			data={historyQuery.data}
 			columns={columns}
+			preferenceKey={`history-${props.params.mode}`}
 			defaultVisibleColumnIds={[
+				"subscription-id",
 				"created-at",
 				"crawl-status",
 				"queue-name",

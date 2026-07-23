@@ -48,8 +48,9 @@ const ReferenceData = ({ ...props }) => {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: false,
 		},
 		{
@@ -71,11 +72,9 @@ const ReferenceData = ({ ...props }) => {
 			header: () => <TableHeadCustom>Reference Type</TableHeadCustom>,
 			cell: ({ row }) => {
 				const ref = row.original.referenceType;
-				const rType = "bg-blue-500";
-
 				return (
 					<TableCellCustom>
-						<Badge className={`${rType}`}>{ref}</Badge>
+						<Badge className="dashboard-data-tag">{ref}</Badge>
 					</TableCellCustom>
 				);
 			},
@@ -204,6 +203,7 @@ const ReferenceData = ({ ...props }) => {
 		<TableDataStaticComponent
 			data={referenceQuery.data}
 			columns={columns}
+			preferenceKey={`references-reference-${props.params.mode}`}
 			defaultVisibleColumnIds={[
 				"subscription-id",
 				props.params.mode === "terminal" ? "terminal" : "carrier",

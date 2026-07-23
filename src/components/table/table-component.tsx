@@ -5,7 +5,6 @@
 // See src/components/ui/table.tsx for the canonical shadcn/ui table implementation.
 
 import { InfoCircle } from "@/components/icons/icons";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -60,10 +59,8 @@ export const TableHeaderTooltip = ({ ...props }) => {
 
 export const TableHeadCustom = ({ ...props }) => {
 	return (
-		<div className={cn("flex items-center justify-center", props.className)}>
-			<Button className="w-full" variant={"ghost"} onClick={props.onClick}>
-				{props.children}
-			</Button>
+		<div className={cn("flex w-full items-center justify-center", props.className)}>
+			{props.children}
 		</div>
 	);
 };

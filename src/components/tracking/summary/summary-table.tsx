@@ -49,8 +49,9 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: true,
 			sortDescFirst: false,
 			sortUndefined: "last",
@@ -71,7 +72,7 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 
 				return (
 					<TableCellCustom>
-						<Badge className="bg-stone-500 capitalize">{qType}</Badge>
+						<Badge className="dashboard-data-tag capitalize">{qType}</Badge>
 					</TableCellCustom>
 				);
 			},
@@ -393,6 +394,7 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 		<TableDataStaticComponent
 			data={summaryQuery.data}
 			columns={columns}
+			preferenceKey={`summary-${params.mode}`}
 			defaultVisibleColumnIds={[
 				params.mode === "terminal" ? "terminal" : "carrier",
 				"queue",

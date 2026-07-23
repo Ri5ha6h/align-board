@@ -23,16 +23,24 @@ const chartConfig = {
 	},
 } satisfies ChartConfig;
 
+const SERIES_STYLES = [
+	{ color: "#fafafa", dash: undefined },
+	{ color: "#a1a1aa", dash: "7 4" },
+	{ color: "#71717a", dash: "2 4" },
+] as const;
+
+type ChartDatum = { date: string } & Record<string, string | number | null | undefined>;
+
 export default function ChartComponent({
 	chartData,
 	carriers,
 }: {
-	chartData: any;
+	chartData: ChartDatum[];
 	carriers: string[];
 }) {
 	const [timeRange, setTimeRange] = React.useState("7d");
 
-	const filteredData = chartData.filter((item: any) => {
+	const filteredData = (Array.isArray(chartData) ? chartData : []).filter((item) => {
 		const date = new Date(item.date);
 		const now = new Date();
 		let daysToSubtract = 7;
@@ -52,48 +60,38 @@ export default function ChartComponent({
 		return date >= newDate;
 	});
 
-	const updatedCarrierList = carriers.map((item, index) => {
-		if (index === 0) {
-			return { carrier: item, color: "#8884d8", hide: false };
-		} else if (index === 1) {
-			return { carrier: item, color: "#82ca9d", hide: false };
-		} else if (index === 2) {
-			return { carrier: item, color: "#ffca3a", hide: false };
-		}
-	});
+	const updatedCarrierList = React.useMemo(
+		() =>
+			carriers.map((carrier, index) => ({
+				carrier,
+				...SERIES_STYLES[index % SERIES_STYLES.length],
+				hide: false,
+			})),
+		[carriers],
+	);
+	const [hidden, setHidden] = React.useState(updatedCarrierList);
 
-	const [hidden, setHidden] = React.useState<any>(updatedCarrierList);
+	React.useEffect(() => {
+		setHidden(updatedCarrierList);
+	}, [updatedCarrierList]);
 
 	return (
-		<Card className="mt-5">
+		<Card className="dashboard-chart-card mt-5">
 			<CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
 				<div className="grid flex-1 gap-1 text-center sm:text-left">
-					<CardTitle className="text-xl">Latency</CardTitle>
+					<CardTitle className="text-xl">Latency Trend</CardTitle>
 					<CardDescription>Showing latency in hours for each day.</CardDescription>
 				</div>
 				<Select value={timeRange} onValueChange={setTimeRange}>
-					<SelectTrigger
-						className="w-[160px] rounded-lg sm:ml-auto"
-						aria-label="Select a value"
-					>
+					<SelectTrigger className="w-[160px] sm:ml-auto" aria-label="Chart time range">
 						<SelectValue placeholder="Last 3 months" />
 					</SelectTrigger>
-					<SelectContent className="rounded-xl">
-						<SelectItem value="all" className="rounded-lg">
-							All
-						</SelectItem>
-						<SelectItem value="90d" className="rounded-lg">
-							Last 3 months
-						</SelectItem>
-						<SelectItem value="60d" className="rounded-lg">
-							Last 2 months
-						</SelectItem>
-						<SelectItem value="30d" className="rounded-lg">
-							Last 30 days
-						</SelectItem>
-						<SelectItem value="7d" className="rounded-lg">
-							Last 7 days
-						</SelectItem>
+					<SelectContent className="dashboard-select-content">
+						<SelectItem value="all">All</SelectItem>
+						<SelectItem value="90d">Last 3 months</SelectItem>
+						<SelectItem value="60d">Last 2 months</SelectItem>
+						<SelectItem value="30d">Last 30 days</SelectItem>
+						<SelectItem value="7d">Last 7 days</SelectItem>
 					</SelectContent>
 				</Select>
 			</CardHeader>
@@ -107,9 +105,11 @@ export default function ChartComponent({
 							right: 12,
 						}}
 					>
-						<CartesianGrid vertical={false} />
+						<CartesianGrid stroke="#444449" vertical={false} />
 						<XAxis
 							dataKey="date"
+							stroke="#a1a1aa"
+							tickLine={false}
 							tickFormatter={(value) => {
 								const date = new Date(value);
 								return date.toLocaleDateString("en-US", {
@@ -119,11 +119,16 @@ export default function ChartComponent({
 							}}
 						/>
 
-						<YAxis ticks={[0, 4, 8, 12, 16, 20]} />
+						<YAxis
+							axisLine={false}
+							stroke="#a1a1aa"
+							tickLine={false}
+							ticks={[0, 4, 8, 12, 16, 20]}
+						/>
 						<ChartTooltip
 							content={
 								<ChartTooltipContent
-									className="w-[150px]"
+									className="dashboard-chart-tooltip w-[180px]"
 									labelFormatter={(value) => {
 										return new Date(value).toLocaleDateString("en-US", {
 											month: "short",
@@ -153,8 +158,9 @@ export default function ChartComponent({
 									type="monotone"
 									dataKey={item?.carrier}
 									stroke={item?.color}
+									strokeDasharray={item?.dash}
 									strokeWidth={2}
-									dot={true}
+									dot={{ fill: "#202023", r: 3, strokeWidth: 1.5 }}
 									key={item?.carrier}
 									hide={item?.hide}
 								/>

@@ -19,7 +19,7 @@ const MainStatusComponent = ({ isAlignUser }: { isAlignUser: boolean }) => {
 				onValueChange={(value) => {
 					setTabVal(value);
 				}}
-				className="flex h-full flex-col"
+				className="flex flex-col"
 			>
 				<div className="flex items-center justify-between">
 					<TabsList>
@@ -48,10 +48,10 @@ const MainStatusComponent = ({ isAlignUser }: { isAlignUser: boolean }) => {
 						</>
 					) : null}
 				</div>
-				<TabsContent value="active" className="mt-6 mb-6 flex-1">
+				<TabsContent value="active" className="mt-6 mb-6">
 					<StatusTable type="active" isAlignUser={isAlignUser} />
 				</TabsContent>
-				<TabsContent value="closed" className="mt-6 mb-6 flex-1">
+				<TabsContent value="closed" className="mt-6 mb-6">
 					<StatusTable type="closed" isAlignUser={isAlignUser} />
 				</TabsContent>
 			</Tabs>

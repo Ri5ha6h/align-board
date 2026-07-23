@@ -8,7 +8,6 @@ import { useDashboardQueryReport } from "@/components/dashboard/dashboard-runtim
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { ParamType, StatusColumnType } from "@/utils/common-types";
 import { useStatusQuery } from "@/utils/query";
 
@@ -39,6 +38,10 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 				const carrier = row.original.value.carrier;
 				return <TableCellCustom>{carrier ? carrier : "-"}</TableCellCustom>;
 			},
+			meta: {
+				className: "dashboard-sticky-column",
+			},
+			enableHiding: false,
 			enableSorting: false,
 		},
 		{
@@ -47,11 +50,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Status</TableHeadCustom>,
 			cell: ({ row }) => {
 				const status = row.original.value.status;
-				const commonClass = "border p-[5px] rounded-sm";
-				let statusColor = commonClass + " bg-green-50 border-green-500 text-green-500";
-				if (status === "CLOSED")
-					statusColor = commonClass + " bg-red-50 border-red-500 text-red-500";
-				return <TableCellCustom className={statusColor}>{status}</TableCellCustom>;
+				return <TableCellCustom className="dashboard-data-tag">{status}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
@@ -64,9 +63,6 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 					<p className="w-32 truncate capitalize">{row.original.value.issue}</p>
 				</TableCellCustom>
 			),
-			meta: {
-				className: "sticky left-0 bg-white",
-			},
 			enableSorting: false,
 		},
 		{
@@ -78,9 +74,6 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 					<p className="w-46 truncate capitalize">{row.original.value.impact}</p>
 				</TableCellCustom>
 			),
-			meta: {
-				className: "sticky left-0 bg-white",
-			},
 			enableSorting: false,
 		},
 		{
@@ -89,17 +82,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Type</TableHeadCustom>,
 			cell: ({ row }) => {
 				const type = row.original.value.statusType;
-				const commonClass = "border p-[5px] rounded-sm";
-				let typeColor = commonClass + " bg-red-50 border-red-500 text-red-500";
-				if (type === "INFORMATION")
-					typeColor = commonClass + " bg-blue-50 border-blue-500 text-blue-500";
-				if (type === "WEBSITE MAINTENANCE")
-					typeColor = commonClass + " bg-teal-50 border-teal-500 text-teal-500";
-				if (type === "SYSTEM MAINTENANCE")
-					typeColor = commonClass + " bg-yellow-50 border-yellow-500 text-yellow-500";
-				if (type === "DEGRADATION")
-					typeColor = commonClass + " bg-orange-50 border-orange-500 text-orange-500";
-				return <TableCellCustom className={typeColor}>{type}</TableCellCustom>;
+				return <TableCellCustom className="dashboard-data-tag">{type}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
@@ -272,16 +255,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 					</Button>
 				</div>
 				<div className="dashboard-empty-state">
-					<p
-						className={cn(
-							"capitalize",
-							statusQuery.data?.data.includes("carriers are operational")
-								? "text-green-400"
-								: "",
-						)}
-					>
-						{statusQuery.data?.data}
-					</p>
+					<p className="capitalize">{statusQuery.data?.data}</p>
 				</div>
 			</div>
 		);
@@ -301,6 +275,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 				<TableDataStaticComponent
 					data={statusQuery.data}
 					columns={columns}
+					preferenceKey={`status-${params.mode}-${props.type}`}
 					defaultVisibleColumnIds={[
 						params.mode === "terminal" ? "terminal" : "carrier",
 						"status",

@@ -1,9 +1,12 @@
 "use client";
 
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
-import { Button } from "@/components/ui/button";
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
 import {
 	Form,
 	FormControl,
@@ -28,34 +31,25 @@ export const ReferenceForm = () => {
 	const id = useId();
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
+	const filterNavigation = useDashboardFilterNavigation();
 
 	const form = useReferenceForm(searchParams);
 
 	const onSubmit = (data: any) => {
 		//console.log("submit data", data);
-		setBtnLoad(true);
 		if (!data.carrier) {
 			form.setError("carrier", {
 				type: "custom",
 				message: "Select a carrier",
 			});
-			setBtnLoad(false);
 		} else if (!data.reference) {
 			form.setError("reference", {
 				type: "custom",
 				message: "Input a reference",
 			});
-			setBtnLoad(false);
 		} else {
-			setTimeout(() => {
-				const q = createQueryString(data);
-				router.push(pathname + "?" + q);
-				setBtnLoad(false);
-			}, 400);
+			filterNavigation.apply(createQueryString(data));
 		}
 	};
 
@@ -86,11 +80,7 @@ export const ReferenceForm = () => {
 								<FormLabel htmlFor={`${id}-carrier`}>
 									{params.mode === "terminal" ? "Terminal" : "Carrier"}
 								</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									defaultValue={field.value}
-									required
-								>
+								<Select onValueChange={field.onChange} value={field.value} required>
 									<FormControl id={`${id}-carrier`}>
 										<SelectTrigger className="w-full">
 											<SelectValue
@@ -102,7 +92,7 @@ export const ReferenceForm = () => {
 											/>
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{carriersOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -132,11 +122,13 @@ export const ReferenceForm = () => {
 							</FormItem>
 						)}
 					/>
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() => form.reset({ carrier: "", reference: "" }))
+						}
+					/>
 				</form>
 			</Form>
 		</>

@@ -64,8 +64,9 @@ const LatencyData = ({ ...props }) => {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: true,
 			sortDescFirst: false,
 			sortUndefined: "last",
@@ -77,22 +78,7 @@ const LatencyData = ({ ...props }) => {
 			cell: ({ row }) => {
 				const ref = row.original.refType;
 
-				const commonClass = "border p-[5px] rounded-sm";
-				let refColor = commonClass + " bg-green-50 border-green-500 text-green-500";
-				if (ref.includes("BOOKING"))
-					refColor = commonClass + " bg-amber-50 border-amber-500 text-amber-500";
-				if (ref.includes("BILL"))
-					refColor = commonClass + " bg-orange-50 border-orange-500 text-orange-500";
-				if (ref.includes("CONTAINER"))
-					refColor = commonClass + " bg-green-50 border-green-500 text-green-500";
-				if (ref.includes("AWB"))
-					refColor = commonClass + " bg-blue-50 border-blue-500 text-blue-500";
-				if (ref.includes("IMPORT"))
-					refColor = commonClass + " bg-yellow-50 border-yellow-500 text-yellow-500";
-				if (ref.includes("EXPORT"))
-					refColor = commonClass + " bg-lime-50 border-lime-500 text-lime-500";
-
-				return <TableCellCustom className={refColor}>{ref}</TableCellCustom>;
+				return <TableCellCustom className="dashboard-data-tag">{ref}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
@@ -311,6 +297,7 @@ const LatencyData = ({ ...props }) => {
 		<TableDataStaticComponent
 			data={latencyQuery.data}
 			columns={columns}
+			preferenceKey={`latency-${props.params.mode}`}
 			defaultVisibleColumnIds={[
 				props.params.mode === "terminal" ? "terminal" : "carrier",
 				"ref-type",
