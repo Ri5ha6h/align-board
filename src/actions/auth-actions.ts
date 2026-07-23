@@ -15,9 +15,6 @@ import type { AuthType } from "@/utils/common-types";
 
 import { mainRequestAction } from "./main-actions";
 
-const TEST_USER_ALIAS_USERNAME = "testuser";
-const TEST_USER_ALIAS_PASSWORD = "user@test123";
-
 type GetUserResult = { data: SessionPayload; success: true } | { data: string; success: false };
 
 // auth actions
@@ -61,8 +58,12 @@ export const signUpAction = async ({ username, password }: AuthType) => {
 export const signInAction = async ({ username, password }: AuthType) => {
 	try {
 		const cookieStore = await cookies();
+		const testUserAliasUsername = process.env.TEST_USER_ALIAS_USERNAME;
+		const testUserAliasPassword = process.env.TEST_USER_ALIAS_PASSWORD;
 		const isTestUserAlias =
-			username === TEST_USER_ALIAS_USERNAME && password === TEST_USER_ALIAS_PASSWORD;
+			Boolean(testUserAliasUsername && testUserAliasPassword) &&
+			username === testUserAliasUsername &&
+			password === testUserAliasPassword;
 		let requestUsername = username;
 		let passwordToCompare = password;
 

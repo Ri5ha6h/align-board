@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@keyframes auth-route-flow {
+	to {
+		stroke-dashoffset: -180;
+	}
+}
+
 html,
 body {
 	margin: 0;
