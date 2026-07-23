@@ -1,5 +1,6 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -10,7 +11,7 @@ import { SESSION_ACTIVITY_STORAGE_KEY } from "@/lib/session-constants";
 
 import { Button } from "./ui/button";
 
-export const SignOutComponent = () => {
+export const SignOutComponent = ({ compact = false }: { compact?: boolean }) => {
 	const router = useRouter();
 	const [isSignOutPending, setIsSignOutPending] = useState(false);
 	const isSignOutPendingRef = useRef(false);
@@ -59,7 +60,8 @@ export const SignOutComponent = () => {
 
 	return (
 		<Button variant="ghost" disabled={isSignOutPending} onClick={handleSignOut}>
-			Sign Out
+			{compact ? <LogOut aria-hidden="true" /> : null}
+			<span>{isSignOutPending ? "Signing out..." : "Sign Out"}</span>
 		</Button>
 	);
 };

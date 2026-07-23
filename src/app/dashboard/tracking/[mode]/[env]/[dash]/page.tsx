@@ -18,7 +18,7 @@ const SlugPage = async ({ params }: DashPageProps) => {
 
 	return (
 		<>
-			<DashboardPage mode={param.mode} dash={param.dash} isAlignUser={isAlignUser} />
+			<DashboardPage dash={param.dash} isAlignUser={isAlignUser} />
 		</>
 	);
 };

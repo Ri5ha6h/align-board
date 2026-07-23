@@ -1,18 +1,30 @@
-import Footer from "@/components/footer";
-import Header from "@/components/header";
+import { DM_Mono, Manrope } from "next/font/google";
+
 import { SessionActivityController } from "@/components/session-activity-controller";
 
 export type DashboardProps = {
 	children: React.ReactNode;
 };
 
+const manrope = Manrope({
+	display: "swap",
+	subsets: ["latin"],
+	variable: "--font-dashboard-sans",
+	weight: ["400", "500", "600", "700"],
+});
+
+const dmMono = DM_Mono({
+	display: "swap",
+	subsets: ["latin"],
+	variable: "--font-dashboard-mono",
+	weight: ["400", "500"],
+});
+
 export default function DashboardLayout({ children }: Readonly<DashboardProps>) {
 	return (
-		<div className="flex h-full flex-col bg-primary text-primary-foreground">
+		<div className={`${manrope.variable} ${dmMono.variable} h-full`}>
 			<SessionActivityController />
-			<Header />
-			<main className="flex-1 overflow-auto p-4 sm:p-8">{children}</main>
-			<Footer />
+			{children}
 		</div>
 	);
 }

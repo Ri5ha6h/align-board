@@ -1,6 +1,12 @@
-import TrackingDashHeader from "@/components/tracking-dash-header";
-import TrackingEnvHeader from "@/components/tracking-env-header";
-import { cn } from "@/lib/utils";
+import { redirect } from "next/navigation";
+
+import {
+	dashboardPath,
+	isDashboardEnv,
+	isDashboardMode,
+	isDashboardView,
+} from "@/components/dashboard/dashboard-config";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
 interface EnvProps {
 	children: React.ReactNode;
@@ -13,11 +19,19 @@ interface EnvProps {
 
 export default async function DashLayout({ children, params }: EnvProps) {
 	const sendParam = await params;
+	if (!isDashboardMode(sendParam.mode) || !isDashboardEnv(sendParam.env)) {
+		redirect("/dashboard/tracking/ocean/prod/status");
+	}
+	if (!isDashboardView(sendParam.dash)) {
+		redirect(dashboardPath(sendParam.mode, sendParam.env, "status"));
+	}
+	if (sendParam.dash === "induced" && sendParam.mode !== "ocean") {
+		redirect(dashboardPath(sendParam.mode, sendParam.env, "status"));
+	}
+
 	return (
-		<div className={cn("flex h-full flex-col")}>
-			<TrackingEnvHeader params={sendParam} />
-			<TrackingDashHeader params={sendParam} />
-			<div className={cn("flex-1 py-10")}>{children}</div>
-		</div>
+		<DashboardShell env={sendParam.env} mode={sendParam.mode} view={sendParam.dash}>
+			{children}
+		</DashboardShell>
 	);
 }

@@ -7,33 +7,9 @@ import MainReferenceComponent from "@/components/tracking/reference/reference-co
 import MainStatusComponent from "@/components/tracking/status/status-component";
 import MainSummaryComponent from "@/components/tracking/summary/summary-component";
 
-const DashboardPage = ({
-	mode,
-	dash,
-	isAlignUser,
-}: {
-	mode: string;
-	dash: string;
-	isAlignUser: boolean;
-}) => {
-	if (
-		(mode === "air" ||
-			mode === "terminal" ||
-			mode === "road" ||
-			mode === "intermodal" ||
-			mode === "freight" ||
-			mode === "load") &&
-		dash === "induced"
-	) {
-		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-semibold">
-				Not available for AIR, TERMINAL, ROAD, INTERMODAL, FREIGHT, LOAD dashboards.
-			</div>
-		);
-	}
-
+const DashboardPage = ({ dash, isAlignUser }: { dash: string; isAlignUser: boolean }) => {
 	return (
-		<div className="h-full w-full rounded-md bg-white p-4 text-primary">
+		<div className="h-full w-full">
 			{dash === "status" ? (
 				<MainStatusComponent isAlignUser={isAlignUser} />
 			) : dash === "summary" ? (
@@ -41,7 +17,7 @@ const DashboardPage = ({
 			) : dash === "history" ? (
 				<MainHistoryComponent />
 			) : dash === "latency" ? (
-				<MainLatencyComponent mode={mode} />
+				<MainLatencyComponent />
 			) : dash === "references" ? (
 				<MainReferenceComponent />
 			) : dash === "induced" ? (
