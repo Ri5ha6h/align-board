@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -13,6 +14,7 @@ import { Button } from "./ui/button";
 
 export const SignOutComponent = ({ compact = false }: { compact?: boolean }) => {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [isSignOutPending, setIsSignOutPending] = useState(false);
 	const isSignOutPendingRef = useRef(false);
 
@@ -38,6 +40,7 @@ export const SignOutComponent = ({ compact = false }: { compact?: boolean }) => 
 			}
 
 			didSignOut = true;
+			queryClient.clear();
 			try {
 				localStorage.removeItem(SESSION_ACTIVITY_STORAGE_KEY);
 			} catch {

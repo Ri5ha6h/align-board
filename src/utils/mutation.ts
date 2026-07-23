@@ -42,6 +42,7 @@ export const useSignUpSubmitMutation = (form: any) => {
 // mutation for signIn
 export const useSignInSubmitMutation = (form: any) => {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const submit = useMutation({
 		mutationFn: async (data: AuthType) => await signInAction(data),
 		onSuccess: (data) => {
@@ -51,7 +52,9 @@ export const useSignInSubmitMutation = (form: any) => {
 				});
 			} else {
 				form.reset({ username: "", password: "" });
-				router.push("/dashboard");
+				queryClient.clear();
+				router.replace("/dashboard/tracking/ocean/prod/status");
+				router.refresh();
 				toast.success("Sign In Successful.");
 			}
 		},

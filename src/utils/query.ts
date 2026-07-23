@@ -1,6 +1,6 @@
 // dashboard queries
 
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { ReadonlyURLSearchParams } from "next/navigation";
 
 import { getFetchHistoryAction, getHistoryAction } from "@/actions/history-actions";
@@ -33,6 +33,39 @@ export const useStatusQuery = (status: string, params: ParamType) => {
 	return query;
 };
 
+export interface SummaryQueryInput {
+	carriers: string[];
+	endTime: string;
+	env: string;
+	mode: string;
+	queue: string;
+	startTime: string;
+}
+
+export const summaryQueryOptions = (input: SummaryQueryInput) =>
+	queryOptions({
+		queryKey: [
+			"summary",
+			input.mode,
+			input.env,
+			input.carriers,
+			input.queue,
+			input.startTime,
+			input.endTime,
+		],
+		queryFn: async () =>
+			await getSummaryAction({
+				env: input.env,
+				mode: input.mode,
+				carriers: input.carriers,
+				queue: input.queue,
+				startTime: input.startTime,
+				endTime: input.endTime,
+			}),
+		gcTime: 1000 * 60 * 30,
+		staleTime: 1000 * 60 * 30,
+	});
+
 // summary query
 export const useSummaryQuery = (
 	params: ParamType,
@@ -44,30 +77,16 @@ export const useSummaryQuery = (
 	const startTime = isAlignUser ? searchParams.get("from") || "" : "";
 	const endTime = isAlignUser ? searchParams.get("to") || "" : "";
 
-	const query = useQuery({
-		queryKey: [
-			"summary",
-			`${params.mode}`,
-			`${params.env}`,
-			newCarrOpt,
+	const query = useQuery(
+		summaryQueryOptions({
+			mode: params.mode,
+			env: params.env,
+			carriers: newCarrOpt,
 			queue,
 			startTime,
 			endTime,
-		],
-		queryFn: async () => {
-			const response = await getSummaryAction({
-				env: params.env,
-				mode: params.mode,
-				carriers: newCarrOpt,
-				queue: queue,
-				startTime: startTime,
-				endTime: endTime,
-			});
-			return response;
-		},
-		gcTime: 1000 * 60 * 30,
-		staleTime: 1000 * 60 * 30,
-	});
+		}),
+	);
 
 	return query;
 };
@@ -109,6 +128,7 @@ export const useHistoryFetchQuery = (
 	schedulerId: string,
 	subscriptionId: string,
 	resourceId: string,
+	enabled = true,
 ) => {
 	const query = useQuery({
 		queryKey: [
@@ -129,6 +149,7 @@ export const useHistoryFetchQuery = (
 		},
 		gcTime: 1000 * 60 * 60 * 24,
 		staleTime: 1000 * 60 * 60 * 24,
+		enabled,
 	});
 
 	return query;
@@ -196,7 +217,12 @@ export const useReferenceAllQuery = (params: ParamType, searchParams: any) => {
 };
 
 // reference info query
-export const useReferenceInfoQuery = (params: ParamType, searchParams: any, reference: string) => {
+export const useReferenceInfoQuery = (
+	params: ParamType,
+	searchParams: Pick<ReadonlyURLSearchParams, "get">,
+	reference: string,
+	enabled = true,
+) => {
 	const query = useQuery({
 		queryKey: [
 			"reference-info",
@@ -211,15 +237,16 @@ export const useReferenceInfoQuery = (params: ParamType, searchParams: any, refe
 			const response = await getReferenceInfoAction({
 				env: params.env,
 				mode: params.mode,
-				carrier: searchParams.get("carrier"),
-				referenceType: searchParams.get("refType"),
-				refStatus: searchParams.get("refStatus"),
+				carrier: searchParams.get("carrier") ?? "",
+				referenceType: searchParams.get("refType") ?? "",
+				refStatus: searchParams.get("refStatus") ?? "",
 				reference: reference,
 			});
 			return response;
 		},
 		gcTime: 1000 * 60 * 60,
 		staleTime: 1000 * 60 * 60,
+		enabled,
 	});
 
 	return query;

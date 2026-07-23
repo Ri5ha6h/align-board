@@ -63,6 +63,7 @@ import {
 } from "./dashboard-config";
 import { DashboardSkeleton } from "./dashboard-loading";
 import { DashboardRuntimeProvider, useDashboardRuntime } from "./dashboard-runtime";
+import { SummaryPrefetcher } from "./summary-prefetcher";
 
 interface DashboardShellProps {
 	children: React.ReactNode;
@@ -79,17 +80,20 @@ const QUERY_STATE_LABEL = {
 	error: "Query error",
 } as const;
 
+const NUMBER_FORMATTER = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+
 function sum<T>(rows: T[], select: (row: T) => number): number {
 	return rows.reduce<number>((total, row) => total + (Number(select(row)) || 0), 0);
 }
 
 function formatNumber(value: number) {
-	return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value);
+	return NUMBER_FORMATTER.format(value);
 }
 
 function getKpis(
 	view: DashboardView,
 	rows: unknown[],
+	searchParams: Pick<URLSearchParams, "get">,
 ): ReadonlyArray<readonly [string, string | number]> {
 	if (view === "status") {
 		const statusRows = rows as StatusColumnType[];
@@ -122,15 +126,19 @@ function getKpis(
 	}
 	if (view === "history") {
 		const historyRows = rows as HistoryType[];
-		const latency = historyRows
-			.map((row) => Number(row.v?.jtLatencyInMinutes))
-			.filter(Number.isFinite);
+		const latency: number[] = [];
+		for (const row of historyRows) {
+			const value = Number(row.v?.jtLatencyInMinutes);
+			if (Number.isFinite(value)) {
+				latency.push(value);
+			}
+		}
 		return [
 			["Total crawls", historyRows.length],
 			["Successful", historyRows.filter((row) => row.v?.crawl_status === "SUCCESS").length],
 			["Failed", historyRows.filter((row) => row.v?.crawl_status === "FAILED").length],
 			[
-				"Average JT latency",
+				"Average latency",
 				latency.length
 					? `${formatNumber(sum(latency, (value) => value) / latency.length)}m`
 					: "—",
@@ -139,21 +147,37 @@ function getKpis(
 	}
 	if (view === "references") {
 		const referenceRows = rows as ReferenceTableType[];
-		const carriers = new Set(referenceRows.map((row) => row.carrier).filter(Boolean));
+		const carriers = new Set<string>();
+		for (const row of referenceRows) {
+			if (row.carrier) {
+				carriers.add(row.carrier);
+			}
+		}
+		const selectedCarrier = searchParams.get("carrier") || searchParams.get("refCarrier") || "";
+		const selectedStatus = searchParams.get("refStatus")?.toUpperCase();
+		const hasRowStatus = referenceRows.some((row) => row.status);
 		return [
 			["Results", referenceRows.length],
-			["Unique carriers", carriers.size || "—"],
+			["Unique carriers", carriers.size || (selectedCarrier ? 1 : "—")],
 			[
 				"Active",
-				referenceRows.some((row) => row.status)
+				hasRowStatus
 					? referenceRows.filter((row) => row.status?.toUpperCase() === "ACTIVE").length
-					: "—",
+					: selectedStatus === "ACTIVE"
+						? referenceRows.length
+						: selectedStatus === "CLOSED"
+							? 0
+							: "—",
 			],
 			[
 				"Closed",
-				referenceRows.some((row) => row.status)
+				hasRowStatus
 					? referenceRows.filter((row) => row.status?.toUpperCase() === "CLOSED").length
-					: "—",
+					: selectedStatus === "CLOSED"
+						? referenceRows.length
+						: selectedStatus === "ACTIVE"
+							? 0
+							: "—",
 			],
 		] as const;
 	}
@@ -183,16 +207,22 @@ function getKpis(
 		] as const;
 	}
 	const inducedRows = rows as Array<InducedChartType & Record<string, unknown>>;
-	const values = inducedRows.flatMap((row) =>
-		Object.entries(row)
-			.filter(([key]) => key !== "date")
-			.map(([, value]) => Number(value))
-			.filter(Number.isFinite),
-	);
-	const latestValues = Object.entries(inducedRows.at(-1) ?? {})
-		.filter(([key]) => key !== "date")
-		.map(([, value]) => Number(value))
-		.filter(Number.isFinite);
+	const values: number[] = [];
+	for (const row of inducedRows) {
+		for (const [key, rawValue] of Object.entries(row)) {
+			const value = Number(rawValue);
+			if (key !== "date" && Number.isFinite(value)) {
+				values.push(value);
+			}
+		}
+	}
+	const latestValues: number[] = [];
+	for (const [key, rawValue] of Object.entries(inducedRows.at(-1) ?? {})) {
+		const value = Number(rawValue);
+		if (key !== "date" && Number.isFinite(value)) {
+			latestValues.push(value);
+		}
+	}
 	const latest = latestValues.length
 		? sum(latestValues, (value) => value) / latestValues.length
 		: undefined;
@@ -314,7 +344,10 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 	const [menuOpen, setMenuOpen] = React.useState(false);
 	const runtime = useDashboardRuntime();
 	const viewConfig = DASHBOARD_VIEW_CONFIG[view];
-	const kpis = React.useMemo(() => getKpis(view, runtime.data), [runtime.data, view]);
+	const kpis = React.useMemo(
+		() => getKpis(view, runtime.data, searchParams),
+		[runtime.data, searchParams, view],
+	);
 
 	const switchEnvironment = (nextEnv: DashboardEnv) => {
 		const query = searchParams.toString();
@@ -328,6 +361,14 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 
 	return (
 		<div className="dashboard-dispatch">
+			<SummaryPrefetcher
+				enabled={
+					mode === "ocean" &&
+					env === "prod" &&
+					view === "status" &&
+					!["loading", "waiting"].includes(runtime.phase)
+				}
+			/>
 			<header className="dashboard-topbar">
 				<div className="dashboard-brand">
 					<Sheet onOpenChange={setMenuOpen} open={menuOpen}>
@@ -388,7 +429,7 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 					<SelectTrigger aria-label="Tracking mode" className="dashboard-mode-select">
 						<SelectValue />
 					</SelectTrigger>
-					<SelectContent>
+					<SelectContent className="dashboard-select-content">
 						{DASHBOARD_MODES.map((item) => (
 							<SelectItem key={item} value={item}>
 								{item.toUpperCase()}

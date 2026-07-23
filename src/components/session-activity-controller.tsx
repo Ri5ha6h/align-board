@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 
@@ -35,6 +36,7 @@ const writeActivityState = (state: ActivityState) => {
 
 export const SessionActivityController = () => {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const stateRef = useRef<ActivityState>({ lastActivityAt: 0, lastRefreshAt: 0 });
 	const lastActivityWriteRef = useRef(0);
 	const isRefreshingRef = useRef(false);
@@ -61,6 +63,7 @@ export const SessionActivityController = () => {
 		} catch {
 			// Local expiry must complete even if server invalidation fails.
 		} finally {
+			queryClient.clear();
 			try {
 				localStorage.removeItem(SESSION_ACTIVITY_STORAGE_KEY);
 			} catch {
@@ -69,7 +72,7 @@ export const SessionActivityController = () => {
 			router.replace("/signin");
 			router.refresh();
 		}
-	}, [router]);
+	}, [queryClient, router]);
 
 	useEffect(() => {
 		const now = Date.now();

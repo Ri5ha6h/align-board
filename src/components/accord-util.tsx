@@ -56,16 +56,14 @@ export function IssueAccordion() {
 export function StatusAccordion() {
 	return (
 		<CommonAccordion>
-			<li>Initially current status and status history will be fetched automatically.</li>
-			<li>In case there is a issue with any carrier. You can create a new status.</li>
+			<li>Current status and status history load automatically.</li>
+			<li>Use More Details to inspect the complete carrier notice.</li>
 			<li>
-				The data will cached for sometime. In case you want latest data hit the refresh
-				button.
+				Results are cached briefly. Use Refresh when you need the latest available notices.
 			</li>
 			<li>
-				Upon creating, updating, closing, and deleting the status, if the process is
-				successful the latest data will be fetched automatically in the background and will
-				be shown on the page.
+				Create, Edit, Close, and Delete are visible for authorized Align users but are
+				currently unavailable.
 			</li>
 		</CommonAccordion>
 	);
