@@ -15,6 +15,11 @@ import {
 } from "@tanstack/react-table";
 import * as React from "react";
 
+import {
+	DashboardColumnControls,
+	DashboardMobileCards,
+	getInitialColumnVisibility,
+} from "@/components/dashboard/dashboard-table-tools";
 import MultipleSelector from "@/components/multi-select";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +47,9 @@ declare module "@tanstack/react-table" {
 export function TableDataStaticStateComponent({ ...props }) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() =>
+		getInitialColumnVisibility(props.columns, props.defaultVisibleColumnIds),
+	);
 	const [rowSelection, setRowSelection] = React.useState({});
 	const [pagination, setPagination] = React.useState<PaginationState>({
 		pageIndex: 0,
@@ -123,6 +130,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 				<div className="flex-1 text-sm text-muted-foreground">
 					Total Items: {data.length}
 				</div>
+				<DashboardColumnControls table={table} />
 				<div>
 					<MultiSelectPage
 						table={table}
@@ -153,7 +161,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 					</Button>
 				</div>
 			</div>
-			<div className="rounded-md border">
+			<div className="dashboard-desktop-table overflow-x-auto rounded-[2px] border">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -234,6 +242,7 @@ export function TableDataStaticStateComponent({ ...props }) {
 					</TableBody>
 				</Table>
 			</div>
+			<DashboardMobileCards table={table} />
 			<div className="flex items-center justify-end space-x-2 py-4">
 				<div className="flex-1 text-sm text-muted-foreground">
 					Total Items: {data.length}
@@ -268,7 +277,9 @@ export function TableDataStaticStateComponent({ ...props }) {
 export function TableDataStaticComponent({ ...props }) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() =>
+		getInitialColumnVisibility(props.columns, props.defaultVisibleColumnIds),
+	);
 	const [rowSelection, setRowSelection] = React.useState({});
 	const [pagination, setPagination] = React.useState<PaginationState>({
 		pageIndex: 0,
@@ -314,6 +325,7 @@ export function TableDataStaticComponent({ ...props }) {
 				<div className="flex-1 text-sm text-muted-foreground">
 					Total Items: {data.length}
 				</div>
+				<DashboardColumnControls table={table} />
 				<div>
 					<MultiSelectPage
 						table={table}
@@ -344,7 +356,7 @@ export function TableDataStaticComponent({ ...props }) {
 					</Button>
 				</div>
 			</div>
-			<div className="rounded-md border">
+			<div className="dashboard-desktop-table overflow-x-auto rounded-[2px] border">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -425,6 +437,7 @@ export function TableDataStaticComponent({ ...props }) {
 					</TableBody>
 				</Table>
 			</div>
+			<DashboardMobileCards table={table} />
 			<div className="flex items-center justify-end space-x-2 py-4">
 				<div className="flex-1 text-sm text-muted-foreground">
 					Total Items: {data.length}

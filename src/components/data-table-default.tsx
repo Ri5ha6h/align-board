@@ -16,6 +16,11 @@ import {
 import * as React from "react";
 
 import {
+	DashboardColumnControls,
+	DashboardMobileCards,
+	getInitialColumnVisibility,
+} from "@/components/dashboard/dashboard-table-tools";
+import {
 	Table,
 	TableBody,
 	TableCell,
@@ -38,7 +43,9 @@ declare module "@tanstack/react-table" {
 export function TableDataDefaultComponent({ ...props }) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() =>
+		getInitialColumnVisibility(props.columns, props.defaultVisibleColumnIds),
+	);
 	const [rowSelection, setRowSelection] = React.useState({});
 	const [pagination, setPagination] = React.useState<PaginationState>({
 		pageIndex: 0,
@@ -78,7 +85,10 @@ export function TableDataDefaultComponent({ ...props }) {
 
 	return (
 		<div className="mt-6 w-full">
-			<div className="rounded-md border">
+			<div className="mb-3 flex justify-end">
+				<DashboardColumnControls table={table} />
+			</div>
+			<div className="dashboard-desktop-table overflow-x-auto rounded-[2px] border">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -132,6 +142,7 @@ export function TableDataDefaultComponent({ ...props }) {
 					</TableBody>
 				</Table>
 			</div>
+			<DashboardMobileCards table={table} />
 		</div>
 	);
 }
