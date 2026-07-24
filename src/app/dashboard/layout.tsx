@@ -1,5 +1,6 @@
 import { DM_Mono, Manrope } from "next/font/google";
 
+import { LogoutCoordinator } from "@/components/logout-coordinator";
 import { SessionActivityController } from "@/components/session-activity-controller";
 
 export type DashboardProps = {
@@ -23,8 +24,10 @@ const dmMono = DM_Mono({
 export default function DashboardLayout({ children }: Readonly<DashboardProps>) {
 	return (
 		<div className={`${manrope.variable} ${dmMono.variable} h-full`}>
-			<SessionActivityController />
-			{children}
+			<LogoutCoordinator>
+				<SessionActivityController />
+				{children}
+			</LogoutCoordinator>
 		</div>
 	);
 }

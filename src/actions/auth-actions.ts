@@ -4,7 +4,6 @@ import bcryptjs from "bcryptjs";
 import { cookies } from "next/headers";
 
 import {
-	clearSessionCookie,
 	createSessionToken,
 	setSessionCookie,
 	verifySessionToken,
@@ -139,46 +138,6 @@ export const getUserAction = async (): Promise<GetUserResult> => {
 	} catch {
 		return {
 			data: "User not found.",
-			success: false,
-		};
-	}
-};
-
-// refresh session action
-export const refreshSessionAction = async () => {
-	const cookieStore = await cookies();
-	const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
-	if (!token) {
-		return { data: "Session expired.", success: false };
-	}
-
-	let session: SessionPayload;
-	try {
-		session = await verifySessionToken(token);
-	} catch {
-		return { data: "Session expired.", success: false };
-	}
-
-	const refreshedToken = await createSessionToken(session);
-	setSessionCookie(cookieStore, refreshedToken);
-
-	return { data: "Session refreshed.", success: true };
-};
-
-// sign out action
-export const signOutAction = async () => {
-	try {
-		const cookieStore = await cookies();
-		// delete cookie
-		clearSessionCookie(cookieStore);
-		return {
-			data: "Sign out Successful.",
-			success: true,
-		};
-	} catch (error: unknown) {
-		return {
-			data: getErrorMessage(error),
 			success: false,
 		};
 	}

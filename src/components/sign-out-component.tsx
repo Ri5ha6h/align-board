@@ -1,66 +1,18 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
 
-import { signOutAction } from "@/actions/auth-actions";
-import { prepareSessionLogout } from "@/lib/session-activity-client";
-import { SESSION_ACTIVITY_STORAGE_KEY } from "@/lib/session-constants";
+import { useLogoutCoordinator } from "@/components/logout-coordinator";
 
 import { Button } from "./ui/button";
 
 export const SignOutComponent = ({ compact = false }: { compact?: boolean }) => {
-	const router = useRouter();
-	const queryClient = useQueryClient();
-	const [isSignOutPending, setIsSignOutPending] = useState(false);
-	const isSignOutPendingRef = useRef(false);
-
-	const handleSignOut = async () => {
-		if (isSignOutPendingRef.current) {
-			return;
-		}
-
-		isSignOutPendingRef.current = true;
-		setIsSignOutPending(true);
-		let resumeSessionActivity: () => void = () => undefined;
-		try {
-			resumeSessionActivity = await prepareSessionLogout();
-			const result = await signOutAction();
-
-			if (!result.success) {
-				resumeSessionActivity();
-				toast.error("Uh oh! Something went wrong, Sign out failed.", {
-					description: result.data,
-				});
-				return;
-			}
-
-			queryClient.clear();
-			try {
-				localStorage.removeItem(SESSION_ACTIVITY_STORAGE_KEY);
-			} catch {
-				// Continue redirecting when browser storage is unavailable.
-			}
-
-			router.replace("/signin");
-			router.refresh();
-			toast.success("Sign out successful");
-		} catch {
-			resumeSessionActivity();
-			toast.error("Uh oh! Something went wrong, Sign out failed.");
-		} finally {
-			isSignOutPendingRef.current = false;
-			setIsSignOutPending(false);
-		}
-	};
+	const { beginLogout } = useLogoutCoordinator();
 
 	return (
-		<Button variant="ghost" disabled={isSignOutPending} onClick={handleSignOut}>
+		<Button aria-label="Sign Out" variant="ghost" onClick={() => beginLogout("manual")}>
 			{compact ? <LogOut aria-hidden="true" /> : null}
-			<span>{isSignOutPending ? "Signing out..." : "Sign Out"}</span>
+			<span>Sign Out</span>
 		</Button>
 	);
 };

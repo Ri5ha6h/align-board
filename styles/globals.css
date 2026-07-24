@@ -1192,6 +1192,91 @@ thead .dashboard-sticky-column {
 	flex: 1;
 }
 
+.dashboard-status-detail-scroll {
+	padding-top: 18px;
+}
+
+.dashboard-status-detail-fields {
+	display: grid;
+	gap: 16px;
+	padding: 1px 2px 22px 1px;
+}
+
+.dashboard-status-detail-field {
+	display: grid;
+	gap: 7px;
+}
+
+.dashboard-status-detail-field > label {
+	color: var(--dashboard-mist);
+	font-family: var(--font-dashboard-mono), monospace;
+	font-size: 9px;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.dashboard-status-detail-field input,
+.dashboard-status-detail-field textarea {
+	border-color: var(--dashboard-line);
+	border-radius: 2px;
+	background: var(--dashboard-ink);
+	color: var(--dashboard-white);
+	font-family: var(--font-dashboard-mono), monospace;
+	font-size: 11px;
+	line-height: 1.55;
+}
+
+.dashboard-status-detail-field input {
+	height: 40px;
+}
+
+.dashboard-status-detail-field textarea {
+	min-height: 132px;
+	resize: vertical;
+}
+
+.dashboard-status-detail-field input:focus-visible,
+.dashboard-status-detail-field textarea:focus-visible {
+	border-color: var(--dashboard-white);
+	box-shadow: 0 0 0 1px var(--dashboard-white);
+}
+
+.dashboard-status-detail-links {
+	display: grid;
+	gap: 1px;
+	border: 1px solid var(--dashboard-line);
+	background: var(--dashboard-line);
+}
+
+.dashboard-status-detail-links li {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 9px;
+	padding: 11px 12px;
+	background: var(--dashboard-ink);
+	color: var(--dashboard-mist);
+	font-family: var(--font-dashboard-mono), monospace;
+	font-size: 10px;
+}
+
+.dashboard-status-detail-links a {
+	overflow-wrap: anywhere;
+	color: var(--dashboard-white);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.dashboard-status-detail-links a:hover {
+	color: var(--dashboard-mist);
+}
+
+.dashboard-status-detail-links a:focus-visible {
+	border-radius: 1px;
+	outline: 2px solid var(--dashboard-white);
+	outline-offset: 3px;
+}
+
 .dashboard-detail-updating {
 	display: flex;
 	align-items: center;
@@ -1411,6 +1496,99 @@ thead .dashboard-sticky-column {
 	padding: 4px 16px;
 }
 
+.dashboard-logout-quarantine {
+	--dashboard-night: #202023;
+	--dashboard-ink: #2d2d31;
+	--dashboard-line: #444449;
+	--dashboard-mist: #a1a1aa;
+	--dashboard-white: #fafafa;
+	position: fixed;
+	z-index: 100;
+	inset: 0;
+	display: grid;
+	min-height: 100dvh;
+	place-items: center;
+	padding: 24px;
+	background:
+		linear-gradient(rgb(68 68 73 / 20%) 1px, transparent 1px),
+		linear-gradient(90deg, rgb(68 68 73 / 20%) 1px, transparent 1px), var(--dashboard-night);
+	background-size: 32px 32px;
+	color: var(--dashboard-white);
+	font-family: var(--font-dashboard-sans), sans-serif;
+}
+
+.dashboard-logout-card {
+	display: flex;
+	width: min(100%, 420px);
+	align-items: center;
+	flex-direction: column;
+	padding: 38px 32px;
+	border: 1px solid var(--dashboard-line);
+	background: var(--dashboard-night);
+	box-shadow: 0 24px 80px rgb(0 0 0 / 36%);
+	text-align: center;
+}
+
+.dashboard-logout-card > svg {
+	width: 22px;
+	height: 22px;
+	margin-bottom: 18px;
+	color: var(--dashboard-mist);
+}
+
+.dashboard-logout-card .dashboard-eyebrow {
+	margin: 0 0 10px;
+}
+
+.dashboard-logout-card h1 {
+	color: var(--dashboard-white);
+	font-size: 24px;
+	font-weight: 600;
+	letter-spacing: -0.025em;
+}
+
+.dashboard-logout-card h1 + p {
+	max-width: 330px;
+	margin-top: 9px;
+	color: var(--dashboard-mist);
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.dashboard-logout-spinner {
+	animation: dashboard-spin 1s linear infinite;
+}
+
+.dashboard-logout-actions {
+	display: flex;
+	width: 100%;
+	gap: 8px;
+	margin-top: 24px;
+}
+
+.dashboard-logout-actions button {
+	min-width: 0;
+	flex: 1;
+	border-color: var(--dashboard-line);
+	border-radius: 2px;
+	background: var(--dashboard-white);
+	color: var(--dashboard-night);
+	font-family: var(--font-dashboard-mono), monospace;
+	font-size: 9px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.dashboard-logout-actions .dashboard-logout-return {
+	background: var(--dashboard-ink);
+	color: var(--dashboard-white);
+}
+
+.dashboard-logout-actions button:focus-visible {
+	outline: 2px solid var(--dashboard-white);
+	outline-offset: 2px;
+}
+
 .dashboard-menu-button {
 	display: none;
 	color: var(--dashboard-white);
@@ -1595,7 +1773,8 @@ thead .dashboard-sticky-column {
 	.dashboard-dispatch *::before,
 	.dashboard-dispatch *::after,
 	.dashboard-dialog *,
-	.dashboard-sheet * {
+	.dashboard-sheet *,
+	.dashboard-logout-quarantine * {
 		scroll-behavior: auto !important;
 		transition-duration: 0.01ms !important;
 		animation-duration: 0.01ms !important;

@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 
 import { DASHBOARD_MODES } from "@/components/dashboard/dashboard-config";
+import { SESSION_LOGOUT_EVENT } from "@/lib/session-constants";
 import { summaryQueryOptions } from "@/utils/query";
 
 interface SummaryPrefetcherProps {
@@ -28,6 +29,10 @@ export function SummaryPrefetcher({ enabled }: SummaryPrefetcherProps) {
 		startedRef.current = true;
 		let cancelled = false;
 		const idleWindow = window as IdleWindow;
+		const cancelWarmup = () => {
+			cancelled = true;
+		};
+		window.addEventListener(SESSION_LOGOUT_EVENT, cancelWarmup);
 
 		const warmSummaries = async () => {
 			let modeIndex = 0;
@@ -60,13 +65,16 @@ export function SummaryPrefetcher({ enabled }: SummaryPrefetcherProps) {
 		};
 
 		const start = () => {
-			void warmSummaries();
+			if (!cancelled) {
+				void warmSummaries();
+			}
 		};
 		const idleHandle = idleWindow.requestIdleCallback?.(start);
 		const timeoutHandle = idleHandle === undefined ? window.setTimeout(start, 0) : undefined;
 
 		return () => {
 			cancelled = true;
+			window.removeEventListener(SESSION_LOGOUT_EVENT, cancelWarmup);
 			if (idleHandle !== undefined) {
 				idleWindow.cancelIdleCallback?.(idleHandle);
 			}

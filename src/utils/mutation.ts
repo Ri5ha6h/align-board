@@ -10,6 +10,7 @@ import {
 	createUpdateStatusAction,
 	deleteStatusAction,
 } from "@/actions/status-summary-actions";
+import { isSessionLogoutQuarantined } from "@/lib/session-logout-client";
 import { getErrorMessage } from "@/utils/action-result";
 
 import type { AuthType, ParamType, StatusValueInternal } from "./common-types";
@@ -99,6 +100,9 @@ export const useStatusCUMutation = (
 				statusKey: statusKey,
 			}),
 		onSuccess: async (data) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			if (!data.success) {
 				toast.error("Uh oh! Something went wrong.", {
 					description: data.data,
@@ -132,6 +136,9 @@ export const useStatusCUMutation = (
 			}
 		},
 		onError: (error: unknown) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			toast.error("Uh oh! Something went wrong.", {
 				description: getErrorMessage(error),
 			});
@@ -158,6 +165,9 @@ export const useCloseStatusMutation = (
 				statusKey: d.statusKey,
 			}),
 		onSuccess: async (data) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			if (!data.success) {
 				toast.error("Uh oh! Something went wrong.", {
 					description: data.data,
@@ -172,6 +182,9 @@ export const useCloseStatusMutation = (
 			}
 		},
 		onError: (error: unknown) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			toast.error("Uh oh! Something went wrong.", {
 				description: getErrorMessage(error),
 			});
@@ -199,6 +212,9 @@ export const useDeleteStatusMutation = (
 				statusKey: statusKey,
 			}),
 		onSuccess: async (data) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			if (!data.success) {
 				toast.error("Uh oh! Something went wrong.", {
 					description: data.data,
@@ -213,6 +229,9 @@ export const useDeleteStatusMutation = (
 			}
 		},
 		onError: (error: unknown) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			toast.error("Uh oh! Something went wrong.", {
 				description: getErrorMessage(error),
 			});
