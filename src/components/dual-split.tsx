@@ -12,7 +12,7 @@ DualSplit.displayName = "DualSplit";
 const DualSplitTitle = React.forwardRef<
 	HTMLParagraphElement,
 	React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
+>(({ children, className, ...props }, ref) => (
 	<h3
 		ref={ref}
 		className={cn(
@@ -20,7 +20,9 @@ const DualSplitTitle = React.forwardRef<
 			className,
 		)}
 		{...props}
-	/>
+	>
+		{children}
+	</h3>
 ));
 DualSplitTitle.displayName = "DualSplitTitle";
 

@@ -6,8 +6,9 @@ import { useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
+const ENVIRONMENTS = ["PROD", "DEV"] as const;
+
 const TrackingEnvHeader = ({ params }: { params: { mode: string; env: string; dash: string } }) => {
-	const row1 = ["PROD", "DEV"];
 	const searchParams = useSearchParams();
 
 	return (
@@ -20,7 +21,7 @@ const TrackingEnvHeader = ({ params }: { params: { mode: string; env: string; da
 					<p className="text-lg tracking-wider">ENV </p>
 					<Tabs value={params.env}>
 						<TabsList className={cn("ml-2 flex h-10 w-[150px] justify-around")}>
-							{row1.map((tab) => (
+							{ENVIRONMENTS.map((tab) => (
 								<Link
 									key={tab}
 									href={`/dashboard/tracking/${params.mode}/${tab.toLowerCase()}/${

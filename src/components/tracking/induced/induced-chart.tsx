@@ -8,38 +8,40 @@ import {
 	DashboardWaitingState,
 	useDashboardQueryReport,
 } from "@/components/dashboard/dashboard-runtime";
-import ChartComponent from "@/components/data-chart";
+import ChartComponent, { type ChartDatum } from "@/components/data-chart";
 import type { ParamType } from "@/utils/common-types";
+import { getYearList } from "@/utils/default-data/default-data";
 import { useInducedQuery } from "@/utils/query";
+
+interface InducedDataProps {
+	carriers: string[];
+	params: ParamType;
+	year: string;
+}
 
 export function InducedChart() {
 	const params = useParams<ParamType>();
 	const searchParams = useSearchParams();
-
-	const queryCarriers = React.useMemo(
-		() => (searchParams.get("carriers") ? searchParams.get("carriers")?.split(",") : []),
+	const carriers = React.useMemo(
+		() => (searchParams.get("carriers") ?? "").split(",").filter(Boolean),
 		[searchParams],
 	);
 
-	const newCarrOpt: string[] = [];
-
-	if (queryCarriers !== undefined && queryCarriers.length > 0) {
-		queryCarriers.map((carrier) => {
-			if (carrier) {
-				newCarrOpt.push(carrier);
-			}
-		});
-	}
-
-	if (!searchParams.get("carriers")) {
+	if (carriers.length === 0) {
 		return <DashboardWaitingState>Select a carrier to view chart.</DashboardWaitingState>;
 	}
 
-	return <InducedData params={params} carriers={newCarrOpt} year={searchParams.get("year")} />;
+	return (
+		<InducedData
+			carriers={carriers}
+			params={params}
+			year={searchParams.get("year") ?? getYearList()[0]?.value ?? ""}
+		/>
+	);
 }
 
-const InducedData = ({ ...props }) => {
-	const inducedQuery = useInducedQuery(props.params, props.carriers, props.year);
+function InducedData({ carriers, params, year }: InducedDataProps) {
+	const inducedQuery = useInducedQuery(params, carriers, year);
 	useDashboardQueryReport({
 		data: inducedQuery.data,
 		error: inducedQuery.error,
@@ -48,9 +50,7 @@ const InducedData = ({ ...props }) => {
 		success: inducedQuery.data?.success,
 	});
 
-	if (inducedQuery.isPending) {
-		return <DashboardTableSkeleton />;
-	}
+	if (inducedQuery.isPending) return <DashboardTableSkeleton />;
 
 	if (inducedQuery.isError || inducedQuery.error) {
 		return (
@@ -60,17 +60,14 @@ const InducedData = ({ ...props }) => {
 		);
 	}
 
-	if (inducedQuery.data && !inducedQuery.data?.success) {
+	if (inducedQuery.data && !inducedQuery.data.success) {
 		return (
 			<div className="mt-10 flex h-full flex-col items-center justify-center">
-				<p className="text-red-500">{inducedQuery.data?.data}</p>
+				<p className="text-red-500">{String(inducedQuery.data.data)}</p>
 			</div>
 		);
 	}
 
-	return <ChartDataTwo data={inducedQuery.data} carriers={props.carriers} />;
-};
-
-const ChartDataTwo = ({ ...props }) => {
-	return <ChartComponent chartData={props.data?.data} carriers={props.carriers} />;
-};
+	const data = (inducedQuery.data?.data ?? []) as ChartDatum[];
+	return <ChartComponent carriers={carriers} chartData={data} />;
+}

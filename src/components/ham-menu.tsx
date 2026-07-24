@@ -13,40 +13,22 @@ import {
 
 import { Button } from "./ui/button";
 
+interface TrackingLink {
+	path: string;
+	title: string;
+}
+
+const TRACKING_COMPONENTS: TrackingLink[] = [
+	{ title: "Ocean Dashboard", path: "/dashboard/tracking/ocean/prod/status" },
+	{ title: "Air Dashboard", path: "/dashboard/tracking/air/prod/status" },
+	{ title: "Terminal Dashboard", path: "/dashboard/tracking/terminal/prod/status" },
+	{ title: "Road Dashboard", path: "/dashboard/tracking/road/prod/status" },
+	{ title: "Intermodal Dashboard", path: "/dashboard/tracking/intermodal/prod/status" },
+	{ title: "Freight Dashboard", path: "/dashboard/tracking/freight/prod/status" },
+	{ title: "Load Dashboard", path: "/dashboard/tracking/load/prod/status" },
+];
+
 export function HamburgerMenuComponent() {
-	const trackingComponents: {
-		title: string;
-		path: string;
-	}[] = [
-		{
-			title: "Ocean Dashboard",
-			path: "/dashboard/tracking/ocean/prod/status",
-		},
-		{
-			title: "Air Dashboard",
-			path: "/dashboard/tracking/air/prod/status",
-		},
-		{
-			title: "Terminal Dashboard",
-			path: "/dashboard/tracking/terminal/prod/status",
-		},
-		{
-			title: "Road Dashboard",
-			path: "/dashboard/tracking/road/prod/status",
-		},
-		{
-			title: "Intermodal Dashboard",
-			path: "/dashboard/tracking/intermodal/prod/status",
-		},
-		{
-			title: "Freight Dashboard",
-			path: "/dashboard/tracking/freight/prod/status",
-		},
-		{
-			title: "Load Dashboard",
-			path: "/dashboard/tracking/load/prod/status",
-		},
-	];
 	return (
 		<Sheet>
 			<SheetTrigger asChild>
@@ -63,7 +45,7 @@ export function HamburgerMenuComponent() {
 				</SheetHeader>
 				<div className="mt-5">
 					<nav className="flex flex-col items-start justify-center gap-6 text-lg font-medium">
-						<PopoverMenu components={trackingComponents} />
+						<PopoverMenu components={TRACKING_COMPONENTS} />
 					</nav>
 				</div>
 			</SheetContent>
@@ -71,7 +53,7 @@ export function HamburgerMenuComponent() {
 	);
 }
 
-function PopoverMenu({ ...props }) {
+function PopoverMenu({ components }: { components: TrackingLink[] }) {
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
@@ -81,7 +63,7 @@ function PopoverMenu({ ...props }) {
 			</PopoverTrigger>
 			<PopoverContent className="w-56" side="right">
 				<ul className="flex flex-col gap-5 p-1">
-					{props.components.map((component: any) => (
+					{components.map((component) => (
 						<li key={component.title}>
 							<SheetClose asChild>
 								<Link
