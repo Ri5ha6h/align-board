@@ -51,9 +51,7 @@ function HistoryDetailContent({
 	schedulerId,
 	subscriptionId,
 }: HistoryDrawerProps & { enabled: boolean }) {
-	const resourceId = rawResourceId.includes("customfunction")
-		? rawResourceId.replace("customfunction", "custom function")
-		: rawResourceId;
+	const resourceId = rawResourceId === "customfunction" ? "custom function" : rawResourceId;
 	const query = useHistoryFetchQuery(params, schedulerId, subscriptionId, resourceId, enabled);
 	const responseError =
 		query.error?.message || (query.data && !query.data.success ? String(query.data.data) : "");

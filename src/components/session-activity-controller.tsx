@@ -121,9 +121,11 @@ export const SessionActivityController = () => {
 					expireSession();
 				}
 			} catch (error: unknown) {
-				if (!(error instanceof DOMException && error.name === "AbortError")) {
-					expireSession();
+				if (error instanceof DOMException && error.name === "AbortError") {
+					return;
 				}
+				// A transport failure does not prove that the authenticated session is invalid.
+				// Keep the current session so a later activity check can retry the refresh.
 			} finally {
 				if (refreshControllerRef.current === controller) {
 					refreshControllerRef.current = null;

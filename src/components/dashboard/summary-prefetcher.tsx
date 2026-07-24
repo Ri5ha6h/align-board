@@ -20,9 +20,10 @@ type IdleWindow = Window &
 export function SummaryPrefetcher({ enabled }: SummaryPrefetcherProps) {
 	const queryClient = useQueryClient();
 	const startedRef = React.useRef(false);
+	const completedRef = React.useRef(false);
 
 	React.useEffect(() => {
-		if (!enabled || startedRef.current) {
+		if (!enabled || completedRef.current || startedRef.current) {
 			return;
 		}
 
@@ -62,6 +63,9 @@ export function SummaryPrefetcher({ enabled }: SummaryPrefetcherProps) {
 			};
 
 			await Promise.all([worker(), worker()]);
+			if (!cancelled) {
+				completedRef.current = true;
+			}
 		};
 
 		const start = () => {
@@ -74,6 +78,7 @@ export function SummaryPrefetcher({ enabled }: SummaryPrefetcherProps) {
 
 		return () => {
 			cancelled = true;
+			startedRef.current = false;
 			window.removeEventListener(SESSION_LOGOUT_EVENT, cancelWarmup);
 			if (idleHandle !== undefined) {
 				idleWindow.cancelIdleCallback?.(idleHandle);

@@ -13,19 +13,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
-const CartesianGrid = dynamic(() => import("recharts").then((module) => module.CartesianGrid));
-const Line = dynamic(() => import("recharts").then((module) => module.Line));
-const LineChart = dynamic(() => import("recharts").then((module) => module.LineChart), {
-	ssr: false,
-});
-const ResponsiveContainer = dynamic(
-	() => import("recharts").then((module) => module.ResponsiveContainer),
-	{ ssr: false },
-);
-const Tooltip = dynamic(() => import("recharts").then((module) => module.Tooltip));
-const XAxis = dynamic(() => import("recharts").then((module) => module.XAxis));
-const YAxis = dynamic(() => import("recharts").then((module) => module.YAxis));
-
 const SERIES_STYLES = [
 	{ color: "#fafafa", dash: undefined },
 	{ color: "#d4d4d8", dash: "8 4" },
@@ -52,10 +39,132 @@ interface ChartComponentProps {
 	chartData: ChartDatum[];
 }
 
+interface ChartCanvasProps {
+	carriers: string[];
+	filteredData: ChartDatum[];
+	focusedCarrier: string | null;
+	hiddenCarriers: ReadonlySet<string>;
+}
+
 function formatChartDate(value: unknown, formatter: Intl.DateTimeFormat) {
 	const date = new Date(String(value));
 	return Number.isNaN(date.getTime()) ? "Unknown date" : formatter.format(date);
 }
+
+const ChartCanvas = dynamic<ChartCanvasProps>(
+	() =>
+		import("recharts").then(
+			({ CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis }) => {
+				return function InducedLatencyChart({
+					carriers,
+					filteredData,
+					focusedCarrier,
+					hiddenCarriers,
+				}: ChartCanvasProps) {
+					return (
+						<figure
+							aria-label="Induced latency trends by carrier"
+							className="aspect-auto h-[280px] w-full"
+						>
+							<ResponsiveContainer height="100%" width="100%">
+								<LineChart
+									accessibilityLayer
+									data={filteredData}
+									margin={{ left: 12, right: 12 }}
+								>
+									<CartesianGrid stroke="#444449" vertical={false} />
+									<XAxis
+										axisLine={false}
+										dataKey="date"
+										stroke="#a1a1aa"
+										tickFormatter={(value) =>
+											formatChartDate(value, SHORT_DATE_FORMATTER)
+										}
+										tickLine={false}
+									/>
+									<YAxis
+										axisLine={false}
+										stroke="#a1a1aa"
+										tickFormatter={(value) => `${value}h`}
+										tickLine={false}
+									/>
+									<Tooltip
+										content={({ active, label, payload }) =>
+											active && payload?.length ? (
+												<div className="dashboard-chart-tooltip grid w-[210px] gap-2 border p-3">
+													<strong>
+														{formatChartDate(
+															label,
+															LONG_DATE_FORMATTER,
+														)}
+													</strong>
+													{payload.map((item) => (
+														<div
+															className="dashboard-chart-tooltip-row"
+															key={String(item.dataKey ?? item.name)}
+														>
+															<span
+																aria-hidden="true"
+																className="dashboard-chart-tooltip-swatch"
+																style={{
+																	backgroundColor: item.color,
+																}}
+															/>
+															<span>{String(item.name)}</span>
+															<strong>
+																{Number(item.value).toLocaleString(
+																	"en-US",
+																)}{" "}
+																h
+															</strong>
+														</div>
+													))}
+												</div>
+											) : null
+										}
+									/>
+									{carriers.map((carrier, index) => {
+										if (hiddenCarriers.has(carrier)) return null;
+										const style = SERIES_STYLES[index % SERIES_STYLES.length];
+										const isDimmed =
+											focusedCarrier !== null && focusedCarrier !== carrier;
+										return (
+											<Line
+												activeDot={{
+													r: 5,
+													stroke: "#202023",
+													strokeWidth: 2,
+												}}
+												dataKey={carrier}
+												dot={{
+													fill: "#202023",
+													r: 3,
+													stroke: style.color,
+													strokeWidth: 2,
+												}}
+												isAnimationActive={false}
+												key={carrier}
+												opacity={isDimmed ? 0.22 : 1}
+												stroke={style.color}
+												strokeDasharray={style.dash}
+												strokeLinecap="round"
+												strokeWidth={focusedCarrier === carrier ? 3.5 : 2.5}
+												type="monotone"
+											/>
+										);
+									})}
+								</LineChart>
+							</ResponsiveContainer>
+						</figure>
+					);
+				};
+			},
+		),
+	{
+		loading: () => <div className="dashboard-shimmer h-[280px] w-full" />,
+		ssr: false,
+	},
+);
 
 export default function ChartComponent({ carriers, chartData }: ChartComponentProps) {
 	const [timeRange, setTimeRange] = React.useState("7d");
@@ -107,89 +216,12 @@ export default function ChartComponent({ carriers, chartData }: ChartComponentPr
 				</Select>
 			</CardHeader>
 			<CardContent className="p-4">
-				<figure
-					aria-label="Induced latency trends by carrier"
-					className="aspect-auto h-[280px] w-full"
-				>
-					<ResponsiveContainer height="100%" width="100%">
-						<LineChart
-							accessibilityLayer
-							data={filteredData}
-							margin={{ left: 12, right: 12 }}
-						>
-							<CartesianGrid stroke="#444449" vertical={false} />
-							<XAxis
-								axisLine={false}
-								dataKey="date"
-								stroke="#a1a1aa"
-								tickFormatter={(value) =>
-									formatChartDate(value, SHORT_DATE_FORMATTER)
-								}
-								tickLine={false}
-							/>
-							<YAxis
-								axisLine={false}
-								stroke="#a1a1aa"
-								tickFormatter={(value) => `${value}h`}
-								tickLine={false}
-							/>
-							<Tooltip
-								content={({ active, label, payload }) =>
-									active && payload?.length ? (
-										<div className="dashboard-chart-tooltip grid w-[210px] gap-2 border p-3">
-											<strong>
-												{formatChartDate(label, LONG_DATE_FORMATTER)}
-											</strong>
-											{payload.map((item) => (
-												<div
-													className="dashboard-chart-tooltip-row"
-													key={String(item.dataKey ?? item.name)}
-												>
-													<span
-														aria-hidden="true"
-														className="dashboard-chart-tooltip-swatch"
-														style={{ backgroundColor: item.color }}
-													/>
-													<span>{String(item.name)}</span>
-													<strong>
-														{Number(item.value).toLocaleString("en-US")}{" "}
-														h
-													</strong>
-												</div>
-											))}
-										</div>
-									) : null
-								}
-							/>
-							{carriers.map((carrier, index) => {
-								if (hiddenCarriers.has(carrier)) return null;
-								const style = SERIES_STYLES[index % SERIES_STYLES.length];
-								const isDimmed =
-									focusedCarrier !== null && focusedCarrier !== carrier;
-								return (
-									<Line
-										activeDot={{ r: 5, stroke: "#202023", strokeWidth: 2 }}
-										dataKey={carrier}
-										dot={{
-											fill: "#202023",
-											r: 3,
-											stroke: style.color,
-											strokeWidth: 2,
-										}}
-										isAnimationActive={false}
-										key={carrier}
-										opacity={isDimmed ? 0.22 : 1}
-										stroke={style.color}
-										strokeDasharray={style.dash}
-										strokeLinecap="round"
-										strokeWidth={focusedCarrier === carrier ? 3.5 : 2.5}
-										type="monotone"
-									/>
-								);
-							})}
-						</LineChart>
-					</ResponsiveContainer>
-				</figure>
+				<ChartCanvas
+					carriers={carriers}
+					filteredData={filteredData}
+					focusedCarrier={focusedCarrier}
+					hiddenCarriers={hiddenCarriers}
+				/>
 				<div aria-label="Toggle chart series" className="dashboard-chart-legend">
 					{carriers.map((carrier, index) => {
 						const isHidden = hiddenCarriers.has(carrier);

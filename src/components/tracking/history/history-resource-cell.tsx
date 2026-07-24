@@ -79,7 +79,7 @@ export function HistoryResourceCell({ kind, onOpen, row }: HistoryResourceCellPr
 				onOpen,
 			);
 		}
-		if (samePayload && latestResponse === "") {
+		if (samePayload && !hasLatestResponse) {
 			return <TableCellCustom>Same Payload</TableCellCustom>;
 		}
 		return <TableCellCustom>{hasResponse ? "Unhandled" : "Payload"}</TableCellCustom>;

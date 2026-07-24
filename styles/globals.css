@@ -13,6 +13,19 @@
 	}
 }
 
+@keyframes dashboard-pulse {
+	0%,
+	100% {
+		transform: scale(0.85);
+		opacity: 0.45;
+	}
+
+	50% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
 html,
 body {
 	margin: 0;
@@ -176,6 +189,7 @@ body {
 	--dashboard-mist: #a1a1aa;
 	--dashboard-white: #fafafa;
 	--dashboard-danger: #d47b7b;
+
 	min-height: 100vh;
 	background: var(--dashboard-night);
 	color-scheme: dark;
@@ -428,7 +442,7 @@ body {
 }
 
 .dashboard-state-dot--loading {
-	animation: pulse 1.4s ease-in-out infinite;
+	animation: dashboard-pulse 1.4s ease-in-out infinite;
 }
 
 .dashboard-main {
@@ -927,6 +941,7 @@ thead .dashboard-sticky-column {
 	--dashboard-line: #444449;
 	--dashboard-mist: #a1a1aa;
 	--dashboard-white: #fafafa;
+
 	width: var(--radix-popover-trigger-width);
 	min-width: 260px;
 	padding: 0 !important;
@@ -1501,6 +1516,7 @@ thead .dashboard-sticky-column {
 	--dashboard-mist: #a1a1aa;
 	--dashboard-white: #fafafa;
 	--dashboard-danger: #d47b7b;
+
 	border-color: #444449;
 	border-radius: 2px;
 	background: #202023;
@@ -1539,6 +1555,7 @@ thead .dashboard-sticky-column {
 	--dashboard-line: #444449;
 	--dashboard-mist: #a1a1aa;
 	--dashboard-white: #fafafa;
+
 	position: fixed;
 	z-index: 100;
 	inset: 0;
