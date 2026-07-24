@@ -1,13 +1,14 @@
 "use client";
 import type { ColumnDef, SortingFn } from "@tanstack/react-table";
 import { useParams } from "next/navigation";
+import * as React from "react";
 
 import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
 import { useDashboardQueryReport } from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Button } from "@/components/ui/button";
-import type { ParamType, StatusColumnType } from "@/utils/common-types";
+import type { ParamType, StatusColumnType, StatusValue } from "@/utils/common-types";
 import { formatUtcDate, formatUtcDateTime } from "@/utils/format-date";
 import { useStatusQuery } from "@/utils/query";
 
@@ -21,6 +22,7 @@ const sortCreated: SortingFn<StatusColumnType> = (rowA, rowB) =>
 
 export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }) {
 	const params = useParams<ParamType>();
+	const [selectedStatus, setSelectedStatus] = React.useState<StatusValue | null>(null);
 
 	const columns: ColumnDef<StatusColumnType>[] = [
 		{
@@ -113,12 +115,14 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Details</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<StatusDetailDrawer
+					<Button
+						className="dashboard-row-action"
+						onClick={() => setSelectedStatus(row.original.value)}
+						type="button"
 						variant="outline"
-						title="Status Details"
-						buttonTitle="View Details"
-						data={row.original.value}
-					/>
+					>
+						View Details
+					</Button>
 				);
 			},
 			enableSorting: false,
@@ -280,6 +284,15 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 							? ["edit", ...(props.type === "closed" ? [] : ["close"]), "delete"]
 							: []),
 					]}
+				/>
+				<StatusDetailDrawer
+					data={selectedStatus}
+					onOpenChange={(open) => {
+						if (!open) {
+							setSelectedStatus(null);
+						}
+					}}
+					open={selectedStatus !== null}
 				/>
 			</div>
 		</>
