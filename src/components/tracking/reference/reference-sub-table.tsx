@@ -26,7 +26,7 @@ export function ReferenceSubscriptionTable() {
 	return <ReferenceSubscriptionData params={params} searchParams={searchParams} />;
 }
 
-export function ReferenceSubscriptionData({ ...props }) {
+function ReferenceSubscriptionData({ ...props }) {
 	const columns: ColumnDef<ReferenceTableType>[] = [
 		{
 			id: "subscription-id",

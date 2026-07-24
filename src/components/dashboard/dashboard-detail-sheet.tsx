@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, Check, CircleAlert, Copy, Loader2, RefreshCw } from "lucide-react";
+import * as React from "react";
 
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-loading";
 import {
@@ -12,10 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export interface DashboardDetailField {
+interface DashboardDetailField {
 	label: string;
 	value: unknown;
 }
+
+type CopyState = "idle" | "copied" | "failed";
 
 interface DashboardDetailBodyProps {
 	error?: string;
@@ -36,6 +39,8 @@ function displayValue(value: unknown) {
 	return String(value);
 }
 
+const COPY_FEEDBACK_DURATION_MS = 2000;
+
 export function DashboardDetailBody({
 	error,
 	fields = [],
@@ -44,6 +49,36 @@ export function DashboardDetailBody({
 	onRetry,
 	rawValue,
 }: DashboardDetailBodyProps) {
+	const [copyState, setCopyState] = React.useState<CopyState>("idle");
+	const resetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+	const rawJson = JSON.stringify(rawValue ?? {}, null, 2);
+
+	React.useEffect(() => {
+		return () => {
+			if (resetTimerRef.current) {
+				clearTimeout(resetTimerRef.current);
+			}
+		};
+	}, []);
+
+	const handleCopy = async () => {
+		if (resetTimerRef.current) {
+			clearTimeout(resetTimerRef.current);
+		}
+
+		try {
+			await navigator.clipboard.writeText(rawJson);
+			setCopyState("copied");
+		} catch {
+			setCopyState("failed");
+		}
+
+		resetTimerRef.current = setTimeout(() => {
+			setCopyState("idle");
+			resetTimerRef.current = null;
+		}, COPY_FEEDBACK_DURATION_MS);
+	};
+
 	if (isLoading) {
 		return (
 			<div aria-label="Loading details" aria-live="polite" className="space-y-px py-5">
@@ -90,9 +125,40 @@ export function DashboardDetailBody({
 			</div>
 			<Accordion collapsible className="dashboard-raw-payload" type="single">
 				<AccordionItem value="payload">
-					<AccordionTrigger>Raw Payload</AccordionTrigger>
+					<div className="dashboard-raw-payload-header">
+						<AccordionTrigger>Raw JSON</AccordionTrigger>
+						<Button
+							aria-label={
+								copyState === "copied"
+									? "Raw JSON copied"
+									: copyState === "failed"
+										? "Raw JSON copy failed"
+										: "Copy raw JSON"
+							}
+							className="dashboard-raw-copy"
+							onClick={handleCopy}
+							size="sm"
+							type="button"
+							variant="ghost"
+						>
+							{copyState === "copied" ? (
+								<Check aria-hidden="true" />
+							) : copyState === "failed" ? (
+								<CircleAlert aria-hidden="true" />
+							) : (
+								<Copy aria-hidden="true" />
+							)}
+							<span aria-live="polite">
+								{copyState === "copied"
+									? "Copied"
+									: copyState === "failed"
+										? "Copy failed"
+										: "Copy"}
+							</span>
+						</Button>
+					</div>
 					<AccordionContent>
-						<pre>{JSON.stringify(rawValue ?? {}, null, 2)}</pre>
+						<pre>{rawJson}</pre>
 					</AccordionContent>
 				</AccordionItem>
 			</Accordion>

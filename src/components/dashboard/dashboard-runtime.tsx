@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-export type DashboardQueryPhase = "waiting" | "loading" | "live" | "empty" | "error";
+type DashboardQueryPhase = "waiting" | "loading" | "live" | "empty" | "error";
 
 export interface DashboardQuerySnapshot {
 	data: unknown[];

@@ -155,8 +155,6 @@ const summaryFormSchema = z.object({
 		.optional(),
 });
 
-export type SummaryFormValues = z.infer<typeof summaryFormSchema>;
-
 export const useSummaryForm = (newCarrOpt: Option[], searchParams: SearchParamsReader) => {
 	const { end, start } = getDefaultDates();
 	const form = useForm<z.infer<typeof summaryFormSchema>>({

@@ -17,7 +17,7 @@ export const DASHBOARD_MODES = [
 	"load",
 ] as const;
 export const DASHBOARD_ENVS = ["prod", "dev"] as const;
-export const DASHBOARD_VIEWS = [
+const DASHBOARD_VIEWS = [
 	"status",
 	"summary",
 	"references",

@@ -1341,6 +1341,16 @@ thead .dashboard-sticky-column {
 	border: 1px solid var(--dashboard-line);
 }
 
+.dashboard-raw-payload-header {
+	display: flex;
+	align-items: center;
+}
+
+.dashboard-raw-payload-header > :first-child {
+	min-width: 0;
+	flex: 1;
+}
+
 .dashboard-raw-payload [data-slot="accordion-trigger"] {
 	padding: 13px;
 	color: var(--dashboard-white);
@@ -1348,6 +1358,33 @@ thead .dashboard-sticky-column {
 	font-size: 9px;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
+}
+
+.dashboard-raw-copy {
+	min-width: 92px;
+	margin-right: 8px;
+	border: 1px solid transparent;
+	border-radius: 2px;
+	color: var(--dashboard-mist);
+	font-family: var(--font-dashboard-mono), monospace;
+	font-size: 9px;
+	letter-spacing: 0.04em;
+}
+
+.dashboard-raw-copy:hover {
+	border-color: var(--dashboard-line);
+	background: var(--dashboard-night);
+	color: var(--dashboard-white);
+}
+
+.dashboard-raw-copy:focus-visible {
+	border-color: var(--dashboard-white);
+	box-shadow: 0 0 0 2px rgb(250 250 250 / 18%);
+}
+
+.dashboard-raw-copy svg {
+	width: 13px;
+	height: 13px;
 }
 
 .dashboard-raw-payload [data-slot="accordion-content"] > div {
