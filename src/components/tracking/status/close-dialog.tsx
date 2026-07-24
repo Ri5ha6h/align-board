@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { ParamType } from "@/utils/common-types";
 import { useCloseStatusMutation } from "@/utils/mutation";
-import { useCloseDeleteStatusForm } from "@/utils/schema";
+import { useCloseDeleteStatusForm, type CloseDeleteStatusFormValues } from "@/utils/schema";
 
 export const CloseStatusForm = ({ ...props }) => {
 	const id = useId();
@@ -37,7 +37,7 @@ export const CloseStatusForm = ({ ...props }) => {
 		props.carrier,
 	);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: CloseDeleteStatusFormValues) => {
 		if (data.statusKey === props.statusKey) {
 			//console.log("onSubmit", data);
 			server_close(data);

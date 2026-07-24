@@ -1,50 +1,51 @@
+import type { ReadonlyURLSearchParams } from "next/navigation";
 import * as React from "react";
 
-import {
-	DashboardDetailBody,
-	findDetailValue,
-} from "@/components/dashboard/dashboard-detail-sheet";
-import { Button } from "@/components/ui/button";
+import { DashboardDetailBody } from "@/components/dashboard/dashboard-detail-sheet";
+import { findDetailValue } from "@/components/dashboard/dashboard-detail-utils";
 import {
 	Sheet,
 	SheetContent,
 	SheetDescription,
 	SheetHeader,
 	SheetTitle,
-	SheetTrigger,
 } from "@/components/ui/sheet";
+import type { ParamType } from "@/utils/common-types";
 import { useReferenceInfoQuery } from "@/utils/query";
 import { sanitizeHistoryDataForDisplay } from "@/utils/sanitize-history-data";
 
-export function ReferenceDrawer({ ...props }) {
-	const [open, setOpen] = React.useState(false);
+interface ReferenceDrawerProps {
+	onOpenChange: (open: boolean) => void;
+	open: boolean;
+	params: ParamType;
+	resource: string;
+	searchParams: Pick<ReadonlyURLSearchParams, "get">;
+	title: string;
+}
+
+export function ReferenceDrawer(props: ReferenceDrawerProps) {
 	return (
-		<div className="flex items-center justify-center">
-			<Sheet onOpenChange={setOpen} open={open}>
-				<SheetTrigger asChild>
-					<Button variant={props.variant}>{props.buttonTitle}</Button>
-				</SheetTrigger>
-				<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
-					<SheetHeader>
-						<SheetTitle>{props.title}</SheetTitle>
-						<SheetDescription>
-							Tracking reference summary and source payload.
-						</SheetDescription>
-					</SheetHeader>
-					<ReferenceDetailContent {...props} enabled={open} />
-				</SheetContent>
-			</Sheet>
-		</div>
+		<Sheet onOpenChange={props.onOpenChange} open={props.open}>
+			<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
+				<SheetHeader className="dashboard-detail-header">
+					<SheetTitle>{props.title}</SheetTitle>
+					<SheetDescription>
+						Tracking reference summary and source payload.
+					</SheetDescription>
+				</SheetHeader>
+				<ReferenceDetailContent {...props} enabled={props.open} />
+			</SheetContent>
+		</Sheet>
 	);
 }
 
-function ReferenceDetailContent({ ...props }) {
-	const query = useReferenceInfoQuery(
-		props.params,
-		props.searchParams,
-		props.resource,
-		props.enabled,
-	);
+function ReferenceDetailContent({
+	enabled,
+	params,
+	resource,
+	searchParams,
+}: ReferenceDrawerProps & { enabled: boolean }) {
+	const query = useReferenceInfoQuery(params, searchParams, resource, enabled);
 	const responseError =
 		query.error?.message || (query.data && !query.data.success ? String(query.data.data) : "");
 	const rawValue = query.data?.success ? query.data.data : undefined;
@@ -56,15 +57,13 @@ function ReferenceDetailContent({ ...props }) {
 			fields={[
 				{
 					label: "Subscription ID",
-					value:
-						findDetailValue(data, ["subscriptionId", "subscription_id"]) ??
-						props.resource,
+					value: findDetailValue(data, ["subscriptionId", "subscription_id"]) ?? resource,
 				},
 				{
-					label: props.params.mode === "terminal" ? "Terminal" : "Carrier",
+					label: params.mode === "terminal" ? "Terminal" : "Carrier",
 					value:
 						findDetailValue(data, ["carrier", "carrierCode", "terminal"]) ??
-						props.searchParams.get("carrier"),
+						searchParams.get("carrier"),
 				},
 				{
 					label: "Reference Type",
@@ -77,14 +76,13 @@ function ReferenceDetailContent({ ...props }) {
 				{
 					label: "Queue",
 					value:
-						findDetailValue(data, ["queue", "queueName"]) ??
-						props.searchParams.get("queue"),
+						findDetailValue(data, ["queue", "queueName"]) ?? searchParams.get("queue"),
 				},
 				{
 					label: "Status",
 					value:
 						findDetailValue(data, ["status", "referenceStatus"]) ??
-						props.searchParams.get("refStatus"),
+						searchParams.get("refStatus"),
 				},
 				{
 					label: "Created",
@@ -101,6 +99,8 @@ function ReferenceDetailContent({ ...props }) {
 				{ label: "Error", value: findDetailValue(data, ["error", "errorMessage"]) },
 			]}
 			isLoading={query.isPending}
+			isRefreshing={query.isFetching && !query.isPending}
+			onRetry={() => void query.refetch()}
 			rawValue={data}
 		/>
 	);

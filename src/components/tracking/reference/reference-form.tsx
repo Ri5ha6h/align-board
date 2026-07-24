@@ -23,9 +23,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { ParamType, ReferenceFormType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList } from "@/utils/default-data/default-data";
-import { useReferenceForm } from "@/utils/schema";
+import { useReferenceForm, type ReferenceFormValues } from "@/utils/schema";
 
 export const ReferenceForm = () => {
 	const id = useId();
@@ -36,7 +36,7 @@ export const ReferenceForm = () => {
 
 	const form = useReferenceForm(searchParams);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: ReferenceFormValues) => {
 		//console.log("submit data", data);
 		if (!data.carrier) {
 			form.setError("carrier", {
@@ -49,12 +49,12 @@ export const ReferenceForm = () => {
 				message: "Input a reference",
 			});
 		} else {
-			filterNavigation.apply(createQueryString(data));
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
 	const createQueryString = React.useCallback(
-		(data: ReferenceFormType) => {
+		(data: ReferenceFormValues) => {
 			const refParams = new URLSearchParams(searchParams.toString());
 
 			refParams.set("refCarrier", data.carrier);
@@ -70,7 +70,7 @@ export const ReferenceForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2 md:grid-cols-3"
+					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2"
 				>
 					<FormField
 						control={form.control}

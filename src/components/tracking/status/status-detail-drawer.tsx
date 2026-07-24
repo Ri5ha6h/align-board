@@ -76,11 +76,15 @@ const StatusTextArea = ({ label, value }: { label: string; value: string | numbe
 	);
 };
 
-const CustomLinkInput = ({ value }: { value: any }) => {
+const CustomLinkInput = ({ value }: { value: string }) => {
+	const links = value
+		.split(",")
+		.map((link) => link.trim())
+		.filter(Boolean);
 	return (
 		<ul className="mt-2">
-			{value.includes(",") ? (
-				value.split(",").map((link: string, index: number) => (
+			{links.length > 1 ? (
+				links.map((link, index) => (
 					<Link key={link} href={link} target="_blank">
 						<li className="p-2">
 							{index + 1}.{" "}
@@ -89,9 +93,9 @@ const CustomLinkInput = ({ value }: { value: any }) => {
 					</Link>
 				))
 			) : (
-				<Link href={value} target="_blank">
+				<Link href={links[0] ?? "#"} target="_blank">
 					<li className="p-2">
-						1. <span className="underline hover:text-[#a1a1aa]">{value}</span>
+						1. <span className="underline hover:text-[#a1a1aa]">{links[0] ?? "—"}</span>
 					</li>
 				</Link>
 			)}

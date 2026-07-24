@@ -1,9 +1,8 @@
 "use client";
 
 import { Loader2, RotateCcw } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import * as React from "react";
 
+import { useDashboardFilterTransaction } from "@/components/dashboard/dashboard-filter-transaction";
 import { Button } from "@/components/ui/button";
 
 interface DashboardFilterActionsProps {
@@ -30,6 +29,7 @@ export function DashboardFilterActions({
 				Reset
 			</Button>
 			<Button
+				aria-busy={isPending}
 				className="dashboard-filter-apply"
 				disabled={!canApply || isPending}
 				type="submit"
@@ -42,35 +42,10 @@ export function DashboardFilterActions({
 }
 
 export function useDashboardFilterNavigation() {
-	const pathname = usePathname();
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const [isPending, startTransition] = React.useTransition();
-
-	const apply = React.useCallback(
-		(query: string) => {
-			startTransition(() => {
-				router.push(`${pathname}${query ? `?${query}` : ""}`);
-			});
-		},
-		[pathname, router],
-	);
-
-	const reset = React.useCallback(
-		(resetForm: () => void) => {
-			const nextParams = new URLSearchParams();
-			const category = searchParams.get("category");
-			if (category) {
-				nextParams.set("category", category);
-			}
-			resetForm();
-			startTransition(() => {
-				const query = nextParams.toString();
-				router.push(`${pathname}${query ? `?${query}` : ""}`);
-			});
-		},
-		[pathname, router, searchParams],
-	);
-
-	return { apply, isPending, reset };
+	const transaction = useDashboardFilterTransaction();
+	return {
+		apply: transaction.begin,
+		isPending: transaction.isPending,
+		reset: transaction.reset,
+	};
 }

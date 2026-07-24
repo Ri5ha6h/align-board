@@ -1,7 +1,9 @@
 "use client";
+
 import type { ColumnDef, SortingFn } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
+import type { ReadonlyURLSearchParams } from "next/navigation";
 import { useParams, useSearchParams } from "next/navigation";
+import * as React from "react";
 
 import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
 import {
@@ -12,14 +14,37 @@ import { TableDataStaticComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
 	TableCellTooltip,
-	TableCellTooltipScroll,
 	TableHeadCustom,
 } from "@/components/table/table-component";
-import { HistoryDrawer } from "@/components/tracking/history/history-drawer";
+import {
+	HistoryDrawer,
+	type HistoryDrawerSelection,
+} from "@/components/tracking/history/history-drawer";
+import {
+	HistoryResourceCell,
+	type HistoryResourceSelection,
+} from "@/components/tracking/history/history-resource-cell";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { HistoryType, ParamType } from "@/utils/common-types";
+import { formatUtcDateTime } from "@/utils/format-date";
 import { useHistoryQuery } from "@/utils/query";
+
+const sortScheduler: SortingFn<HistoryType> = (rowA, rowB) =>
+	Number(rowA.original.k) - Number(rowB.original.k);
+
+const sortStatus: SortingFn<HistoryType> = (rowA, rowB) => {
+	const statusOrder = ["SUCCESS", "FAILED"];
+	return (
+		statusOrder.indexOf(rowA.original.v.crawl_status) -
+		statusOrder.indexOf(rowB.original.v.crawl_status)
+	);
+};
+
+interface HistoryDataProps {
+	params: ParamType;
+	searchParams: ReadonlyURLSearchParams;
+}
 
 export function HistoryTable() {
 	const params = useParams<ParamType>();
@@ -34,8 +59,11 @@ export function HistoryTable() {
 	return <HistoryData params={params} searchParams={searchParams} />;
 }
 
-const HistoryData = ({ ...props }) => {
-	const historyQuery = useHistoryQuery(props.params, props.searchParams);
+function HistoryData({ params, searchParams }: HistoryDataProps) {
+	const historyQuery = useHistoryQuery(params, searchParams);
+	const subscriptionId = searchParams.get("subId") ?? "";
+	const [selection, setSelection] = React.useState<HistoryDrawerSelection | null>(null);
+
 	useDashboardQueryReport({
 		data: historyQuery.data,
 		error: historyQuery.error,
@@ -44,278 +72,109 @@ const HistoryData = ({ ...props }) => {
 		success: historyQuery.data?.success,
 	});
 
-	const sortSchedulerFn: SortingFn<HistoryType> = (rowA, rowB, _columnId) => {
-		const statusA = +rowA.original.k;
-		const statusB = +rowB.original.k;
-		return statusA - statusB;
-	};
+	const openResource = React.useCallback(
+		(resource: HistoryResourceSelection) => {
+			setSelection({ ...resource, params, subscriptionId });
+		},
+		[params, subscriptionId],
+	);
 
-	const sortStatusFn: SortingFn<HistoryType> = (rowA, rowB, _columnId) => {
-		const statusA = rowA.original.v.crawl_status;
-		const statusB = rowB.original.v.crawl_status;
-		const statusOrder = ["SUCCESS", "FAILED"];
-		return statusOrder.indexOf(statusA) - statusOrder.indexOf(statusB);
-	};
-
-	const columns: ColumnDef<HistoryType>[] = [
-		{
-			id: "subscription-id",
-			accessorKey: "subId",
-			header: () => <TableHeadCustom>Subscription Id</TableHeadCustom>,
-			cell: () => (
-				<TableCellCustom className="font-semibold">
-					{props.searchParams.get("subId")}
-				</TableCellCustom>
-			),
-			meta: {
-				className: "dashboard-sticky-column",
+	const columns = React.useMemo<ColumnDef<HistoryType>[]>(
+		() => [
+			{
+				id: "subscription-id",
+				accessorKey: "subId",
+				header: () => <TableHeadCustom>Subscription Id</TableHeadCustom>,
+				cell: () => (
+					<TableCellCustom className="font-semibold">{subscriptionId}</TableCellCustom>
+				),
+				meta: { className: "dashboard-sticky-column" },
+				enableHiding: false,
+				enableSorting: false,
 			},
-			enableHiding: false,
-			enableSorting: false,
-		},
-		{
-			id: "transaction-id",
-			accessorKey: "transactionId",
-			header: () => <TableHeadCustom>Transaction Id</TableHeadCustom>,
-			cell: ({ row }) => {
-				const tnId = row.original.v.transactionId ? row.original.v.transactionId : "N/A";
-				return <TableCellCustom>{tnId}</TableCellCustom>;
+			{
+				id: "transaction-id",
+				accessorKey: "transactionId",
+				header: () => <TableHeadCustom>Transaction Id</TableHeadCustom>,
+				cell: ({ row }) => (
+					<TableCellCustom>{row.original.v.transactionId || "N/A"}</TableCellCustom>
+				),
+				enableSorting: false,
 			},
-			enableSorting: false,
-		},
-		{
-			id: "queue-name",
-			accessorKey: "QueueName",
-			header: () => <TableHeadCustom>Queue</TableHeadCustom>,
-			cell: ({ row }) => {
-				const q = row.original.v.QueueName ? row.original.v.QueueName : "N/A";
-				return <TableCellCustom>{q}</TableCellCustom>;
+			{
+				id: "queue-name",
+				accessorKey: "QueueName",
+				header: () => <TableHeadCustom>Queue</TableHeadCustom>,
+				cell: ({ row }) => (
+					<TableCellCustom>{row.original.v.QueueName || "N/A"}</TableCellCustom>
+				),
+				enableSorting: false,
 			},
-			enableSorting: false,
-		},
-		{
-			id: "created-at",
-			accessorKey: "insertion_time",
-			header: () => <TableHeadCustom>Created At</TableHeadCustom>,
-			cell: ({ row }) => {
-				return (
+			{
+				id: "created-at",
+				accessorKey: "insertion_time",
+				header: () => <TableHeadCustom>Created At</TableHeadCustom>,
+				cell: ({ row }) => (
 					<TableCellCustom>
-						{format(toDate(row.original.v.insertion_time), "do MMM yyyy, HH:mm:ss")}
+						{formatUtcDateTime(row.original.v.insertion_time)}
 					</TableCellCustom>
-				);
+				),
+				enableSorting: false,
 			},
-			enableSorting: false,
-		},
-		{
-			id: "crawl-status",
-			accessorKey: "crawl_status",
-			header: () => <TableHeadCustom>Crawl Status</TableHeadCustom>,
-			cell: ({ row }) => {
-				const status =
-					row.original.v.crawl_status === undefined
-						? "No Data"
-						: row.original.v.crawl_status;
-				const tip = row.original.v.error === "" ? "No error" : row.original.v.error;
-				return (
-					<TableCellCustom>
-						<TableCellTooltip tip={tip}>
-							<Badge
-								className={cn(
-									"dashboard-data-tag",
-									status !== "SUCCESS" && "dashboard-data-tag--danger",
-								)}
-							>
-								{status}
-							</Badge>
-						</TableCellTooltip>
-					</TableCellCustom>
-				);
-			},
-			sortingFn: sortStatusFn,
-		},
-		{
-			id: "scheduler-id",
-			accessorKey: "schedulerId",
-			header: () => <TableHeadCustom>Scheduler Id</TableHeadCustom>,
-			cell: ({ row }) => <TableCellCustom>{row.original.k}</TableCellCustom>,
-			sortingFn: sortSchedulerFn,
-		},
-		{
-			id: "response-sent",
-			accessorKey: "responseSent",
-			header: () => <TableHeadCustom>Response Sent</TableHeadCustom>,
-			cell: ({ row }) => {
-				const response = row.original.v.fkMappedJsonResourceId
-					? row.original.v.fkMappedJsonResourceId
-					: "No data";
-				const latestRes = row.original.v.latestFKMappedJsonResourceId
-					? row.original.v.latestFKMappedJsonResourceId
-					: "No data";
-				const error = row.original.v.error;
-				if (error && response === "No data" && latestRes === "No data") {
+			{
+				id: "crawl-status",
+				accessorKey: "crawl_status",
+				header: () => <TableHeadCustom>Crawl Status</TableHeadCustom>,
+				cell: ({ row }) => {
+					const status = row.original.v.crawl_status ?? "No Data";
+					const tip = row.original.v.error || "No error";
 					return (
 						<TableCellCustom>
-							<TableCellTooltipScroll
-								tip={
-									row.original.v.errorMsg.error
-										? row.original.v.errorMsg.error
-										: row.original.v.errorMsg
-								}
-							>
-								{error}
-							</TableCellTooltipScroll>
+							<TableCellTooltip tip={tip}>
+								<Badge
+									className={cn(
+										"dashboard-data-tag",
+										status !== "SUCCESS" && "dashboard-data-tag--danger",
+									)}
+								>
+									{status}
+								</Badge>
+							</TableCellTooltip>
 						</TableCellCustom>
 					);
-				}
-				if (
-					response !== "No data" &&
-					response !== "null" &&
-					response === "SAME_PAYLOAD" &&
-					latestRes !== "null" &&
-					latestRes !== "No data"
-				) {
-					return (
-						<HistoryDrawer
-							variant="warning"
-							buttonTitle="Same"
-							title="Response Sent"
-							params={props.params}
-							schedulerId={row.original.k}
-							subscriptionId={props.searchParams.get("subId")}
-							resourceId={latestRes}
-						/>
-					);
-				}
-				if (response !== "No data" && response !== "null" && response !== "SAME_PAYLOAD") {
-					return (
-						<HistoryDrawer
-							variant="success"
-							buttonTitle="New events"
-							title="Response Sent"
-							params={props.params}
-							schedulerId={row.original.k}
-							subscriptionId={props.searchParams.get("subId")}
-							resourceId={response}
-						/>
-					);
-				}
-				if (
-					response !== "No data" &&
-					response !== "null" &&
-					response === "SAME_PAYLOAD" &&
-					latestRes === ""
-				) {
-					return <TableCellCustom>SAME PAYLOAD</TableCellCustom>;
-				}
-				if (response === "No data" || response === "null") {
-					return <TableCellCustom>PAYLOAD</TableCellCustom>;
-				}
-				return <TableCellCustom>Unhandled</TableCellCustom>;
+				},
+				sortingFn: sortStatus,
 			},
-			enableSorting: false,
-		},
-		{
-			id: "crawled-output",
-			accessorKey: "crawledOutput",
-			header: () => <TableHeadCustom>Crawled Output</TableHeadCustom>,
-			cell: ({ row }) => {
-				const response = row.original.v.fkMappedJsonResourceId
-					? row.original.v.fkMappedJsonResourceId
-					: "No data";
-				const crawledRes = row.original.v.crawledJsonResourceId
-					? row.original.v.crawledJsonResourceId
-					: "No data";
-				const error = row.original.v.error;
-				if (error && response === "No data") {
-					return (
-						<TableCellCustom>
-							<TableCellTooltipScroll
-								tip={
-									row.original.v.errorMsg.error
-										? row.original.v.errorMsg.error
-										: row.original.v.errorMsg
-								}
-							>
-								{error}
-							</TableCellTooltipScroll>
-						</TableCellCustom>
-					);
-				}
-				if (
-					crawledRes !== "No data" &&
-					crawledRes !== "null" &&
-					response === "SAME_PAYLOAD"
-				) {
-					return (
-						<HistoryDrawer
-							variant="warning"
-							buttonTitle="Same"
-							title="Crawled Output"
-							params={props.params}
-							schedulerId={row.original.k}
-							subscriptionId={props.searchParams.get("subId")}
-							resourceId={crawledRes}
-						/>
-					);
-				}
-				if (crawledRes !== "No data" && crawledRes !== "null" && response === "No data") {
-					return (
-						<HistoryDrawer
-							variant="normal"
-							buttonTitle="Crawled JSON"
-							title="Crawled Output"
-							params={props.params}
-							schedulerId={row.original.k}
-							subscriptionId={props.searchParams.get("subId")}
-							resourceId={crawledRes}
-						/>
-					);
-				}
-				if (
-					crawledRes !== "No data" &&
-					crawledRes !== "null" &&
-					response !== "No data" &&
-					response !== "null" &&
-					response !== "SAME_PAYLOAD"
-				) {
-					return (
-						<HistoryDrawer
-							variant="success"
-							buttonTitle="New events"
-							title="Crawled Output"
-							params={props.params}
-							schedulerId={row.original.k}
-							subscriptionId={props.searchParams.get("subId")}
-							resourceId={crawledRes}
-						/>
-					);
-				}
-				if (
-					crawledRes !== "No data" &&
-					crawledRes !== "null" &&
-					(response === "No data" || response === "null")
-				) {
-					return (
-						<HistoryDrawer
-							variant="normal"
-							buttonTitle="Crawled JSON"
-							title="Crawled Output"
-							params={props.params}
-							schedulerId={row.original.k}
-							subscriptionId={props.searchParams.get("subId")}
-							resourceId={crawledRes}
-						/>
-					);
-				}
-				return <TableCellCustom>Unhandled</TableCellCustom>;
+			{
+				id: "scheduler-id",
+				accessorKey: "schedulerId",
+				header: () => <TableHeadCustom>Scheduler Id</TableHeadCustom>,
+				cell: ({ row }) => <TableCellCustom>{row.original.k}</TableCellCustom>,
+				sortingFn: sortScheduler,
 			},
-			enableSorting: false,
-		},
-	];
+			{
+				id: "response-sent",
+				accessorKey: "responseSent",
+				header: () => <TableHeadCustom>Response Sent</TableHeadCustom>,
+				cell: ({ row }) => (
+					<HistoryResourceCell kind="response" onOpen={openResource} row={row.original} />
+				),
+				enableSorting: false,
+			},
+			{
+				id: "crawled-output",
+				accessorKey: "crawledOutput",
+				header: () => <TableHeadCustom>Crawled Output</TableHeadCustom>,
+				cell: ({ row }) => (
+					<HistoryResourceCell kind="crawled" onOpen={openResource} row={row.original} />
+				),
+				enableSorting: false,
+			},
+		],
+		[openResource, subscriptionId],
+	);
 
-	if (historyQuery.isPending) {
-		return <DashboardTableSkeleton />;
-	}
+	if (historyQuery.isPending) return <DashboardTableSkeleton />;
 
 	if (historyQuery.isError || historyQuery.error) {
 		return (
@@ -325,29 +184,40 @@ const HistoryData = ({ ...props }) => {
 		);
 	}
 
-	if (historyQuery.data && !historyQuery.data?.success) {
+	if (historyQuery.data && !historyQuery.data.success) {
 		return (
 			<div className="mt-10 flex h-full flex-col items-center justify-center">
-				<p className="text-red-500">{historyQuery.data?.data}</p>
+				<p className="text-red-500">{String(historyQuery.data.data)}</p>
 			</div>
 		);
 	}
 
 	return (
-		<TableDataStaticComponent
-			tableType="history"
-			data={historyQuery.data}
-			columns={columns}
-			preferenceKey={`history-${props.params.mode}`}
-			defaultVisibleColumnIds={[
-				"subscription-id",
-				"created-at",
-				"crawl-status",
-				"queue-name",
-				"transaction-id",
-				"response-sent",
-				"crawled-output",
-			]}
-		/>
+		<>
+			<TableDataStaticComponent
+				tableType="history"
+				data={historyQuery.data}
+				columns={columns}
+				preferenceKey={`history-${params.mode}`}
+				defaultVisibleColumnIds={[
+					"subscription-id",
+					"created-at",
+					"crawl-status",
+					"queue-name",
+					"transaction-id",
+					"response-sent",
+					"crawled-output",
+				]}
+			/>
+			{selection ? (
+				<HistoryDrawer
+					{...selection}
+					onOpenChange={(open) => {
+						if (!open) setSelection(null);
+					}}
+					open
+				/>
+			) : null}
+		</>
 	);
-};
+}

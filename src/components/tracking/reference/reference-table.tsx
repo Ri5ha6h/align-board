@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
 
@@ -14,6 +13,7 @@ import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
 import type { ParamType, ReferenceTableType } from "@/utils/common-types";
+import { formatUtcDateTime } from "@/utils/format-date";
 import { useReferenceQuery } from "@/utils/query";
 
 export function ReferenceTable() {
@@ -124,7 +124,7 @@ const ReferenceData = ({ ...props }) => {
 				const time = row.original.createdAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -140,7 +140,7 @@ const ReferenceData = ({ ...props }) => {
 				const time = row.original.lastCrawledAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -156,7 +156,7 @@ const ReferenceData = ({ ...props }) => {
 				const time = row.original.updatedAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},

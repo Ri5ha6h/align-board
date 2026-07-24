@@ -22,9 +22,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { ParamType, ReferenceAllFormType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList, getQueueList, getRefList } from "@/utils/default-data/default-data";
-import { useReferenceAllForm } from "@/utils/schema";
+import { useReferenceAllForm, type ReferenceAllFormValues } from "@/utils/schema";
 
 export const ReferenceAllForm = () => {
 	const id = useId();
@@ -37,7 +37,7 @@ export const ReferenceAllForm = () => {
 
 	const form = useReferenceAllForm(params, searchParams);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: ReferenceAllFormValues) => {
 		//console.log("submit data", data);
 		if (data.carrier.length === 0) {
 			form.setError("carrier", {
@@ -45,12 +45,12 @@ export const ReferenceAllForm = () => {
 				message: "At least one carrier should be selected.",
 			});
 		} else {
-			filterNavigation.apply(createQueryString(data));
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
 	const createQueryString = React.useCallback(
-		(data: ReferenceAllFormType) => {
+		(data: ReferenceAllFormValues) => {
 			const referenceAllParams = new URLSearchParams(searchParams.toString());
 			referenceAllParams.set("carrier", data.carrier);
 			if (data.refStatus === "ACTIVE") {
@@ -73,7 +73,7 @@ export const ReferenceAllForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
 				>
 					<FormField
 						control={form.control}

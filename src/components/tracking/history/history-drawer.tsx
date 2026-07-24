@@ -1,54 +1,60 @@
 import * as React from "react";
 
-import {
-	DashboardDetailBody,
-	findDetailValue,
-} from "@/components/dashboard/dashboard-detail-sheet";
-import { Button } from "@/components/ui/button";
+import { DashboardDetailBody } from "@/components/dashboard/dashboard-detail-sheet";
+import { findDetailValue } from "@/components/dashboard/dashboard-detail-utils";
 import {
 	Sheet,
 	SheetContent,
 	SheetDescription,
 	SheetHeader,
 	SheetTitle,
-	SheetTrigger,
 } from "@/components/ui/sheet";
+import type { ParamType } from "@/utils/common-types";
 import { useHistoryFetchQuery } from "@/utils/query";
 import { sanitizeHistoryDataForDisplay } from "@/utils/sanitize-history-data";
 
-export function HistoryDrawer({ ...props }) {
-	const [open, setOpen] = React.useState(false);
+export interface HistoryDrawerSelection {
+	buttonTitle: string;
+	params: ParamType;
+	resourceId: string;
+	schedulerId: string;
+	subscriptionId: string;
+	title: string;
+}
+
+interface HistoryDrawerProps extends HistoryDrawerSelection {
+	onOpenChange: (open: boolean) => void;
+	open: boolean;
+}
+
+export function HistoryDrawer(props: HistoryDrawerProps) {
 	return (
-		<div className="flex items-center justify-center">
-			<Sheet onOpenChange={setOpen} open={open}>
-				<SheetTrigger asChild>
-					<Button variant={props.variant}>{props.buttonTitle}</Button>
-				</SheetTrigger>
-				<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
-					<SheetHeader>
-						<SheetTitle>{props.title}</SheetTitle>
-						<SheetDescription>
-							Crawl outcome summary and sanitized source payload.
-						</SheetDescription>
-					</SheetHeader>
-					<HistoryDetailContent {...props} enabled={open} />
-				</SheetContent>
-			</Sheet>
-		</div>
+		<Sheet onOpenChange={props.onOpenChange} open={props.open}>
+			<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
+				<SheetHeader className="dashboard-detail-header">
+					<SheetTitle>{props.title}</SheetTitle>
+					<SheetDescription>
+						Crawl outcome summary and sanitized source payload.
+					</SheetDescription>
+				</SheetHeader>
+				<HistoryDetailContent {...props} enabled={props.open} />
+			</SheetContent>
+		</Sheet>
 	);
 }
 
-function HistoryDetailContent({ ...props }) {
-	const resourceId = props.resourceId.includes("customfunction")
-		? props.resourceId.replace("customfunction", "custom function")
-		: props.resourceId;
-	const query = useHistoryFetchQuery(
-		props.params,
-		props.schedulerId,
-		props.subscriptionId,
-		resourceId,
-		props.enabled,
-	);
+function HistoryDetailContent({
+	buttonTitle,
+	enabled,
+	params,
+	resourceId: rawResourceId,
+	schedulerId,
+	subscriptionId,
+}: HistoryDrawerProps & { enabled: boolean }) {
+	const resourceId = rawResourceId.includes("customfunction")
+		? rawResourceId.replace("customfunction", "custom function")
+		: rawResourceId;
+	const query = useHistoryFetchQuery(params, schedulerId, subscriptionId, resourceId, enabled);
 	const responseError =
 		query.error?.message || (query.data && !query.data.success ? String(query.data.data) : "");
 	const rawValue = query.data?.success ? query.data.data : undefined;
@@ -58,8 +64,8 @@ function HistoryDetailContent({ ...props }) {
 		<DashboardDetailBody
 			error={responseError}
 			fields={[
-				{ label: "Scheduler ID", value: props.schedulerId },
-				{ label: "Subscription ID", value: props.subscriptionId },
+				{ label: "Scheduler ID", value: schedulerId },
+				{ label: "Subscription ID", value: subscriptionId },
 				{
 					label: "Transaction",
 					value: findDetailValue(data, ["transactionId", "transaction_id"]),
@@ -80,10 +86,12 @@ function HistoryDetailContent({ ...props }) {
 					label: "Latency",
 					value: findDetailValue(data, ["latencyInMinutes", "abLatencyInMinutes"]),
 				},
-				{ label: "Response", value: props.buttonTitle },
+				{ label: "Response", value: buttonTitle },
 				{ label: "Error", value: findDetailValue(data, ["error", "errorMessage"]) },
 			]}
 			isLoading={query.isPending}
+			isRefreshing={query.isFetching && !query.isPending}
+			onRetry={() => void query.refetch()}
 			rawValue={data}
 		/>
 	);

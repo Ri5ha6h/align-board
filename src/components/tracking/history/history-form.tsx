@@ -29,21 +29,23 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { HistoryFormType, ParamType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList, getHistoryType } from "@/utils/default-data/default-data";
-import { useHistoryForm } from "@/utils/schema";
+import { useHistoryForm, type HistoryFormValues } from "@/utils/schema";
 
 export const HistoryForm = () => {
 	const id = useId();
+	const [calendarToday, setCalendarToday] = React.useState<Date | null>(null);
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const historyOptions = getHistoryType();
 	const searchParams = useSearchParams();
 	const filterNavigation = useDashboardFilterNavigation();
+	React.useEffect(() => setCalendarToday(new Date()), []);
 
 	const form = useHistoryForm(searchParams);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: HistoryFormValues) => {
 		//console.log("submit data", data);
 		if (!data.range || !data.range.from || !data.range.to) {
 			form.setError("range", {
@@ -70,7 +72,7 @@ export const HistoryForm = () => {
 			}
 		}
 
-		const subTract = data.range.to - data.range.from;
+		const subTract = data.range.to.getTime() - data.range.from.getTime();
 
 		if (millisecondsToHours(subTract) > 360) {
 			form.setError("range", {
@@ -78,17 +80,17 @@ export const HistoryForm = () => {
 				message: "Date range should be less than or equal to 15 days.",
 			});
 		} else {
-			filterNavigation.apply(createQueryString(data));
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
 	const createQueryString = React.useCallback(
-		(data: HistoryFormType) => {
+		(data: HistoryFormValues) => {
 			const historyParams = new URLSearchParams(searchParams.toString());
 			historyParams.set("subId", data.subId);
 			historyParams.set("historyType", data.historyType);
 			historyParams.set("includeRange", data.includeRange);
-			if (data.subId.length > 1 && data.includeRange === "YES") {
+			if (data.subId.length > 1 && data.includeRange === "YES" && data.range) {
 				historyParams.set("from", format(data.range.from, "yyyy-MM-dd"));
 				historyParams.set("to", format(data.range.to, "yyyy-MM-dd"));
 			} else {
@@ -107,7 +109,7 @@ export const HistoryForm = () => {
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className={cn(
-						"mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2",
+						"dashboard-filter-form grid-cols-1 sm:grid-cols-2",
 						form.watch("includeRange") === "YES" ? "md:grid-cols-3" : "md:grid-cols-4",
 					)}
 				>
@@ -232,10 +234,16 @@ export const HistoryForm = () => {
 												selected={field.value}
 												onSelect={field.onChange}
 												numberOfMonths={1}
-												disabled={{
-													before: startOfDay(subDays(new Date(), 89)),
-													after: new Date(),
-												}}
+												disabled={
+													calendarToday
+														? {
+																before: startOfDay(
+																	subDays(calendarToday, 89),
+																),
+																after: calendarToday,
+															}
+														: undefined
+												}
 											/>
 										</PopoverContent>
 									</Popover>

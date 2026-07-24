@@ -61,6 +61,7 @@ import {
 	type DashboardView,
 	getDashboardViews,
 } from "./dashboard-config";
+import { DashboardFilterTransactionProvider } from "./dashboard-filter-transaction";
 import { DashboardSkeleton } from "./dashboard-loading";
 import { DashboardRuntimeProvider, useDashboardRuntime } from "./dashboard-runtime";
 import { SummaryPrefetcher } from "./summary-prefetcher";
@@ -514,7 +515,9 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 export function DashboardShell(props: DashboardShellProps) {
 	return (
 		<DashboardRuntimeProvider key={`${props.mode}-${props.env}-${props.view}`}>
-			<DashboardShellInner {...props} />
+			<DashboardFilterTransactionProvider>
+				<DashboardShellInner {...props} />
+			</DashboardFilterTransactionProvider>
 		</DashboardRuntimeProvider>
 	);
 }

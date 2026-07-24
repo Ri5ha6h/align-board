@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
 
@@ -15,9 +14,14 @@ import {
 } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
 import type { ParamType, SummaryType } from "@/utils/common-types";
+import { formatUtcDateTime } from "@/utils/format-date";
 import { useSummaryQuery } from "@/utils/query";
 
 export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
+	return useSummaryTableContent(isAlignUser);
+}
+
+function useSummaryTableContent(isAlignUser: boolean) {
 	const params = useParams<ParamType>();
 	const searchParams = useSearchParams();
 	const queryCarriers = React.useMemo(
@@ -335,9 +339,7 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 			header: () => <TableHeadCustom>Start Time</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<TableCellCustom>
-						{format(toDate(row.original.start_time), "do MMM yyyy, HH:mm:ss")}
-					</TableCellCustom>
+					<TableCellCustom>{formatUtcDateTime(row.original.start_time)}</TableCellCustom>
 				);
 			},
 			enableSorting: true,
@@ -350,9 +352,7 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 			header: () => <TableHeadCustom>End Time</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<TableCellCustom>
-						{format(toDate(row.original.end_time), "do MMM yyyy, HH:mm:ss")}
-					</TableCellCustom>
+					<TableCellCustom>{formatUtcDateTime(row.original.end_time)}</TableCellCustom>
 				);
 			},
 			enableSorting: true,

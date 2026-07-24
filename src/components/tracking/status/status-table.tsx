@@ -1,6 +1,5 @@
 "use client";
 import type { ColumnDef, SortingFn } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
 import { useParams } from "next/navigation";
 
 import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
@@ -9,6 +8,7 @@ import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Button } from "@/components/ui/button";
 import type { ParamType, StatusColumnType } from "@/utils/common-types";
+import { formatUtcDate, formatUtcDateTime } from "@/utils/format-date";
 import { useStatusQuery } from "@/utils/query";
 
 import { StatusDetailDrawer } from "./status-detail-drawer";
@@ -16,14 +16,11 @@ import { StatusDetailDrawer } from "./status-detail-drawer";
 const disabledActionClassName =
 	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-[#444449] disabled:bg-[#2d2d31] disabled:text-[#71717a] disabled:opacity-100";
 
+const sortCreated: SortingFn<StatusColumnType> = (rowA, rowB) =>
+	Number(rowA.original.created_at) - Number(rowB.original.created_at);
+
 export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }) {
 	const params = useParams<ParamType>();
-
-	const sortCreatedFn: SortingFn<StatusColumnType> = (rowA, rowB, _columnId) => {
-		const statusA = +rowA.original.created_at - 19800000;
-		const statusB = +rowB.original.created_at - 19800000;
-		return statusA - statusB;
-	};
 
 	const columns: ColumnDef<StatusColumnType>[] = [
 		{
@@ -93,7 +90,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			cell: ({ row }) => {
 				return (
 					<TableCellCustom>
-						{format(row.original.value.expectedResolutionDate, "do MMM, yyyy")}
+						{formatUtcDate(row.original.value.expectedResolutionDate)}
 					</TableCellCustom>
 				);
 			},
@@ -105,26 +102,21 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Created At</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<TableCellCustom>
-						{format(
-							toDate(+row.original.created_at - 19800000),
-							"do MMM yyyy, HH:mm:ss",
-						)}
-					</TableCellCustom>
+					<TableCellCustom>{formatUtcDateTime(row.original.created_at)}</TableCellCustom>
 				);
 			},
-			sortingFn: sortCreatedFn,
+			sortingFn: sortCreated,
 		},
 		{
 			id: "more-detail",
 			accessorKey: "moreDetail",
-			header: () => <TableHeadCustom>More Detail</TableHeadCustom>,
+			header: () => <TableHeadCustom>Details</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
 					<StatusDetailDrawer
 						variant="outline"
 						title="Status Details"
-						buttonTitle="More Detail"
+						buttonTitle="View Details"
 						data={row.original.value}
 					/>
 				);

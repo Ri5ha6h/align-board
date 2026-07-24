@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
 
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-loading";
 import {
@@ -9,6 +9,7 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface DashboardDetailField {
@@ -20,6 +21,8 @@ interface DashboardDetailBodyProps {
 	error?: string;
 	fields?: DashboardDetailField[];
 	isLoading?: boolean;
+	isRefreshing?: boolean;
+	onRetry?: () => void;
 	rawValue?: unknown;
 }
 
@@ -33,36 +36,12 @@ function displayValue(value: unknown) {
 	return String(value);
 }
 
-export function findDetailValue(value: unknown, candidateKeys: string[]): unknown {
-	const candidates = new Set(
-		candidateKeys.map((key) => key.toLowerCase().replaceAll(/[^a-z0-9]/g, "")),
-	);
-	const queue: unknown[] = [value];
-	const visited = new Set<object>();
-
-	while (queue.length) {
-		const current = queue.shift();
-		if (!current || typeof current !== "object" || visited.has(current)) {
-			continue;
-		}
-		visited.add(current);
-		for (const [key, nestedValue] of Object.entries(current)) {
-			const normalizedKey = key.toLowerCase().replaceAll(/[^a-z0-9]/g, "");
-			if (candidates.has(normalizedKey)) {
-				return nestedValue;
-			}
-			if (nestedValue && typeof nestedValue === "object") {
-				queue.push(nestedValue);
-			}
-		}
-	}
-	return undefined;
-}
-
 export function DashboardDetailBody({
 	error,
 	fields = [],
 	isLoading = false,
+	isRefreshing = false,
+	onRetry,
 	rawValue,
 }: DashboardDetailBodyProps) {
 	if (isLoading) {
@@ -82,6 +61,12 @@ export function DashboardDetailBody({
 				<div>
 					<strong>Details unavailable</strong>
 					<p>{error} Try opening this result again.</p>
+					{onRetry ? (
+						<Button onClick={onRetry} size="sm" type="button" variant="outline">
+							<RefreshCw aria-hidden="true" />
+							Retry
+						</Button>
+					) : null}
 				</div>
 			</div>
 		);
@@ -89,6 +74,12 @@ export function DashboardDetailBody({
 
 	return (
 		<ScrollArea className="dashboard-detail-scroll">
+			{isRefreshing ? (
+				<div aria-live="polite" className="dashboard-detail-updating">
+					<Loader2 aria-hidden="true" />
+					Updating details…
+				</div>
+			) : null}
 			<div className="dashboard-detail-grid">
 				{fields.map((field) => (
 					<div className="dashboard-detail-field" key={field.label}>

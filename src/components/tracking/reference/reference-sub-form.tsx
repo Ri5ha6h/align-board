@@ -16,9 +16,9 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { ParamType, ReferenceSubscriptionFormType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList } from "@/utils/default-data/default-data";
-import { useReferenceSubscriptionForm } from "@/utils/schema";
+import { useReferenceSubscriptionForm, type ReferenceSubscriptionFormValues } from "@/utils/schema";
 
 export const ReferenceSubscriptionForm = () => {
 	const id = useId();
@@ -29,7 +29,7 @@ export const ReferenceSubscriptionForm = () => {
 
 	const form = useReferenceSubscriptionForm(searchParams);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: ReferenceSubscriptionFormValues) => {
 		//console.log("submit data", data);
 		if (data.subscriptionId) {
 			let carrierCheck = data.subscriptionId.split("_")[0];
@@ -49,12 +49,12 @@ export const ReferenceSubscriptionForm = () => {
 		}
 
 		if (data.subscriptionId) {
-			filterNavigation.apply(createQueryString(data));
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
 	const createQueryString = React.useCallback(
-		(data: ReferenceSubscriptionFormType) => {
+		(data: ReferenceSubscriptionFormValues) => {
 			const refParams = new URLSearchParams(searchParams.toString());
 
 			refParams.set("subscriptionId", data.subscriptionId);
@@ -69,7 +69,7 @@ export const ReferenceSubscriptionForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2"
+					className="dashboard-filter-form grid-cols-1"
 				>
 					<FormField
 						control={form.control}

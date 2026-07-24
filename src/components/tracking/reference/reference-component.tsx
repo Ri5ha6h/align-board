@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import React from "react";
 
 import { DashboardFilter } from "@/components/dashboard/dashboard-filter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { ParamType } from "@/utils/common-types";
 
 import { ReferenceAllForm } from "./reference-all-form";
 import { ReferenceAllTable } from "./reference-all-table";
@@ -15,9 +15,12 @@ import { ReferenceSubscriptionTable } from "./reference-sub-table";
 import { ReferenceTable } from "./reference-table";
 
 export default function MainReferenceComponent() {
-	const params = useParams();
+	const params = useParams<ParamType>();
 	const searchParams = useSearchParams();
-	const [tabVal, setTabVal] = React.useState(searchParams.get("category") || "all");
+	const requestedCategory = searchParams.get("category");
+	const tabValue = ["all", "subscription", "reference"].includes(requestedCategory ?? "")
+		? (requestedCategory ?? "all")
+		: "all";
 
 	const row1 = [
 		{
@@ -68,20 +71,17 @@ export default function MainReferenceComponent() {
 	];
 
 	return (
-		<Tabs
-			className="w-full"
-			value={tabVal}
-			onValueChange={(value) => {
-				setTabVal(value);
-			}}
-		>
-			<TabsList className="grid w-full grid-cols-3">
+		<Tabs className="w-full" value={tabValue}>
+			<TabsList className="dashboard-reference-tabs grid w-full grid-cols-3">
 				{row1.map((tab) => (
-					<Link key={tab.value} href={{ pathname: tab.path, query: tab.query }}>
-						<TabsTrigger value={tab.value} className="w-full cursor-pointer">
+					<TabsTrigger asChild key={tab.value} value={tab.value}>
+						<Link
+							className="w-full cursor-pointer"
+							href={{ pathname: tab.path, query: tab.query }}
+						>
 							{tab.name}
-						</TabsTrigger>
-					</Link>
+						</Link>
+					</TabsTrigger>
 				))}
 			</TabsList>
 			<TabsContent value="all">

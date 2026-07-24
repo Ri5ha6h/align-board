@@ -49,11 +49,13 @@ type SummaryFormValues = {
 
 export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 	const id = useId();
+	const [calendarToday, setCalendarToday] = React.useState<Date | null>(null);
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const queueOptions = React.useMemo(() => getQueueList(params.mode), [params.mode]);
 	const searchParams = useSearchParams();
 	const filterNavigation = useDashboardFilterNavigation();
+	React.useEffect(() => setCalendarToday(new Date()), []);
 	const queryCarriers = React.useMemo(
 		() => (searchParams.get("carriers") ? searchParams.get("carriers")?.split(",") : []),
 		[searchParams],
@@ -85,7 +87,7 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 				message: "Start date and End date are required.",
 			});
 		} else {
-			filterNavigation.apply(createQueryString(data));
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
@@ -126,7 +128,7 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2 lg:grid-cols-4"
+					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
 				>
 					<FormField
 						control={form.control}
@@ -146,7 +148,6 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 												? "Select Terminals you like..."
 												: "Select Carriers you like..."
 										}
-										hidePlaceholderWhenSelected
 										maxSelected={5}
 										emptyIndicator={
 											<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
@@ -240,10 +241,16 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 												selected={field.value}
 												onSelect={field.onChange}
 												numberOfMonths={1}
-												disabled={{
-													before: startOfDay(subDays(new Date(), 44)),
-													after: new Date(),
-												}}
+												disabled={
+													calendarToday
+														? {
+																before: startOfDay(
+																	subDays(calendarToday, 44),
+																),
+																after: calendarToday,
+															}
+														: undefined
+												}
 											/>
 										</PopoverContent>
 									</Popover>

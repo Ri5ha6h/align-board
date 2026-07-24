@@ -7,7 +7,7 @@ import {
 	DashboardFilterActions,
 	useDashboardFilterNavigation,
 } from "@/components/dashboard/dashboard-filter-actions";
-import MultipleSelector from "@/components/multi-select";
+import MultipleSelector, { type Option } from "@/components/multi-select";
 import {
 	Form,
 	FormControl,
@@ -23,9 +23,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { InducedFormType, ParamType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList, getYearList } from "@/utils/default-data/default-data";
-import { useInducedForm } from "@/utils/schema";
+import { useInducedForm, type InducedFormValues } from "@/utils/schema";
 
 export const InducedForm = () => {
 	const id = useId();
@@ -34,28 +34,18 @@ export const InducedForm = () => {
 	const filterNavigation = useDashboardFilterNavigation();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const yearOptions = React.useMemo(() => getYearList(), []);
-	const queryCarriers = React.useMemo(
-		() => (searchParams.get("carriers") ? searchParams.get("carriers")?.split(",") : []),
+	const newCarrOpt = React.useMemo<Option[]>(
+		() =>
+			(searchParams.get("carriers") ?? "")
+				.split(",")
+				.filter(Boolean)
+				.map((carrier) => ({ label: carrier, value: carrier })),
 		[searchParams],
 	);
 
-	const newCarrOpt: any = [];
-
-	if (queryCarriers !== undefined && queryCarriers.length > 0) {
-		queryCarriers.map((carrier) => {
-			if (carrier) {
-				const carrObj = {
-					label: carrier,
-					value: carrier,
-				};
-				newCarrOpt.push(carrObj);
-			}
-		});
-	}
-
 	const form = useInducedForm(newCarrOpt, searchParams);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: InducedFormValues) => {
 		//console.log("submit data", data);
 		if (data.carriers.length === 0) {
 			form.setError("carriers", {
@@ -63,22 +53,13 @@ export const InducedForm = () => {
 				message: "Select at least one carrier.",
 			});
 		} else {
-			filterNavigation.apply(createQueryString(data));
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
 	const createQueryString = React.useCallback(
-		(data: InducedFormType) => {
-			let carrStr = "";
-			if (data.carriers.length > 0) {
-				data.carriers.map((carrier: any, index: number) => {
-					if (index === data.carriers.length - 1) {
-						carrStr += carrier.value;
-					} else {
-						carrStr += carrier.value + ",";
-					}
-				});
-			}
+		(data: InducedFormValues) => {
+			const carrStr = data.carriers.map((carrier) => carrier.value).join(",");
 
 			const inducedParams = new URLSearchParams(searchParams.toString());
 			if (carrStr !== "") {
@@ -99,7 +80,7 @@ export const InducedForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 md:grid-cols-3"
+					className="dashboard-filter-form grid-cols-1 md:grid-cols-2"
 				>
 					<FormField
 						control={form.control}
@@ -119,7 +100,6 @@ export const InducedForm = () => {
 												? "Select Terminals you like..."
 												: "Select Carriers you like..."
 										}
-										hidePlaceholderWhenSelected
 										maxSelected={3}
 										emptyIndicator={
 											<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">

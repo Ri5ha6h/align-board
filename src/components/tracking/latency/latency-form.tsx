@@ -7,7 +7,7 @@ import {
 	DashboardFilterActions,
 	useDashboardFilterNavigation,
 } from "@/components/dashboard/dashboard-filter-actions";
-import MultipleSelector from "@/components/multi-select";
+import MultipleSelector, { type Option } from "@/components/multi-select";
 import {
 	Form,
 	FormControl,
@@ -23,9 +23,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { LatencyFormType, ParamType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList, getQueueList, getRefList } from "@/utils/default-data/default-data";
-import { useLatencyForm } from "@/utils/schema";
+import { useLatencyForm, type LatencyFormValues } from "@/utils/schema";
 
 export const LatencyForm = () => {
 	const id = useId();
@@ -35,42 +35,24 @@ export const LatencyForm = () => {
 	const refOptions = React.useMemo(() => getRefList(params.mode), [params.mode]);
 	const searchParams = useSearchParams();
 	const filterNavigation = useDashboardFilterNavigation();
-	const queryCarriers = React.useMemo(
-		() => (searchParams.get("carriers") ? searchParams.get("carriers")?.split(",") : []),
+	const newCarrOpt = React.useMemo<Option[]>(
+		() =>
+			(searchParams.get("carriers") ?? "")
+				.split(",")
+				.filter(Boolean)
+				.map((carrier) => ({ label: carrier, value: carrier })),
 		[searchParams],
 	);
-	const newCarrOpt: any = [];
-
-	if (queryCarriers !== undefined && queryCarriers.length > 0) {
-		queryCarriers.map((carrier) => {
-			if (carrier) {
-				const carrObj = {
-					label: carrier,
-					value: carrier,
-				};
-				newCarrOpt.push(carrObj);
-			}
-		});
-	}
 
 	const form = useLatencyForm(newCarrOpt, searchParams);
 
-	const onSubmit = (data: any) => {
-		filterNavigation.apply(createQueryString(data));
+	const onSubmit = (data: LatencyFormValues) => {
+		filterNavigation.apply(createQueryString(data), () => form.reset(data));
 	};
 
 	const createQueryString = React.useCallback(
-		(data: LatencyFormType) => {
-			let str = "";
-			if (data.carriers.length > 0) {
-				data.carriers.map((carrier: any, index: number) => {
-					if (index === data.carriers.length - 1) {
-						str += carrier.value;
-					} else {
-						str += carrier.value + ",";
-					}
-				});
-			}
+		(data: LatencyFormValues) => {
+			const str = data.carriers.map((carrier) => carrier.value).join(",");
 			const latencyParams = new URLSearchParams(searchParams.toString());
 			if (str !== "") {
 				latencyParams.set("carriers", str);
@@ -90,7 +72,7 @@ export const LatencyForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2 lg:grid-cols-4"
+					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
 				>
 					<FormField
 						control={form.control}
@@ -110,7 +92,6 @@ export const LatencyForm = () => {
 												? "Select Terminals you like..."
 												: "Select Carriers you like..."
 										}
-										hidePlaceholderWhenSelected
 										maxSelected={5}
 										emptyIndicator={
 											<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
