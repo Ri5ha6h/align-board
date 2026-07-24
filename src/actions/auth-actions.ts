@@ -11,11 +11,13 @@ import {
 	type SessionPayload,
 } from "@/lib/session";
 import { SESSION_COOKIE_NAME } from "@/lib/session-constants";
+import { getErrorMessage } from "@/utils/action-result";
 import type { AuthType } from "@/utils/common-types";
 
 import { mainRequestAction } from "./main-actions";
 
 type GetUserResult = { data: SessionPayload; success: true } | { data: string; success: false };
+type SignInRecord = SessionPayload & { password: string };
 
 // auth actions
 
@@ -32,7 +34,7 @@ export const signUpAction = async ({ username, password }: AuthType) => {
 			password: hashedPassword,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<unknown>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -46,9 +48,9 @@ export const signUpAction = async ({ username, password }: AuthType) => {
 			data: "User created successfully",
 			success: true,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
+			data: getErrorMessage(error),
 			success: false,
 		};
 	}
@@ -84,7 +86,7 @@ export const signInAction = async ({ username, password }: AuthType) => {
 			username: requestUsername,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<SignInRecord>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -116,9 +118,9 @@ export const signInAction = async ({ username, password }: AuthType) => {
 			data: "Sign in Successful.",
 			success: true,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
+			data: getErrorMessage(error),
 			success: false,
 		};
 	}
@@ -174,9 +176,9 @@ export const signOutAction = async () => {
 			data: "Sign out Successful.",
 			success: true,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
+			data: getErrorMessage(error),
 			success: false,
 		};
 	}

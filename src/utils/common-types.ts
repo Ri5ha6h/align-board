@@ -228,7 +228,6 @@ export type InducedFormType = {
 
 export type InducedChartType = {
 	date: string;
-	latency: number;
-};
+} & Record<string, string | number | null | undefined>;
 
 // ************* dashboard types end ****************

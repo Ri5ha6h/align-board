@@ -27,7 +27,9 @@ export const useStatusQuery = (status: string, params: ParamType) => {
 			return response;
 		},
 		gcTime: 1000 * 60 * 60,
-		staleTime: 1000 * 60 * 60,
+		staleTime: 1000 * 60 * 15,
+		refetchOnWindowFocus: true,
+		refetchOnReconnect: true,
 	});
 
 	return query;
@@ -92,7 +94,10 @@ export const useSummaryQuery = (
 };
 
 // history query
-export const useHistoryQuery = (params: ParamType, searchParams: any) => {
+export const useHistoryQuery = (
+	params: ParamType,
+	searchParams: Pick<ReadonlyURLSearchParams, "get">,
+) => {
 	const query = useQuery({
 		queryKey: [
 			"history",
@@ -108,8 +113,8 @@ export const useHistoryQuery = (params: ParamType, searchParams: any) => {
 			const response = await getHistoryAction({
 				env: params.env,
 				mode: params.mode,
-				subscriptionId: searchParams.get("subId").toUpperCase(),
-				historyType: searchParams.get("historyType"),
+				subscriptionId: (searchParams.get("subId") ?? "").toUpperCase(),
+				historyType: searchParams.get("historyType") ?? "DIFF",
 				startTime: searchParams.get("from") || "",
 				endTime: searchParams.get("to") || "",
 			});
@@ -136,6 +141,7 @@ export const useHistoryFetchQuery = (
 			`${params.mode}`,
 			`${params.env}`,
 			`${schedulerId}`,
+			`${subscriptionId}`,
 			`${resourceId}`,
 		],
 		queryFn: async () => {
@@ -147,8 +153,8 @@ export const useHistoryFetchQuery = (
 			});
 			return response;
 		},
-		gcTime: 1000 * 60 * 60 * 24,
-		staleTime: 1000 * 60 * 60 * 24,
+		gcTime: 1000 * 60 * 60 * 4,
+		staleTime: 1000 * 60 * 120,
 		enabled,
 	});
 
@@ -156,7 +162,11 @@ export const useHistoryFetchQuery = (
 };
 
 // latency fetch query
-export const useLatencyQuery = (params: ParamType, newCarrOpt: string[], searchParams: any) => {
+export const useLatencyQuery = (
+	params: ParamType,
+	newCarrOpt: string[],
+	searchParams: Pick<ReadonlyURLSearchParams, "get">,
+) => {
 	const query = useQuery({
 		queryKey: [
 			"latency",
@@ -171,8 +181,8 @@ export const useLatencyQuery = (params: ParamType, newCarrOpt: string[], searchP
 				env: params.env,
 				mode: params.mode,
 				carriers: newCarrOpt,
-				queue: searchParams.get("queue"),
-				referenceType: searchParams.get("refType"),
+				queue: searchParams.get("queue") ?? "NORMAL",
+				referenceType: searchParams.get("refType") ?? "ALL",
 			});
 			return response;
 		},
@@ -184,7 +194,10 @@ export const useLatencyQuery = (params: ParamType, newCarrOpt: string[], searchP
 };
 
 // reference all query
-export const useReferenceAllQuery = (params: ParamType, searchParams: any) => {
+export const useReferenceAllQuery = (
+	params: ParamType,
+	searchParams: Pick<ReadonlyURLSearchParams, "get">,
+) => {
 	const query = useQuery({
 		queryKey: [
 			"reference-all",
@@ -201,11 +214,11 @@ export const useReferenceAllQuery = (params: ParamType, searchParams: any) => {
 			const response = await getReferenceAllAction({
 				env: params.env,
 				mode: params.mode,
-				carrier: searchParams.get("carrier"),
-				queue: searchParams.get("queue"),
-				referenceType: searchParams.get("refType"),
-				refStatus: searchParams.get("refStatus"),
-				bucket: searchParams.get("bucket"),
+				carrier: searchParams.get("carrier") ?? "",
+				queue: searchParams.get("queue") ?? "NORMAL",
+				referenceType: searchParams.get("refType") ?? "",
+				refStatus: searchParams.get("refStatus") ?? "ACTIVE",
+				bucket: searchParams.get("bucket") ?? "",
 			});
 			return response;
 		},
@@ -244,8 +257,8 @@ export const useReferenceInfoQuery = (
 			});
 			return response;
 		},
-		gcTime: 1000 * 60 * 60,
-		staleTime: 1000 * 60 * 60,
+		gcTime: 1000 * 60 * 60 * 4,
+		staleTime: 1000 * 60 * 120,
 		enabled,
 	});
 
@@ -309,7 +322,7 @@ export const useReferenceSubscriptionQuery = (
 // induced query
 export const useInducedQuery = (params: ParamType, newCarrOpt: string[], year: string) => {
 	const query = useQuery({
-		queryKey: ["summary", `${params.mode}`, `${params.env}`, newCarrOpt, year],
+		queryKey: ["induced", `${params.mode}`, `${params.env}`, newCarrOpt, year],
 		queryFn: async () => {
 			const response = await getInducedAction({
 				env: params.env,

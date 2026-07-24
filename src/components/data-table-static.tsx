@@ -20,8 +20,8 @@ import * as React from "react";
 import {
 	DashboardColumnControls,
 	DashboardMobileCards,
-	getInitialColumnVisibility,
 } from "@/components/dashboard/dashboard-table-tools";
+import { getInitialColumnVisibility } from "@/components/dashboard/dashboard-table-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

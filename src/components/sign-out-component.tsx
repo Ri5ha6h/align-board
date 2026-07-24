@@ -25,7 +25,6 @@ export const SignOutComponent = ({ compact = false }: { compact?: boolean }) => 
 
 		isSignOutPendingRef.current = true;
 		setIsSignOutPending(true);
-		let didSignOut = false;
 		let resumeSessionActivity: () => void = () => undefined;
 		try {
 			resumeSessionActivity = await prepareSessionLogout();
@@ -39,7 +38,6 @@ export const SignOutComponent = ({ compact = false }: { compact?: boolean }) => 
 				return;
 			}
 
-			didSignOut = true;
 			queryClient.clear();
 			try {
 				localStorage.removeItem(SESSION_ACTIVITY_STORAGE_KEY);
@@ -54,10 +52,8 @@ export const SignOutComponent = ({ compact = false }: { compact?: boolean }) => 
 			resumeSessionActivity();
 			toast.error("Uh oh! Something went wrong, Sign out failed.");
 		} finally {
-			if (!didSignOut) {
-				isSignOutPendingRef.current = false;
-				setIsSignOutPending(false);
-			}
+			isSignOutPendingRef.current = false;
+			setIsSignOutPending(false);
 		}
 	};
 

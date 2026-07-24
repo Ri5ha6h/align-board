@@ -1,5 +1,8 @@
 "use server";
 
+import { getErrorMessage } from "@/utils/action-result";
+import type { InducedChartType, LatencyTableType } from "@/utils/common-types";
+
 import { getUserAction } from "./auth-actions";
 import { mainRequestAction } from "./main-actions";
 
@@ -49,7 +52,7 @@ export const getLatencyAction = async ({
 			};
 		}
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<LatencyTableType[]>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -67,12 +70,12 @@ export const getLatencyAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
@@ -105,7 +108,7 @@ export const getInducedAction = async ({
 			year: year,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<InducedChartType[]>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -123,12 +126,12 @@ export const getInducedAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };

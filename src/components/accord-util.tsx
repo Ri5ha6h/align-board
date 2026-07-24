@@ -57,7 +57,7 @@ export function StatusAccordion() {
 	return (
 		<CommonAccordion>
 			<li>Current status and status history load automatically.</li>
-			<li>Use More Details to inspect the complete carrier notice.</li>
+			<li>Use View Details to inspect the complete carrier notice.</li>
 			<li>
 				Results are cached briefly. Use Refresh when you need the latest available notices.
 			</li>

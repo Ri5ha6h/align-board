@@ -1,6 +1,8 @@
 "use server";
 
 import { getStatusManagementDeniedMessage, isAlignUsername } from "@/lib/user-access";
+import { getErrorMessage } from "@/utils/action-result";
+import type { StatusColumnType, SummaryType } from "@/utils/common-types";
 
 import { getUserAction } from "./auth-actions";
 import { mainRequestAction } from "./main-actions";
@@ -32,7 +34,7 @@ export const getStatusAction = async ({
 			status: status.toUpperCase(),
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<StatusColumnType[]>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -54,12 +56,12 @@ export const getStatusAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
@@ -145,7 +147,7 @@ export const createUpdateStatusAction = async ({
 			};
 		}
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<unknown>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -159,12 +161,12 @@ export const createUpdateStatusAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
@@ -203,7 +205,7 @@ export const closeStatusAction = async ({
 			statusKey: statusKey,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<unknown>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -219,12 +221,12 @@ export const closeStatusAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
@@ -263,7 +265,7 @@ export const deleteStatusAction = async ({
 			statusKey: statusKey,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<unknown>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -275,12 +277,12 @@ export const deleteStatusAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
@@ -333,7 +335,7 @@ export const getSummaryAction = async ({
 			};
 		}
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<SummaryType[]>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -349,12 +351,12 @@ export const getSummaryAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
