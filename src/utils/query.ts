@@ -1,6 +1,6 @@
 // dashboard queries
 
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { ReadonlyURLSearchParams } from "next/navigation";
 
 import { getFetchHistoryAction, getHistoryAction } from "@/actions/history-actions";
@@ -27,11 +27,46 @@ export const useStatusQuery = (status: string, params: ParamType) => {
 			return response;
 		},
 		gcTime: 1000 * 60 * 60,
-		staleTime: 1000 * 60 * 60,
+		staleTime: 1000 * 60 * 15,
+		refetchOnWindowFocus: true,
+		refetchOnReconnect: true,
 	});
 
 	return query;
 };
+
+export interface SummaryQueryInput {
+	carriers: string[];
+	endTime: string;
+	env: string;
+	mode: string;
+	queue: string;
+	startTime: string;
+}
+
+export const summaryQueryOptions = (input: SummaryQueryInput) =>
+	queryOptions({
+		queryKey: [
+			"summary",
+			input.mode,
+			input.env,
+			input.carriers,
+			input.queue,
+			input.startTime,
+			input.endTime,
+		],
+		queryFn: async () =>
+			await getSummaryAction({
+				env: input.env,
+				mode: input.mode,
+				carriers: input.carriers,
+				queue: input.queue,
+				startTime: input.startTime,
+				endTime: input.endTime,
+			}),
+		gcTime: 1000 * 60 * 30,
+		staleTime: 1000 * 60 * 30,
+	});
 
 // summary query
 export const useSummaryQuery = (
@@ -44,36 +79,25 @@ export const useSummaryQuery = (
 	const startTime = isAlignUser ? searchParams.get("from") || "" : "";
 	const endTime = isAlignUser ? searchParams.get("to") || "" : "";
 
-	const query = useQuery({
-		queryKey: [
-			"summary",
-			`${params.mode}`,
-			`${params.env}`,
-			newCarrOpt,
+	const query = useQuery(
+		summaryQueryOptions({
+			mode: params.mode,
+			env: params.env,
+			carriers: newCarrOpt,
 			queue,
 			startTime,
 			endTime,
-		],
-		queryFn: async () => {
-			const response = await getSummaryAction({
-				env: params.env,
-				mode: params.mode,
-				carriers: newCarrOpt,
-				queue: queue,
-				startTime: startTime,
-				endTime: endTime,
-			});
-			return response;
-		},
-		gcTime: 1000 * 60 * 30,
-		staleTime: 1000 * 60 * 30,
-	});
+		}),
+	);
 
 	return query;
 };
 
 // history query
-export const useHistoryQuery = (params: ParamType, searchParams: any) => {
+export const useHistoryQuery = (
+	params: ParamType,
+	searchParams: Pick<ReadonlyURLSearchParams, "get">,
+) => {
 	const query = useQuery({
 		queryKey: [
 			"history",
@@ -89,8 +113,8 @@ export const useHistoryQuery = (params: ParamType, searchParams: any) => {
 			const response = await getHistoryAction({
 				env: params.env,
 				mode: params.mode,
-				subscriptionId: searchParams.get("subId").toUpperCase(),
-				historyType: searchParams.get("historyType"),
+				subscriptionId: (searchParams.get("subId") ?? "").toUpperCase(),
+				historyType: searchParams.get("historyType") ?? "DIFF",
 				startTime: searchParams.get("from") || "",
 				endTime: searchParams.get("to") || "",
 			});
@@ -109,6 +133,7 @@ export const useHistoryFetchQuery = (
 	schedulerId: string,
 	subscriptionId: string,
 	resourceId: string,
+	enabled = true,
 ) => {
 	const query = useQuery({
 		queryKey: [
@@ -116,6 +141,7 @@ export const useHistoryFetchQuery = (
 			`${params.mode}`,
 			`${params.env}`,
 			`${schedulerId}`,
+			`${subscriptionId}`,
 			`${resourceId}`,
 		],
 		queryFn: async () => {
@@ -127,15 +153,20 @@ export const useHistoryFetchQuery = (
 			});
 			return response;
 		},
-		gcTime: 1000 * 60 * 60 * 24,
-		staleTime: 1000 * 60 * 60 * 24,
+		gcTime: 1000 * 60 * 60 * 4,
+		staleTime: 1000 * 60 * 120,
+		enabled,
 	});
 
 	return query;
 };
 
 // latency fetch query
-export const useLatencyQuery = (params: ParamType, newCarrOpt: string[], searchParams: any) => {
+export const useLatencyQuery = (
+	params: ParamType,
+	newCarrOpt: string[],
+	searchParams: Pick<ReadonlyURLSearchParams, "get">,
+) => {
 	const query = useQuery({
 		queryKey: [
 			"latency",
@@ -150,8 +181,8 @@ export const useLatencyQuery = (params: ParamType, newCarrOpt: string[], searchP
 				env: params.env,
 				mode: params.mode,
 				carriers: newCarrOpt,
-				queue: searchParams.get("queue"),
-				referenceType: searchParams.get("refType"),
+				queue: searchParams.get("queue") ?? "NORMAL",
+				referenceType: searchParams.get("refType") ?? "ALL",
 			});
 			return response;
 		},
@@ -163,7 +194,10 @@ export const useLatencyQuery = (params: ParamType, newCarrOpt: string[], searchP
 };
 
 // reference all query
-export const useReferenceAllQuery = (params: ParamType, searchParams: any) => {
+export const useReferenceAllQuery = (
+	params: ParamType,
+	searchParams: Pick<ReadonlyURLSearchParams, "get">,
+) => {
 	const query = useQuery({
 		queryKey: [
 			"reference-all",
@@ -180,11 +214,11 @@ export const useReferenceAllQuery = (params: ParamType, searchParams: any) => {
 			const response = await getReferenceAllAction({
 				env: params.env,
 				mode: params.mode,
-				carrier: searchParams.get("carrier"),
-				queue: searchParams.get("queue"),
-				referenceType: searchParams.get("refType"),
-				refStatus: searchParams.get("refStatus"),
-				bucket: searchParams.get("bucket"),
+				carrier: searchParams.get("carrier") ?? "",
+				queue: searchParams.get("queue") ?? "NORMAL",
+				referenceType: searchParams.get("refType") ?? "",
+				refStatus: searchParams.get("refStatus") ?? "ACTIVE",
+				bucket: searchParams.get("bucket") ?? "",
 			});
 			return response;
 		},
@@ -196,7 +230,12 @@ export const useReferenceAllQuery = (params: ParamType, searchParams: any) => {
 };
 
 // reference info query
-export const useReferenceInfoQuery = (params: ParamType, searchParams: any, reference: string) => {
+export const useReferenceInfoQuery = (
+	params: ParamType,
+	searchParams: Pick<ReadonlyURLSearchParams, "get">,
+	reference: string,
+	enabled = true,
+) => {
 	const query = useQuery({
 		queryKey: [
 			"reference-info",
@@ -211,15 +250,16 @@ export const useReferenceInfoQuery = (params: ParamType, searchParams: any, refe
 			const response = await getReferenceInfoAction({
 				env: params.env,
 				mode: params.mode,
-				carrier: searchParams.get("carrier"),
-				referenceType: searchParams.get("refType"),
-				refStatus: searchParams.get("refStatus"),
+				carrier: searchParams.get("carrier") ?? "",
+				referenceType: searchParams.get("refType") ?? "",
+				refStatus: searchParams.get("refStatus") ?? "",
 				reference: reference,
 			});
 			return response;
 		},
-		gcTime: 1000 * 60 * 60,
-		staleTime: 1000 * 60 * 60,
+		gcTime: 1000 * 60 * 60 * 4,
+		staleTime: 1000 * 60 * 120,
+		enabled,
 	});
 
 	return query;
@@ -282,7 +322,7 @@ export const useReferenceSubscriptionQuery = (
 // induced query
 export const useInducedQuery = (params: ParamType, newCarrOpt: string[], year: string) => {
 	const query = useQuery({
-		queryKey: ["summary", `${params.mode}`, `${params.env}`, newCarrOpt, year],
+		queryKey: ["induced", `${params.mode}`, `${params.env}`, newCarrOpt, year],
 		queryFn: async () => {
 			const response = await getInducedAction({
 				env: params.env,

@@ -1,5 +1,8 @@
 "use server";
 
+import { getErrorMessage } from "@/utils/action-result";
+import type { ReferenceTableType } from "@/utils/common-types";
+
 import { getUserAction } from "./auth-actions";
 import { mainRequestAction } from "./main-actions";
 
@@ -42,7 +45,7 @@ export const getReferenceAllAction = async ({
 			bucket: bucket,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<ReferenceTableType[]>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -60,12 +63,12 @@ export const getReferenceAllAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
@@ -104,7 +107,7 @@ export const getReferenceInfoAction = async ({
 			reference: reference,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<unknown>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -122,12 +125,12 @@ export const getReferenceInfoAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
@@ -157,7 +160,7 @@ export const getReferenceAction = async ({
 			referenceId: referenceId,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<ReferenceTableType[]>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -175,12 +178,12 @@ export const getReferenceAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };
@@ -210,7 +213,7 @@ export const getReferenceSubscriptionAction = async ({
 			subscriptionId: subscriptionId,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<ReferenceTableType[]>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -228,12 +231,12 @@ export const getReferenceSubscriptionAction = async ({
 
 		return {
 			data: res?.data,
-			success: true,
+			success: true as const,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
-			success: false,
+			data: getErrorMessage(error),
+			success: false as const,
 		};
 	}
 };

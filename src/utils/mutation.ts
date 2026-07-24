@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import type { Dispatch, SetStateAction } from "react";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
 import { signInAction, signUpAction } from "@/actions/auth-actions";
@@ -8,14 +10,21 @@ import {
 	createUpdateStatusAction,
 	deleteStatusAction,
 } from "@/actions/status-summary-actions";
+import { isSessionLogoutQuarantined } from "@/lib/session-logout-client";
+import { getErrorMessage } from "@/utils/action-result";
 
 import type { AuthType, ParamType, StatusValueInternal } from "./common-types";
+import type { CloseDeleteStatusFormValues, StatusFormValues } from "./schema";
+
+type ResettableForm<T extends FieldValues> = Pick<UseFormReturn<T>, "reset">;
+type SetOpen = Dispatch<SetStateAction<boolean>>;
 
 // auth mutations
 
 // mutation for signUp
-export const useSignUpSubmitMutation = (form: any) => {
+export const useSignUpSubmitMutation = (form: ResettableForm<AuthType>) => {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const submit = useMutation({
 		mutationFn: async (data: AuthType) => await signUpAction(data),
 		onSuccess: (data) => {
@@ -25,13 +34,14 @@ export const useSignUpSubmitMutation = (form: any) => {
 				});
 			} else {
 				form.reset({ username: "", password: "" });
+				queryClient.clear();
 				router.push("/signin");
 				toast.success("Sign up Successful.");
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
 			toast.error("Uh oh! Something went wrong, Sign up failed.", {
-				description: error.message,
+				description: getErrorMessage(error),
 			});
 		},
 	});
@@ -40,8 +50,9 @@ export const useSignUpSubmitMutation = (form: any) => {
 };
 
 // mutation for signIn
-export const useSignInSubmitMutation = (form: any) => {
+export const useSignInSubmitMutation = (form: ResettableForm<AuthType>) => {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const submit = useMutation({
 		mutationFn: async (data: AuthType) => await signInAction(data),
 		onSuccess: (data) => {
@@ -51,13 +62,15 @@ export const useSignInSubmitMutation = (form: any) => {
 				});
 			} else {
 				form.reset({ username: "", password: "" });
-				router.push("/dashboard");
+				queryClient.clear();
+				router.replace("/dashboard/tracking/ocean/prod/status");
+				router.refresh();
 				toast.success("Sign In Successful.");
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
 			toast.error("Uh oh! Something went wrong, Sign in failed.", {
-				description: error.message,
+				description: getErrorMessage(error),
 			});
 		},
 	});
@@ -72,21 +85,24 @@ export const useSignInSubmitMutation = (form: any) => {
 // create/update issue mutation
 export const useStatusCUMutation = (
 	params: ParamType,
-	form: any,
+	form: ResettableForm<StatusFormValues>,
 	state: string,
 	statusKey: string,
 	tableType: string,
-	setOpen: any,
+	setOpen: SetOpen,
 ) => {
 	const queryClient = useQueryClient();
 	const submit = useMutation({
-		mutationFn: async (data: StatusValueInternal) =>
+		mutationFn: async (data: Omit<StatusValueInternal, "statusKey" | "type">) =>
 			await createUpdateStatusAction({
 				...data,
 				type: state,
 				statusKey: statusKey,
 			}),
 		onSuccess: async (data) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			if (!data.success) {
 				toast.error("Uh oh! Something went wrong.", {
 					description: data.data,
@@ -104,7 +120,7 @@ export const useStatusCUMutation = (
 						statusType: "",
 						issue: "",
 						impact: "",
-						rca: "",
+						jiraLink: "",
 						expectedResolutionDate: new Date(),
 						resolution: "IN-PROGRESS",
 					});
@@ -119,9 +135,12 @@ export const useStatusCUMutation = (
 				}
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			toast.error("Uh oh! Something went wrong.", {
-				description: error.message,
+				description: getErrorMessage(error),
 			});
 		},
 	});
@@ -131,14 +150,14 @@ export const useStatusCUMutation = (
 
 // close status mutation
 export const useCloseStatusMutation = (
-	form: any,
-	setOpen: any,
+	form: ResettableForm<CloseDeleteStatusFormValues>,
+	setOpen: SetOpen,
 	params: ParamType,
 	carrier: string,
 ) => {
 	const queryClient = useQueryClient();
 	const submit = useMutation({
-		mutationFn: async (d: any) =>
+		mutationFn: async (d: CloseDeleteStatusFormValues) =>
 			await closeStatusAction({
 				env: params.env,
 				mode: params.mode,
@@ -146,6 +165,9 @@ export const useCloseStatusMutation = (
 				statusKey: d.statusKey,
 			}),
 		onSuccess: async (data) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			if (!data.success) {
 				toast.error("Uh oh! Something went wrong.", {
 					description: data.data,
@@ -159,9 +181,12 @@ export const useCloseStatusMutation = (
 				toast.success("Status closed successfully.");
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			toast.error("Uh oh! Something went wrong.", {
-				description: error.message,
+				description: getErrorMessage(error),
 			});
 		},
 	});
@@ -171,8 +196,8 @@ export const useCloseStatusMutation = (
 
 // delete status mutation
 export const useDeleteStatusMutation = (
-	form: any,
-	setOpen: any,
+	form: ResettableForm<CloseDeleteStatusFormValues>,
+	setOpen: SetOpen,
 	params: ParamType,
 	carrier: string,
 	tableType: string,
@@ -187,6 +212,9 @@ export const useDeleteStatusMutation = (
 				statusKey: statusKey,
 			}),
 		onSuccess: async (data) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			if (!data.success) {
 				toast.error("Uh oh! Something went wrong.", {
 					description: data.data,
@@ -200,9 +228,12 @@ export const useDeleteStatusMutation = (
 				toast.success("Status deleted successfully.");
 			}
 		},
-		onError: (error: any) => {
+		onError: (error: unknown) => {
+			if (isSessionLogoutQuarantined()) {
+				return;
+			}
 			toast.error("Uh oh! Something went wrong.", {
-				description: error.message,
+				description: getErrorMessage(error),
 			});
 		},
 	});

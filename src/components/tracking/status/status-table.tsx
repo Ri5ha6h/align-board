@@ -1,29 +1,28 @@
 "use client";
 import type { ColumnDef, SortingFn } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
+import * as React from "react";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import { useDashboardQueryReport } from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { ParamType, StatusColumnType } from "@/utils/common-types";
+import type { ParamType, StatusColumnType, StatusValue } from "@/utils/common-types";
+import { formatUtcDate, formatUtcDateTime } from "@/utils/format-date";
 import { useStatusQuery } from "@/utils/query";
 
 import { StatusDetailDrawer } from "./status-detail-drawer";
 
 const disabledActionClassName =
-	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100";
+	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-[#444449] disabled:bg-[#2d2d31] disabled:text-[#71717a] disabled:opacity-100";
+
+const sortCreated: SortingFn<StatusColumnType> = (rowA, rowB) =>
+	Number(rowA.original.created_at) - Number(rowB.original.created_at);
 
 export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }) {
 	const params = useParams<ParamType>();
-
-	const sortCreatedFn: SortingFn<StatusColumnType> = (rowA, rowB, _columnId) => {
-		const statusA = +rowA.original.created_at - 19800000;
-		const statusB = +rowB.original.created_at - 19800000;
-		return statusA - statusB;
-	};
+	const [selectedStatus, setSelectedStatus] = React.useState<StatusValue | null>(null);
 
 	const columns: ColumnDef<StatusColumnType>[] = [
 		{
@@ -38,6 +37,10 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 				const carrier = row.original.value.carrier;
 				return <TableCellCustom>{carrier ? carrier : "-"}</TableCellCustom>;
 			},
+			meta: {
+				className: "dashboard-sticky-column",
+			},
+			enableHiding: false,
 			enableSorting: false,
 		},
 		{
@@ -46,11 +49,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Status</TableHeadCustom>,
 			cell: ({ row }) => {
 				const status = row.original.value.status;
-				const commonClass = "border p-[5px] rounded-sm";
-				let statusColor = commonClass + " bg-green-50 border-green-500 text-green-500";
-				if (status === "CLOSED")
-					statusColor = commonClass + " bg-red-50 border-red-500 text-red-500";
-				return <TableCellCustom className={statusColor}>{status}</TableCellCustom>;
+				return <TableCellCustom className="dashboard-data-tag">{status}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
@@ -63,9 +62,6 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 					<p className="w-32 truncate capitalize">{row.original.value.issue}</p>
 				</TableCellCustom>
 			),
-			meta: {
-				className: "sticky left-0 bg-white",
-			},
 			enableSorting: false,
 		},
 		{
@@ -77,9 +73,6 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 					<p className="w-46 truncate capitalize">{row.original.value.impact}</p>
 				</TableCellCustom>
 			),
-			meta: {
-				className: "sticky left-0 bg-white",
-			},
 			enableSorting: false,
 		},
 		{
@@ -88,17 +81,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Type</TableHeadCustom>,
 			cell: ({ row }) => {
 				const type = row.original.value.statusType;
-				const commonClass = "border p-[5px] rounded-sm";
-				let typeColor = commonClass + " bg-red-50 border-red-500 text-red-500";
-				if (type === "INFORMATION")
-					typeColor = commonClass + " bg-blue-50 border-blue-500 text-blue-500";
-				if (type === "WEBSITE MAINTENANCE")
-					typeColor = commonClass + " bg-teal-50 border-teal-500 text-teal-500";
-				if (type === "SYSTEM MAINTENANCE")
-					typeColor = commonClass + " bg-yellow-50 border-yellow-500 text-yellow-500";
-				if (type === "DEGRADATION")
-					typeColor = commonClass + " bg-orange-50 border-orange-500 text-orange-500";
-				return <TableCellCustom className={typeColor}>{type}</TableCellCustom>;
+				return <TableCellCustom className="dashboard-data-tag">{type}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
@@ -109,7 +92,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			cell: ({ row }) => {
 				return (
 					<TableCellCustom>
-						{format(row.original.value.expectedResolutionDate, "do MMM, yyyy")}
+						{formatUtcDate(row.original.value.expectedResolutionDate)}
 					</TableCellCustom>
 				);
 			},
@@ -121,28 +104,25 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Created At</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<TableCellCustom>
-						{format(
-							toDate(+row.original.created_at - 19800000),
-							"do MMM yyyy, HH:mm:ss",
-						)}
-					</TableCellCustom>
+					<TableCellCustom>{formatUtcDateTime(row.original.created_at)}</TableCellCustom>
 				);
 			},
-			sortingFn: sortCreatedFn,
+			sortingFn: sortCreated,
 		},
 		{
 			id: "more-detail",
 			accessorKey: "moreDetail",
-			header: () => <TableHeadCustom>More Detail</TableHeadCustom>,
+			header: () => <TableHeadCustom>Details</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<StatusDetailDrawer
+					<Button
+						className="dashboard-row-action"
+						onClick={() => setSelectedStatus(row.original.value)}
+						type="button"
 						variant="outline"
-						title="Status Details"
-						buttonTitle="More Detail"
-						data={row.original.value}
-					/>
+					>
+						View Details
+					</Button>
 				);
 			},
 			enableSorting: false,
@@ -239,13 +219,16 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 	}
 
 	const statusQuery = useStatusQuery(props.type.toUpperCase(), params);
+	useDashboardQueryReport({
+		data: statusQuery.data,
+		error: statusQuery.error,
+		isFetching: statusQuery.isFetching,
+		isPending: statusQuery.isPending,
+		success: statusQuery.data?.success,
+	});
 
 	if (statusQuery.isPending) {
-		return (
-			<div className="flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (statusQuery.isError || statusQuery.error) {
@@ -267,24 +250,9 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 						{statusQuery.isFetching ? "Fetching..." : "Refresh"}
 					</Button>
 				</div>
-				{statusQuery.isFetching ? (
-					<div className="flex h-full flex-col items-center justify-center">
-						<Loader2 className="animate-spin text-lg" />
-					</div>
-				) : (
-					<div className="flex h-full flex-col items-center justify-center">
-						<p
-							className={cn(
-								"text-2xl font-bold capitalize",
-								statusQuery.data?.data.includes("carriers are operational")
-									? "text-green-400"
-									: "",
-							)}
-						>
-							{statusQuery.data?.data}
-						</p>
-					</div>
-				)}
+				<div className="dashboard-empty-state">
+					<p className="capitalize">{statusQuery.data?.data}</p>
+				</div>
 			</div>
 		);
 	}
@@ -300,13 +268,32 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 						{statusQuery.isFetching ? "Fetching..." : "Refresh"}
 					</Button>
 				</div>
-				{statusQuery.isFetching ? (
-					<div className="flex h-full flex-col items-center justify-center">
-						<Loader2 className="animate-spin text-lg" />
-					</div>
-				) : (
-					<TableDataStaticComponent data={statusQuery.data} columns={columns} />
-				)}
+				<TableDataStaticComponent
+					data={statusQuery.data}
+					columns={columns}
+					preferenceKey={`status-${params.mode}-${props.type}`}
+					defaultVisibleColumnIds={[
+						params.mode === "terminal" ? "terminal" : "carrier",
+						"status",
+						"issue",
+						"impact",
+						"status-type",
+						"eta",
+						"more-detail",
+						...(props.isAlignUser
+							? ["edit", ...(props.type === "closed" ? [] : ["close"]), "delete"]
+							: []),
+					]}
+				/>
+				<StatusDetailDrawer
+					data={selectedStatus}
+					onOpenChange={(open) => {
+						if (!open) {
+							setSelectedStatus(null);
+						}
+					}}
+					open={selectedStatus !== null}
+				/>
 			</div>
 		</>
 	);

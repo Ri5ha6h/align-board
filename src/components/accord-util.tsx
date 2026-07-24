@@ -9,7 +9,7 @@ import {
 	AccordionTrigger,
 } from "@/components/ui/accordion";
 
-export function CommonAccordion({ children }: { children: React.ReactNode }) {
+function CommonAccordion({ children }: { children: React.ReactNode }) {
 	return (
 		<Accordion type="single" collapsible className="w-full">
 			<AccordionItem value="item-1">
@@ -26,46 +26,17 @@ export function CommonAccordion({ children }: { children: React.ReactNode }) {
 	);
 }
 
-export function IssueAccordion() {
-	return (
-		<CommonAccordion>
-			<li>
-				Initially active and closed issues will be fetched automatically. And this result
-				will be cached for sometime.
-			</li>
-			<li>In case there are no active issues. You can create a new one, if there is one.</li>
-			<li>By clicking more details button you can find additional details for the issue.</li>
-			<li>By clicking the edit button you can update the issue.</li>
-			<li>
-				You can add Emails and Additional Links. If there are more than one, add them as
-				comma separated. e.g. abc@xyz.com,def@xyz.com OR link1,link2
-			</li>
-			<li>
-				Send Notification, Close, and Delete buttons will show an additional modal to
-				confirm whether you want to proceed with the clicked option.
-			</li>
-			<li>
-				Upon updating, sending notification, closing, and deleting the issue, if the process
-				is successful the latest data will be fetched automatically in the background and
-				will be shown on the page.
-			</li>
-		</CommonAccordion>
-	);
-}
-
 export function StatusAccordion() {
 	return (
 		<CommonAccordion>
-			<li>Initially current status and status history will be fetched automatically.</li>
-			<li>In case there is a issue with any carrier. You can create a new status.</li>
+			<li>Current status and status history load automatically.</li>
+			<li>Use View Details to inspect the complete carrier notice.</li>
 			<li>
-				The data will cached for sometime. In case you want latest data hit the refresh
-				button.
+				Results are cached briefly. Use Refresh when you need the latest available notices.
 			</li>
 			<li>
-				Upon creating, updating, closing, and deleting the status, if the process is
-				successful the latest data will be fetched automatically in the background and will
-				be shown on the page.
+				Create, Edit, Close, and Delete are visible for authorized Align users but are
+				currently unavailable.
 			</li>
 		</CommonAccordion>
 	);

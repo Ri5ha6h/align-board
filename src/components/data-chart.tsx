@@ -1,14 +1,10 @@
+"use client";
+
+import { Eye, EyeOff } from "lucide-react";
+import dynamic from "next/dynamic";
 import * as React from "react";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	type ChartConfig,
-	ChartContainer,
-	ChartLegend,
-	ChartTooltip,
-	ChartTooltipContent,
-} from "@/components/ui/chart";
 import {
 	Select,
 	SelectContent,
@@ -17,151 +13,250 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
-const chartConfig = {
-	date: {
-		label: "date",
-	},
-} satisfies ChartConfig;
+const SERIES_STYLES = [
+	{ color: "#fafafa", dash: undefined },
+	{ color: "#d4d4d8", dash: "8 4" },
+	{ color: "#a1a1aa", dash: "2 4" },
+] as const;
 
-export default function ChartComponent({
-	chartData,
-	carriers,
-}: {
-	chartData: any;
+const SHORT_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+	day: "numeric",
+	month: "short",
+	timeZone: "UTC",
+});
+
+const LONG_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+	day: "numeric",
+	month: "short",
+	timeZone: "UTC",
+	year: "numeric",
+});
+
+export type ChartDatum = { date: string } & Record<string, string | number | null | undefined>;
+
+interface ChartComponentProps {
 	carriers: string[];
-}) {
+	chartData: ChartDatum[];
+}
+
+interface ChartCanvasProps {
+	carriers: string[];
+	filteredData: ChartDatum[];
+	focusedCarrier: string | null;
+	hiddenCarriers: ReadonlySet<string>;
+}
+
+function formatChartDate(value: unknown, formatter: Intl.DateTimeFormat) {
+	const date = new Date(String(value));
+	return Number.isNaN(date.getTime()) ? "Unknown date" : formatter.format(date);
+}
+
+const ChartCanvas = dynamic<ChartCanvasProps>(
+	() =>
+		import("recharts").then(
+			({ CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis }) => {
+				return function InducedLatencyChart({
+					carriers,
+					filteredData,
+					focusedCarrier,
+					hiddenCarriers,
+				}: ChartCanvasProps) {
+					return (
+						<figure
+							aria-label="Induced latency trends by carrier"
+							className="aspect-auto h-[280px] w-full"
+						>
+							<ResponsiveContainer height="100%" width="100%">
+								<LineChart
+									accessibilityLayer
+									data={filteredData}
+									margin={{ left: 12, right: 12 }}
+								>
+									<CartesianGrid stroke="#444449" vertical={false} />
+									<XAxis
+										axisLine={false}
+										dataKey="date"
+										stroke="#a1a1aa"
+										tickFormatter={(value) =>
+											formatChartDate(value, SHORT_DATE_FORMATTER)
+										}
+										tickLine={false}
+									/>
+									<YAxis
+										axisLine={false}
+										stroke="#a1a1aa"
+										tickFormatter={(value) => `${value}h`}
+										tickLine={false}
+									/>
+									<Tooltip
+										content={({ active, label, payload }) =>
+											active && payload?.length ? (
+												<div className="dashboard-chart-tooltip grid w-[210px] gap-2 border p-3">
+													<strong>
+														{formatChartDate(
+															label,
+															LONG_DATE_FORMATTER,
+														)}
+													</strong>
+													{payload.map((item) => (
+														<div
+															className="dashboard-chart-tooltip-row"
+															key={String(item.dataKey ?? item.name)}
+														>
+															<span
+																aria-hidden="true"
+																className="dashboard-chart-tooltip-swatch"
+																style={{
+																	backgroundColor: item.color,
+																}}
+															/>
+															<span>{String(item.name)}</span>
+															<strong>
+																{Number(item.value).toLocaleString(
+																	"en-US",
+																)}{" "}
+																h
+															</strong>
+														</div>
+													))}
+												</div>
+											) : null
+										}
+									/>
+									{carriers.map((carrier, index) => {
+										if (hiddenCarriers.has(carrier)) return null;
+										const style = SERIES_STYLES[index % SERIES_STYLES.length];
+										const isDimmed =
+											focusedCarrier !== null && focusedCarrier !== carrier;
+										return (
+											<Line
+												activeDot={{
+													r: 5,
+													stroke: "#202023",
+													strokeWidth: 2,
+												}}
+												dataKey={carrier}
+												dot={{
+													fill: "#202023",
+													r: 3,
+													stroke: style.color,
+													strokeWidth: 2,
+												}}
+												isAnimationActive={false}
+												key={carrier}
+												opacity={isDimmed ? 0.22 : 1}
+												stroke={style.color}
+												strokeDasharray={style.dash}
+												strokeLinecap="round"
+												strokeWidth={focusedCarrier === carrier ? 3.5 : 2.5}
+												type="monotone"
+											/>
+										);
+									})}
+								</LineChart>
+							</ResponsiveContainer>
+						</figure>
+					);
+				};
+			},
+		),
+	{
+		loading: () => <div className="dashboard-shimmer h-[280px] w-full" />,
+		ssr: false,
+	},
+);
+
+export default function ChartComponent({ carriers, chartData }: ChartComponentProps) {
 	const [timeRange, setTimeRange] = React.useState("7d");
+	const [hiddenCarriers, setHiddenCarriers] = React.useState<ReadonlySet<string>>(
+		() => new Set(),
+	);
+	const [focusedCarrier, setFocusedCarrier] = React.useState<string | null>(null);
 
-	const filteredData = chartData.filter((item: any) => {
-		const date = new Date(item.date);
-		const now = new Date();
-		let daysToSubtract = 7;
-		if (timeRange === "90d") {
-			daysToSubtract = 90;
-		} else if (timeRange === "60d") {
-			daysToSubtract = 60;
-		} else if (timeRange === "30d") {
-			daysToSubtract = 30;
-		} else if (timeRange === "all") {
-			return true;
-		}
+	const filteredData = React.useMemo(() => {
+		if (timeRange === "all") return Array.isArray(chartData) ? chartData : [];
+		const days =
+			timeRange === "90d" ? 90 : timeRange === "60d" ? 60 : timeRange === "30d" ? 30 : 7;
+		const threshold = new Date();
+		threshold.setUTCHours(0, 0, 0, 0);
+		threshold.setUTCDate(threshold.getUTCDate() - days);
+		return (Array.isArray(chartData) ? chartData : []).filter((item) => {
+			const date = new Date(item.date);
+			return !Number.isNaN(date.getTime()) && date >= threshold;
+		});
+	}, [chartData, timeRange]);
 
-		now.setDate(now.getDate() - daysToSubtract);
-		const now2 = now.toISOString().split("T")[0];
-		const newDate = new Date(now2);
-		return date >= newDate;
-	});
-
-	const updatedCarrierList = carriers.map((item, index) => {
-		if (index === 0) {
-			return { carrier: item, color: "#8884d8", hide: false };
-		} else if (index === 1) {
-			return { carrier: item, color: "#82ca9d", hide: false };
-		} else if (index === 2) {
-			return { carrier: item, color: "#ffca3a", hide: false };
-		}
-	});
-
-	const [hidden, setHidden] = React.useState<any>(updatedCarrierList);
+	const toggleCarrier = (carrier: string) => {
+		setHiddenCarriers((current) => {
+			const next = new Set(current);
+			if (next.has(carrier)) next.delete(carrier);
+			else next.add(carrier);
+			return next;
+		});
+	};
 
 	return (
-		<Card className="mt-5">
+		<Card className="dashboard-chart-card mt-5">
 			<CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
 				<div className="grid flex-1 gap-1 text-center sm:text-left">
-					<CardTitle className="text-xl">Latency</CardTitle>
-					<CardDescription>Showing latency in hours for each day.</CardDescription>
+					<CardTitle className="text-xl">Latency Trend</CardTitle>
+					<CardDescription>Daily induced latency, shown in hours.</CardDescription>
 				</div>
 				<Select value={timeRange} onValueChange={setTimeRange}>
-					<SelectTrigger
-						className="w-[160px] rounded-lg sm:ml-auto"
-						aria-label="Select a value"
-					>
-						<SelectValue placeholder="Last 3 months" />
+					<SelectTrigger aria-label="Chart time range" className="w-[160px] sm:ml-auto">
+						<SelectValue placeholder="Last 7 days" />
 					</SelectTrigger>
-					<SelectContent className="rounded-xl">
-						<SelectItem value="all" className="rounded-lg">
-							All
-						</SelectItem>
-						<SelectItem value="90d" className="rounded-lg">
-							Last 3 months
-						</SelectItem>
-						<SelectItem value="60d" className="rounded-lg">
-							Last 2 months
-						</SelectItem>
-						<SelectItem value="30d" className="rounded-lg">
-							Last 30 days
-						</SelectItem>
-						<SelectItem value="7d" className="rounded-lg">
-							Last 7 days
-						</SelectItem>
+					<SelectContent className="dashboard-select-content">
+						<SelectItem value="all">All</SelectItem>
+						<SelectItem value="90d">Last 3 months</SelectItem>
+						<SelectItem value="60d">Last 2 months</SelectItem>
+						<SelectItem value="30d">Last 30 days</SelectItem>
+						<SelectItem value="7d">Last 7 days</SelectItem>
 					</SelectContent>
 				</Select>
 			</CardHeader>
 			<CardContent className="p-4">
-				<ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-					<LineChart
-						accessibilityLayer
-						data={filteredData}
-						margin={{
-							left: 12,
-							right: 12,
-						}}
-					>
-						<CartesianGrid vertical={false} />
-						<XAxis
-							dataKey="date"
-							tickFormatter={(value) => {
-								const date = new Date(value);
-								return date.toLocaleDateString("en-US", {
-									month: "short",
-									day: "numeric",
-								});
-							}}
-						/>
-
-						<YAxis ticks={[0, 4, 8, 12, 16, 20]} />
-						<ChartTooltip
-							content={
-								<ChartTooltipContent
-									className="w-[150px]"
-									labelFormatter={(value) => {
-										return new Date(value).toLocaleDateString("en-US", {
-											month: "short",
-											day: "numeric",
-											year: "numeric",
-										});
+				<ChartCanvas
+					carriers={carriers}
+					filteredData={filteredData}
+					focusedCarrier={focusedCarrier}
+					hiddenCarriers={hiddenCarriers}
+				/>
+				<div aria-label="Toggle chart series" className="dashboard-chart-legend">
+					{carriers.map((carrier, index) => {
+						const isHidden = hiddenCarriers.has(carrier);
+						const style = SERIES_STYLES[index % SERIES_STYLES.length];
+						return (
+							<button
+								aria-pressed={!isHidden}
+								className="dashboard-chart-legend-button"
+								data-hidden={isHidden}
+								key={carrier}
+								onBlur={() => setFocusedCarrier(null)}
+								onClick={() => toggleCarrier(carrier)}
+								onFocus={() => setFocusedCarrier(carrier)}
+								onMouseEnter={() => setFocusedCarrier(carrier)}
+								onMouseLeave={() => setFocusedCarrier(null)}
+								type="button"
+							>
+								<span
+									aria-hidden="true"
+									className="dashboard-chart-legend-line"
+									style={{
+										borderColor: style.color,
+										borderStyle: style.dash ? "dashed" : "solid",
 									}}
 								/>
-							}
-						/>
-						<ChartLegend
-							onClick={({ dataKey }) => {
-								const k = dataKey?.toString();
-								const newHidden = hidden.map((item: any) => {
-									if (item?.carrier === k) {
-										return { ...item, hide: !item?.hide };
-									}
-									return item;
-								});
-								setHidden(newHidden);
-							}}
-						/>
-
-						{hidden.map((item: any) => {
-							return (
-								<Line
-									type="monotone"
-									dataKey={item?.carrier}
-									stroke={item?.color}
-									strokeWidth={2}
-									dot={true}
-									key={item?.carrier}
-									hide={item?.hide}
-								/>
-							);
-						})}
-					</LineChart>
-				</ChartContainer>
+								<span>{carrier}</span>
+								{isHidden ? (
+									<EyeOff aria-hidden="true" />
+								) : (
+									<Eye aria-hidden="true" />
+								)}
+							</button>
+						);
+					})}
+				</div>
 			</CardContent>
 		</Card>
 	);

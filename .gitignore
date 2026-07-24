@@ -42,3 +42,8 @@ next-env.d.ts
 
 # general files
 /dep-guide
+
+# local design references
+/design/new-sign-in.html
+/design/new-sign-up.html
+/design/dashboard-02-dispatch-board.html

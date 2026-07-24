@@ -1,14 +1,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, getYear } from "date-fns";
+import type { ReadonlyURLSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import type { Option } from "@/components/multi-select";
+
 import type { ParamType, StatusValueInternal } from "./common-types";
 
-// current and previous dates
-const sD = new Date();
-export const nD = sD.setDate(sD.getDate() - 1);
-export const eD = new Date();
+type SearchParamsReader = Pick<ReadonlyURLSearchParams, "get">;
+
+function getDefaultDates() {
+	const end = new Date();
+	const start = new Date(end);
+	start.setDate(start.getDate() - 1);
+	return { end, start };
+}
 
 // auth schema
 
@@ -66,11 +73,14 @@ const statusFormSchema = z.object({
 	resolution: z.string(),
 });
 
+export type StatusFormValues = z.infer<typeof statusFormSchema>;
+
 export const useStatusForm = (
 	state: string,
 	params: ParamType,
 	statusValue: StatusValueInternal,
 ) => {
+	const { end } = getDefaultDates();
 	let defaultVal = {
 		env: params.env.toUpperCase(),
 		mode: params.mode.toUpperCase(),
@@ -80,7 +90,7 @@ export const useStatusForm = (
 		issue: "",
 		impact: "",
 		jiraLink: "",
-		expectedResolutionDate: new Date(format(eD, "yyyy-MM-dd")),
+		expectedResolutionDate: new Date(format(end, "yyyy-MM-dd")),
 		resolution: "IN-PROGRESS",
 	};
 
@@ -114,6 +124,8 @@ const closeDeleteStatusFormSchema = z.object({
 	statusKey: z.string(),
 });
 
+export type CloseDeleteStatusFormValues = z.infer<typeof closeDeleteStatusFormSchema>;
+
 export const useCloseDeleteStatusForm = () => {
 	const form = useForm<z.infer<typeof closeDeleteStatusFormSchema>>({
 		resolver: zodResolver(closeDeleteStatusFormSchema),
@@ -143,15 +155,16 @@ const summaryFormSchema = z.object({
 		.optional(),
 });
 
-export const useSummaryForm = (newCarrOpt: any, searchParams: any) => {
+export const useSummaryForm = (newCarrOpt: Option[], searchParams: SearchParamsReader) => {
+	const { end, start } = getDefaultDates();
 	const form = useForm<z.infer<typeof summaryFormSchema>>({
 		resolver: zodResolver(summaryFormSchema),
 		defaultValues: {
 			carriers: newCarrOpt,
 			queue: searchParams.get("queue") || "NORMAL",
 			range: {
-				from: new Date(searchParams.get("from") || format(nD, "yyyy-MM-dd")),
-				to: new Date(searchParams.get("to") || format(eD, "yyyy-MM-dd")),
+				from: new Date(searchParams.get("from") || format(start, "yyyy-MM-dd")),
+				to: new Date(searchParams.get("to") || format(end, "yyyy-MM-dd")),
 			},
 		},
 	});
@@ -172,7 +185,10 @@ const historyFormSchema = z.object({
 		.optional(),
 });
 
-export const useHistoryForm = (searchParams: any) => {
+export type HistoryFormValues = z.infer<typeof historyFormSchema>;
+
+export const useHistoryForm = (searchParams: SearchParamsReader) => {
+	const { end, start } = getDefaultDates();
 	const form = useForm<z.infer<typeof historyFormSchema>>({
 		resolver: zodResolver(historyFormSchema),
 		defaultValues: {
@@ -180,8 +196,8 @@ export const useHistoryForm = (searchParams: any) => {
 			historyType: searchParams.get("historyType") || "DIFF",
 			includeRange: searchParams.get("includeRange") || "NO",
 			range: {
-				from: new Date(searchParams.get("from") || format(nD, "yyyy-MM-dd")),
-				to: new Date(searchParams.get("to") || format(eD, "yyyy-MM-dd")),
+				from: new Date(searchParams.get("from") || format(start, "yyyy-MM-dd")),
+				to: new Date(searchParams.get("to") || format(end, "yyyy-MM-dd")),
 			},
 		},
 	});
@@ -202,7 +218,9 @@ const latencyFormSchema = z.object({
 	refType: z.string(),
 });
 
-export const useLatencyForm = (newCarrOpt: any, searchParams: any) => {
+export type LatencyFormValues = z.infer<typeof latencyFormSchema>;
+
+export const useLatencyForm = (newCarrOpt: Option[], searchParams: SearchParamsReader) => {
 	const form = useForm<z.infer<typeof latencyFormSchema>>({
 		resolver: zodResolver(latencyFormSchema),
 		defaultValues: {
@@ -223,14 +241,17 @@ const referenceAllFormSchema = z.object({
 	refStatus: z.string(),
 });
 
-export const useReferenceAllForm = (params: ParamType, searchParams: any) => {
+export type ReferenceAllFormValues = z.infer<typeof referenceAllFormSchema>;
+
+export const useReferenceAllForm = (params: ParamType, searchParams: SearchParamsReader) => {
+	const requestedReferenceType = searchParams.get("refType");
 	const form = useForm<z.infer<typeof referenceAllFormSchema>>({
 		resolver: zodResolver(referenceAllFormSchema),
 		defaultValues: {
 			carrier: searchParams.get("carrier") || "",
 			queue: searchParams.get("queue") || "NORMAL",
-			refType: searchParams.get("refType")
-				? searchParams.get("refType")
+			refType: requestedReferenceType
+				? requestedReferenceType
 				: params.mode === "ocean"
 					? "BOOKING"
 					: params.mode === "air"
@@ -256,7 +277,9 @@ const referenceFormSchema = z.object({
 	reference: z.string(),
 });
 
-export const useReferenceForm = (searchParams: any) => {
+export type ReferenceFormValues = z.infer<typeof referenceFormSchema>;
+
+export const useReferenceForm = (searchParams: SearchParamsReader) => {
 	const form = useForm<z.infer<typeof referenceFormSchema>>({
 		resolver: zodResolver(referenceFormSchema),
 		defaultValues: {
@@ -272,7 +295,9 @@ const referenceSubscriptionFormSchema = z.object({
 	subscriptionId: z.string(),
 });
 
-export const useReferenceSubscriptionForm = (searchParams: any) => {
+export type ReferenceSubscriptionFormValues = z.infer<typeof referenceSubscriptionFormSchema>;
+
+export const useReferenceSubscriptionForm = (searchParams: SearchParamsReader) => {
 	const form = useForm<z.infer<typeof referenceSubscriptionFormSchema>>({
 		resolver: zodResolver(referenceSubscriptionFormSchema),
 		defaultValues: {
@@ -295,7 +320,9 @@ const inducedFormSchema = z.object({
 	year: z.string(),
 });
 
-export const useInducedForm = (newCarrOpt: any, searchParams: any) => {
+export type InducedFormValues = z.infer<typeof inducedFormSchema>;
+
+export const useInducedForm = (newCarrOpt: Option[], searchParams: SearchParamsReader) => {
 	const form = useForm<z.infer<typeof inducedFormSchema>>({
 		resolver: zodResolver(inducedFormSchema),
 		defaultValues: {

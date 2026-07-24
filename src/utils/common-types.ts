@@ -20,19 +20,6 @@ export type AuthType = {
 // ************* dashboard types start ****************
 
 // status related types
-export type StatusType = {
-	env: string;
-	mode: string;
-	carrier: string;
-	status: string;
-	statusType: string;
-	issue: string;
-	impact: string;
-	jiraLink: string;
-	expectedResolutionDate: string;
-	resolution: string;
-};
-
 export type StatusColumnType = {
 	statusKey: string;
 	value: StatusValue;
@@ -116,15 +103,6 @@ export type SummaryType = {
 	AvgAge: number;
 };
 
-export type SummaryFormType = {
-	carriers: string[];
-	queue: string;
-	range: {
-		from: Date;
-		to: Date;
-	};
-};
-
 // history related types
 
 export type HistoryType = {
@@ -157,23 +135,7 @@ type ErrorMsg = {
 	errorScreenshot: null;
 };
 
-export type HistoryFormType = {
-	subId: string;
-	historyType: string;
-	includeRange: string;
-	range: {
-		from: Date;
-		to: Date;
-	};
-};
-
 // latency related types
-export type LatencyFormType = {
-	carriers: string[];
-	queue: string;
-	refType: string;
-};
-
 export type LatencyTableType = {
 	carrier: string;
 	queue: string;
@@ -191,22 +153,6 @@ export type LatencyTableType = {
 };
 
 // reference related types
-export type ReferenceAllFormType = {
-	carrier: string;
-	queue: string;
-	refType: string;
-	refStatus: string;
-};
-
-export type ReferenceFormType = {
-	carrier: string;
-	reference: string;
-};
-
-export type ReferenceSubscriptionFormType = {
-	subscriptionId: string;
-};
-
 export type ReferenceTableType = {
 	subscriptionId: string;
 	carrier: string;
@@ -221,14 +167,8 @@ export type ReferenceTableType = {
 };
 
 // induced related types
-export type InducedFormType = {
-	carriers: string[];
-	year: string;
-};
-
 export type InducedChartType = {
 	date: string;
-	latency: number;
-};
+} & Record<string, string | number | null | undefined>;
 
 // ************* dashboard types end ****************

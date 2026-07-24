@@ -6,6 +6,9 @@ import { SESSION_COOKIE_NAME } from "@/lib/session-constants";
 
 const getRedirectOrigin = (request: NextRequest) => {
 	if (process.env.APP_ORIGIN) {
+		if (!URL.canParse(process.env.APP_ORIGIN)) {
+			throw new Error("APP_ORIGIN must be a valid absolute URL.");
+		}
 		return new URL(process.env.APP_ORIGIN).origin;
 	}
 
@@ -39,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
 	if (hasValidSession && (path === "/" || isAuthPath)) {
 		response = redirectTo("/dashboard", request);
-	} else if (!hasValidSession && path !== "/signin") {
+	} else if (!hasValidSession && !isAuthPath) {
 		response = redirectTo("/signin", request);
 	}
 

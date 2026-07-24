@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	type ColumnDef,
 	type ColumnFiltersState,
 	flexRender,
 	getCoreRowModel,
@@ -13,10 +14,23 @@ import {
 	useReactTable,
 	type VisibilityState,
 } from "@tanstack/react-table";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import * as React from "react";
 
-import MultipleSelector from "@/components/multi-select";
+import {
+	DashboardColumnControls,
+	DashboardMobileCards,
+} from "@/components/dashboard/dashboard-table-tools";
+import { getInitialColumnVisibility } from "@/components/dashboard/dashboard-table-utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import {
 	Table,
 	TableBody,
@@ -27,481 +41,344 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-import { Input } from "./ui/input";
-
-// Custom static data table built using shadcn/ui table and button components.
-// This file provides a static table implementation for use cases where dynamic data is not required.
-// See src/components/ui/table.tsx for the canonical shadcn/ui table implementation.
-
 declare module "@tanstack/react-table" {
 	interface ColumnMeta<TData extends RowData, TValue> {
-		className: string;
+		className?: string;
 	}
 }
 
-export function TableDataStaticStateComponent({ ...props }) {
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-	const [rowSelection, setRowSelection] = React.useState({});
-	const [pagination, setPagination] = React.useState<PaginationState>({
-		pageIndex: 0,
-		pageSize: 5,
-	});
-
-	const inputValue = React.useRef("");
-	const tableType = React.useMemo(() => props.tableType, [props.tableType]);
-	const propData = React.useMemo(
-		() =>
-			Array.isArray(props.data.data)
-				? props.data.data.length > 0
-					? props.data.data
-					: []
-				: [],
-		[props.data.data],
-	);
-	const [data, setData] = React.useState(propData);
-	React.useEffect(() => {
-		let ignore = false;
-		if (!ignore) {
-			setData(propData);
-		}
-		return () => {
-			ignore = true;
-		};
-	}, [propData]);
-	const handleFilter = React.useCallback(
-		(e: any) => {
-			inputValue.current = e.target.value;
-			if (e.target.value === "") {
-				setData(propData);
-			} else {
-				const newData = propData.filter((item: any) => {
-					return item.k.includes(e.target.value);
-				});
-				setData(newData);
-			}
-		},
-		[propData],
-	);
-	const columns = React.useMemo(() => props.columns, [props.columns]);
-
-	const table = useReactTable({
-		data,
-		columns,
-		onSortingChange: setSorting,
-		onColumnFiltersChange: setColumnFilters,
-		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		onColumnVisibilityChange: setColumnVisibility,
-		onRowSelectionChange: setRowSelection,
-		onPaginationChange: setPagination,
-		state: {
-			sorting,
-			columnFilters,
-			columnVisibility,
-			rowSelection,
-			pagination,
-		},
-	});
-
-	return (
-		<div className="mt-6 w-full">
-			{tableType === "history" && (
-				<div>
-					<Input
-						placeholder="Filter schedulerId..."
-						value={inputValue.current ?? ""}
-						onChange={(event) => handleFilter(event)}
-						className="max-w-sm"
-					/>
-				</div>
-			)}
-			<div className="flex items-start justify-end space-x-2 py-4">
-				<div className="flex-1 text-sm text-muted-foreground">
-					Total Items: {data.length}
-				</div>
-				<div>
-					<MultiSelectPage
-						table={table}
-						pagination={pagination}
-						setPagination={setPagination}
-					/>
-				</div>
-				<div className="flex items-center justify-center space-x-2">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						Previous
-					</Button>
-					<div className="text-sm text-muted-foreground">
-						{table.getState().pagination.pageIndex + 1} /{" "}
-						{table.getPageCount().toLocaleString()}
-					</div>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						Next
-					</Button>
-				</div>
-			</div>
-			<div className="rounded-md border">
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => {
-									return (
-										<TableHead
-											key={header.id}
-											className={cn(
-												header.column.columnDef.meta?.className ?? "",
-											)}
-										>
-											{/* {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())} */}
-											{header.isPlaceholder ? null : (
-												<div
-													className={
-														header.column.getCanSort()
-															? "flex cursor-pointer items-center justify-center select-none"
-															: ""
-													}
-													onClick={header.column.getToggleSortingHandler()}
-													onKeyDown={header.column.getToggleSortingHandler()}
-													title={
-														header.column.getCanSort()
-															? header.column.getNextSortingOrder() ===
-																"asc"
-																? "Sort ascending"
-																: header.column.getNextSortingOrder() ===
-																	  "desc"
-																	? "Sort descending"
-																	: "Clear sort"
-															: undefined
-													}
-												>
-													{flexRender(
-														header.column.columnDef.header,
-														header.getContext(),
-													)}
-													{{
-														asc: " 🔼",
-														desc: " 🔽",
-													}[header.column.getIsSorted() as string] ??
-														null}
-												</div>
-											)}
-										</TableHead>
-									);
-								})}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell
-											key={cell.id}
-											className={cn(
-												cell.column.columnDef.meta?.className ?? "",
-											)}
-										>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext(),
-											)}
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="h-24 text-center">
-									No results.
-								</TableCell>
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
-			</div>
-			<div className="flex items-center justify-end space-x-2 py-4">
-				<div className="flex-1 text-sm text-muted-foreground">
-					Total Items: {data.length}
-				</div>
-				<div className="flex items-center justify-center space-x-2">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						Previous
-					</Button>
-					<div className="text-sm text-muted-foreground">
-						{table.getState().pagination.pageIndex + 1} /{" "}
-						{table.getPageCount().toLocaleString()}
-					</div>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						Next
-					</Button>
-				</div>
-			</div>
-		</div>
-	);
+interface TablePreferences {
+	columnVisibility: VisibilityState;
+	pageSize: number;
+	version: 1;
 }
 
-export function TableDataStaticComponent({ ...props }) {
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-	const [rowSelection, setRowSelection] = React.useState({});
-	const [pagination, setPagination] = React.useState<PaginationState>({
-		pageIndex: 0,
-		pageSize: 5,
-	});
-
-	const data = React.useMemo(
-		() =>
-			Array.isArray(props.data.data)
-				? props.data.data.length > 0
-					? props.data.data
-					: []
-				: [],
-		[props.data.data],
-	);
-
-	const columns = React.useMemo(() => props.columns, [props.columns]);
-
-	const table = useReactTable({
-		data,
-		columns,
-		onSortingChange: setSorting,
-		onColumnFiltersChange: setColumnFilters,
-		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		onColumnVisibilityChange: setColumnVisibility,
-		onRowSelectionChange: setRowSelection,
-		onPaginationChange: setPagination,
-		state: {
-			sorting,
-			columnFilters,
-			columnVisibility,
-			rowSelection,
-			pagination,
-		},
-	});
-
-	return (
-		<div className="mt-6 w-full">
-			<div className="flex items-start justify-end space-x-2 py-4">
-				<div className="flex-1 text-sm text-muted-foreground">
-					Total Items: {data.length}
-				</div>
-				<div>
-					<MultiSelectPage
-						table={table}
-						pagination={pagination}
-						setPagination={setPagination}
-					/>
-				</div>
-				<div className="flex items-center justify-center space-x-2">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						Previous
-					</Button>
-					<div className="text-sm text-muted-foreground">
-						{table.getState().pagination.pageIndex + 1} /{" "}
-						{table.getPageCount().toLocaleString()}
-					</div>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						Next
-					</Button>
-				</div>
-			</div>
-			<div className="rounded-md border">
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => {
-									return (
-										<TableHead
-											key={header.id}
-											className={cn(
-												header.column.columnDef.meta?.className ?? "",
-											)}
-										>
-											{/* {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())} */}
-											{header.isPlaceholder ? null : (
-												<div
-													className={
-														header.column.getCanSort()
-															? "flex cursor-pointer items-center justify-center select-none"
-															: ""
-													}
-													onClick={header.column.getToggleSortingHandler()}
-													onKeyDown={header.column.getToggleSortingHandler()}
-													title={
-														header.column.getCanSort()
-															? header.column.getNextSortingOrder() ===
-																"asc"
-																? "Sort ascending"
-																: header.column.getNextSortingOrder() ===
-																	  "desc"
-																	? "Sort descending"
-																	: "Clear sort"
-															: undefined
-													}
-												>
-													{flexRender(
-														header.column.columnDef.header,
-														header.getContext(),
-													)}
-													{{
-														asc: " 🔼",
-														desc: " 🔽",
-													}[header.column.getIsSorted() as string] ??
-														null}
-												</div>
-											)}
-										</TableHead>
-									);
-								})}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell
-											key={cell.id}
-											className={cn(
-												cell.column.columnDef.meta?.className ?? "",
-											)}
-										>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext(),
-											)}
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={columns.length} className="h-24 text-center">
-									No results.
-								</TableCell>
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
-			</div>
-			<div className="flex items-center justify-end space-x-2 py-4">
-				<div className="flex-1 text-sm text-muted-foreground">
-					Total Items: {data.length}
-				</div>
-				<div className="flex items-center justify-center space-x-2">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						Previous
-					</Button>
-					<div className="text-sm text-muted-foreground">
-						{table.getState().pagination.pageIndex + 1} /{" "}
-						{table.getPageCount().toLocaleString()}
-					</div>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						Next
-					</Button>
-				</div>
-			</div>
-		</div>
-	);
+interface PreferenceSnapshot {
+	preferences: TablePreferences | null;
+	ready: boolean;
 }
 
-const MultiSelectPage = ({
-	table,
-	pagination,
-	setPagination,
-}: {
-	table: any;
-	pagination: any;
-	setPagination: any;
-}) => {
-	const tablePageCountMulti = React.useMemo(() => {
-		const arr = Array.from(Array(table.getPageCount()).keys());
-		const newArr: any = [];
-		arr.map((item) => {
-			const opt = {
-				label: (item + 1).toString(),
-				value: (item + 1).toString(),
-			};
-			newArr.push(opt);
-		});
-		return newArr;
-	}, [table]);
+interface DashboardDataTableProps<TData> {
+	columns: ColumnDef<TData, unknown>[];
+	data: { data?: TData[] };
+	defaultVisibleColumnIds?: string[];
+	preferenceKey: string;
+	tableType?: "history";
+}
 
-	return (
-		<MultipleSelector
-			value={[
-				{
-					label: (pagination.pageIndex + 1).toString(),
-					value: (pagination.pageIndex + 1).toString(),
-				},
-			]}
-			onChange={(e) => {
-				if (e.length > 0) {
-					const page = e[0] ? Number(e[0].value) - 1 : 0;
-					setPagination((prev: any) => ({ ...prev, pageIndex: page }));
-				}
-			}}
-			className="h-10 w-24"
-			defaultOptions={tablePageCountMulti}
-			placeholder="page..."
-			hidePlaceholderWhenSelected
-			maxSelected={1}
-			emptyIndicator={
-				<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
-					no results found.
-				</p>
-			}
-		/>
-	);
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZES = [10, 25, 50] as const;
+const STORAGE_PREFIX = "alignbits.dashboard-table.v1";
+const SERVER_PREFERENCE_SNAPSHOT: PreferenceSnapshot = {
+	preferences: null,
+	ready: false,
 };
+const preferenceSnapshots = new Map<string, PreferenceSnapshot>();
+
+function readPreferenceSnapshot(key: string): PreferenceSnapshot {
+	const cached = preferenceSnapshots.get(key);
+	if (cached) {
+		return cached;
+	}
+	let preferences: TablePreferences | null = null;
+	try {
+		const parsed: unknown = JSON.parse(localStorage.getItem(key) ?? "null");
+		if (parsed && typeof parsed === "object") {
+			const value = parsed as Partial<TablePreferences>;
+			if (
+				value.version === 1 &&
+				PAGE_SIZES.includes(value.pageSize as (typeof PAGE_SIZES)[number]) &&
+				value.columnVisibility
+			) {
+				preferences = value as TablePreferences;
+			}
+		}
+	} catch {
+		// Defaults remain available when storage cannot be read.
+	}
+	const snapshot = { preferences, ready: true };
+	preferenceSnapshots.set(key, snapshot);
+	return snapshot;
+}
+
+const subscribeToPreferences = () => () => undefined;
+
+function DashboardDataTable<TData>({
+	columns,
+	data: response,
+	defaultVisibleColumnIds,
+	preferenceKey,
+	tableType,
+}: DashboardDataTableProps<TData>) {
+	const storageKey = `${STORAGE_PREFIX}.${preferenceKey}`;
+	const defaultVisibility = React.useMemo(
+		() => getInitialColumnVisibility(columns, defaultVisibleColumnIds),
+		[columns, defaultVisibleColumnIds],
+	);
+	const [sorting, setSorting] = React.useState<SortingState>([]);
+	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+	const preferenceSnapshot = React.useSyncExternalStore(
+		subscribeToPreferences,
+		() => readPreferenceSnapshot(storageKey),
+		() => SERVER_PREFERENCE_SNAPSHOT,
+	);
+	const [columnVisibilityOverride, setColumnVisibilityOverride] =
+		React.useState<VisibilityState | null>(null);
+	const columnVisibility = React.useMemo(() => {
+		const visibility = columnVisibilityOverride ?? {
+			...defaultVisibility,
+			...preferenceSnapshot.preferences?.columnVisibility,
+		};
+		for (const column of columns) {
+			if (column.meta?.className?.includes("dashboard-sticky-column")) {
+				const id =
+					column.id ??
+					("accessorKey" in column && typeof column.accessorKey === "string"
+						? column.accessorKey
+						: undefined);
+				if (id) {
+					visibility[id] = true;
+				}
+			}
+		}
+		return visibility;
+	}, [columnVisibilityOverride, columns, defaultVisibility, preferenceSnapshot.preferences]);
+	const [paginationOverride, setPaginationOverride] = React.useState<Partial<PaginationState>>({
+		pageIndex: 0,
+	});
+	const basePagination = React.useMemo<PaginationState>(
+		() => ({
+			pageIndex: paginationOverride.pageIndex ?? 0,
+			pageSize:
+				paginationOverride.pageSize ??
+				preferenceSnapshot.preferences?.pageSize ??
+				DEFAULT_PAGE_SIZE,
+		}),
+		[paginationOverride, preferenceSnapshot.preferences?.pageSize],
+	);
+	const [historyFilter, setHistoryFilter] = React.useState("");
+
+	const sourceData = React.useMemo(
+		() => (Array.isArray(response.data) ? response.data : []),
+		[response.data],
+	);
+	const data = React.useMemo(() => {
+		if (tableType !== "history" || !historyFilter.trim()) {
+			return sourceData;
+		}
+		const value = historyFilter.trim().toLowerCase();
+		return sourceData.filter((item) => {
+			const key =
+				item && typeof item === "object" && "k" in item
+					? String((item as { k: unknown }).k)
+					: "";
+			return key.toLowerCase().includes(value);
+		});
+	}, [historyFilter, sourceData, tableType]);
+	const pagination = React.useMemo<PaginationState>(() => {
+		const lastPageIndex = Math.max(Math.ceil(data.length / basePagination.pageSize) - 1, 0);
+		return {
+			...basePagination,
+			pageIndex: Math.min(basePagination.pageIndex, lastPageIndex),
+		};
+	}, [basePagination, data.length]);
+
+	React.useEffect(() => {
+		if (!preferenceSnapshot.ready) {
+			return;
+		}
+		try {
+			const preferences: TablePreferences = {
+				columnVisibility,
+				pageSize: pagination.pageSize,
+				version: 1,
+			};
+			localStorage.setItem(storageKey, JSON.stringify(preferences));
+			preferenceSnapshots.set(storageKey, { preferences, ready: true });
+		} catch {
+			// The table remains usable when storage is unavailable.
+		}
+	}, [columnVisibility, pagination.pageSize, preferenceSnapshot.ready, storageKey]);
+
+	const handleColumnVisibilityChange = React.useCallback(
+		(updater: VisibilityState | ((current: VisibilityState) => VisibilityState)) => {
+			setColumnVisibilityOverride((current) => {
+				const value = current ?? columnVisibility;
+				return typeof updater === "function" ? updater(value) : updater;
+			});
+		},
+		[columnVisibility],
+	);
+
+	const handlePaginationChange = React.useCallback(
+		(updater: PaginationState | ((current: PaginationState) => PaginationState)) => {
+			setPaginationOverride((current) => {
+				const value = {
+					pageIndex: current.pageIndex ?? pagination.pageIndex,
+					pageSize: current.pageSize ?? pagination.pageSize,
+				};
+				return typeof updater === "function" ? updater(value) : updater;
+			});
+		},
+		[pagination],
+	);
+
+	const table = useReactTable({
+		data,
+		columns,
+		onSortingChange: setSorting,
+		onColumnFiltersChange: setColumnFilters,
+		getCoreRowModel: getCoreRowModel(),
+		getPaginationRowModel: getPaginationRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		onColumnVisibilityChange: handleColumnVisibilityChange,
+		onPaginationChange: handlePaginationChange,
+		state: {
+			sorting,
+			columnFilters,
+			columnVisibility,
+			pagination,
+		},
+	});
+
+	const pageCount = Math.max(table.getPageCount(), 1);
+	const pageIndex = Math.min(table.getState().pagination.pageIndex, pageCount - 1);
+	const rangeStart = data.length ? pageIndex * pagination.pageSize + 1 : 0;
+	const rangeEnd = Math.min((pageIndex + 1) * pagination.pageSize, data.length);
+
+	return (
+		<div className="mt-6 w-full">
+			<div className="dashboard-table-toolbar">
+				{tableType === "history" ? (
+					<Input
+						aria-label="Filter by scheduler ID"
+						autoComplete="off"
+						className="max-w-sm"
+						name="scheduler-filter"
+						onChange={(event) => setHistoryFilter(event.target.value)}
+						placeholder="Filter scheduler ID…"
+						spellCheck={false}
+						value={historyFilter}
+					/>
+				) : (
+					<span />
+				)}
+				<DashboardColumnControls table={table} />
+			</div>
+			<div className="dashboard-desktop-table overflow-x-auto rounded-[2px] border">
+				<Table>
+					<TableHeader>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<TableRow key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<TableHead
+										className={cn(header.column.columnDef.meta?.className)}
+										key={header.id}
+									>
+										{header.isPlaceholder ? null : header.column.getCanSort() ? (
+											<button
+												className="dashboard-sort-button"
+												onClick={header.column.getToggleSortingHandler()}
+												type="button"
+											>
+												{flexRender(
+													header.column.columnDef.header,
+													header.getContext(),
+												)}
+												{header.column.getIsSorted() === "asc" ? (
+													<ArrowUp aria-hidden="true" />
+												) : header.column.getIsSorted() === "desc" ? (
+													<ArrowDown aria-hidden="true" />
+												) : (
+													<ArrowUpDown aria-hidden="true" />
+												)}
+											</button>
+										) : (
+											flexRender(
+												header.column.columnDef.header,
+												header.getContext(),
+											)
+										)}
+									</TableHead>
+								))}
+							</TableRow>
+						))}
+					</TableHeader>
+					<TableBody>
+						{table.getRowModel().rows.length ? (
+							table.getRowModel().rows.map((row) => (
+								<TableRow key={row.id}>
+									{row.getVisibleCells().map((cell) => (
+										<TableCell
+											className={cn(cell.column.columnDef.meta?.className)}
+											key={cell.id}
+										>
+											{flexRender(
+												cell.column.columnDef.cell,
+												cell.getContext(),
+											)}
+										</TableCell>
+									))}
+								</TableRow>
+							))
+						) : (
+							<TableRow>
+								<TableCell className="h-24 text-center" colSpan={columns.length}>
+									No results.
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</div>
+			<DashboardMobileCards table={table} />
+			<div className="dashboard-pagination" aria-label="Table pagination">
+				<p>
+					{rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of{" "}
+					{data.length.toLocaleString()}
+				</p>
+				<div className="dashboard-pagination-controls">
+					<Select
+						onValueChange={(value) => table.setPageSize(Number(value))}
+						value={String(pagination.pageSize)}
+					>
+						<SelectTrigger aria-label="Rows per page" className="w-[84px]">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent className="dashboard-select-content">
+							{PAGE_SIZES.map((size) => (
+								<SelectItem key={size} value={String(size)}>
+									{size} rows
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<Button
+						disabled={!table.getCanPreviousPage()}
+						onClick={() => table.previousPage()}
+						size="sm"
+						variant="outline"
+					>
+						Previous
+					</Button>
+					<span>
+						{pageIndex + 1} / {pageCount}
+					</span>
+					<Button
+						disabled={!table.getCanNextPage()}
+						onClick={() => table.nextPage()}
+						size="sm"
+						variant="outline"
+					>
+						Next
+					</Button>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+export function TableDataStaticComponent<TData>(props: DashboardDataTableProps<TData>) {
+	return <DashboardDataTable {...props} />;
+}

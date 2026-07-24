@@ -1,81 +1,96 @@
-import JsonView from "@uiw/react-json-view";
-import { vscodeTheme } from "@uiw/react-json-view/vscode";
-import { Loader2 } from "lucide-react";
-import { useMemo } from "react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { DashboardDetailBody } from "@/components/dashboard/dashboard-detail-sheet";
+import { findDetailValue } from "@/components/dashboard/dashboard-detail-utils";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
+import type { ParamType } from "@/utils/common-types";
 import { useHistoryFetchQuery } from "@/utils/query";
 import { sanitizeHistoryDataForDisplay } from "@/utils/sanitize-history-data";
 
-export function HistoryDrawer({ ...props }) {
+export interface HistoryDrawerSelection {
+	buttonTitle: string;
+	params: ParamType;
+	resourceId: string;
+	schedulerId: string;
+	subscriptionId: string;
+	title: string;
+}
+
+interface HistoryDrawerProps extends HistoryDrawerSelection {
+	onOpenChange: (open: boolean) => void;
+	open: boolean;
+}
+
+export function HistoryDrawer(props: HistoryDrawerProps) {
 	return (
-		<div className="flex items-center justify-center">
-			<Sheet>
-				<SheetTrigger asChild>
-					<Button variant={props.variant}>{props.buttonTitle}</Button>
-				</SheetTrigger>
-				<SheetContent>
-					<SheetHeader>
-						<SheetTitle>{props.title}</SheetTitle>
-					</SheetHeader>
-					<SheetCustomContent {...props} />
-				</SheetContent>
-			</Sheet>
-		</div>
+		<Sheet onOpenChange={props.onOpenChange} open={props.open}>
+			<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
+				<SheetHeader className="dashboard-detail-header">
+					<SheetTitle>{props.title}</SheetTitle>
+					<SheetDescription>
+						Crawl outcome summary and sanitized source payload.
+					</SheetDescription>
+				</SheetHeader>
+				<HistoryDetailContent {...props} enabled={props.open} />
+			</SheetContent>
+		</Sheet>
 	);
 }
 
-function SheetCustomContent({ ...props }) {
-	let resId = props.resourceId;
-	if (resId.includes("customfunction")) {
-		resId = resId.replace("customfunction", "custom function");
-	}
-
-	const fetchHistoryQuery = useHistoryFetchQuery(
-		props.params,
-		props.schedulerId,
-		props.subscriptionId,
-		resId,
-	);
-
-	if (fetchHistoryQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
-	}
-
-	if (fetchHistoryQuery.isError || fetchHistoryQuery.error) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<p className="text-red-500">Error: {fetchHistoryQuery.error?.message}</p>
-			</div>
-		);
-	}
-
-	if (fetchHistoryQuery.data && !fetchHistoryQuery.data?.success) {
-		return (
-			<div className="mt-10 flex h-full flex-col items-center justify-center">
-				<p className="text-red-500">{fetchHistoryQuery.data?.data}</p>
-			</div>
-		);
-	}
-
-	return <CustomView data={fetchHistoryQuery.data} />;
-}
-
-function CustomView({ ...props }) {
-	const displayData = useMemo(
-		() => sanitizeHistoryDataForDisplay(props.data.data),
-		[props.data.data],
-	);
+function HistoryDetailContent({
+	buttonTitle,
+	enabled,
+	params,
+	resourceId: rawResourceId,
+	schedulerId,
+	subscriptionId,
+}: HistoryDrawerProps & { enabled: boolean }) {
+	const resourceId = rawResourceId === "customfunction" ? "custom function" : rawResourceId;
+	const query = useHistoryFetchQuery(params, schedulerId, subscriptionId, resourceId, enabled);
+	const responseError =
+		query.error?.message || (query.data && !query.data.success ? String(query.data.data) : "");
+	const rawValue = query.data?.success ? query.data.data : undefined;
+	const data = sanitizeHistoryDataForDisplay(rawValue);
 
 	return (
-		<ScrollArea className="my-scroll mt-5 w-full rounded-md">
-			<JsonView value={displayData} style={vscodeTheme} className="rounded-md p-2" />
-		</ScrollArea>
+		<DashboardDetailBody
+			error={responseError}
+			fields={[
+				{ label: "Scheduler ID", value: schedulerId },
+				{ label: "Subscription ID", value: subscriptionId },
+				{
+					label: "Transaction",
+					value: findDetailValue(data, ["transactionId", "transaction_id"]),
+				},
+				{
+					label: "Queue",
+					value: findDetailValue(data, ["queue", "queueName"]),
+				},
+				{
+					label: "Crawl Status",
+					value: findDetailValue(data, ["crawlStatus", "crawl_status", "status"]),
+				},
+				{
+					label: "Created",
+					value: findDetailValue(data, ["createdAt", "insertionTime", "created_at"]),
+				},
+				{
+					label: "Latency",
+					value: findDetailValue(data, ["latencyInMinutes", "abLatencyInMinutes"]),
+				},
+				{ label: "Response", value: buttonTitle },
+				{ label: "Error", value: findDetailValue(data, ["error", "errorMessage"]) },
+			]}
+			isLoading={query.isPending}
+			isRefreshing={query.isFetching && !query.isPending}
+			onRetry={() => void query.refetch()}
+			rawValue={data}
+		/>
 	);
 }

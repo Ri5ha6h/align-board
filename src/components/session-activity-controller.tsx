@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 
-import { refreshSessionAction, signOutAction } from "@/actions/auth-actions";
-import { registerSessionLogoutPreparation } from "@/lib/session-activity-client";
+import { useLogoutCoordinator } from "@/components/logout-coordinator";
 import { SESSION_ACTIVITY_STORAGE_KEY, SESSION_IDLE_TIMEOUT_MS } from "@/lib/session-constants";
+import { registerSessionRefreshAbort, requestSessionRefresh } from "@/lib/session-refresh-client";
 
 const ACTIVITY_WRITE_THROTTLE_MS = 1000;
 const SESSION_REFRESH_INTERVAL_MS = 15_000;
@@ -34,42 +33,12 @@ const writeActivityState = (state: ActivityState) => {
 };
 
 export const SessionActivityController = () => {
-	const router = useRouter();
+	const { beginLogout } = useLogoutCoordinator();
 	const stateRef = useRef<ActivityState>({ lastActivityAt: 0, lastRefreshAt: 0 });
 	const lastActivityWriteRef = useRef(0);
-	const isRefreshingRef = useRef(false);
-	const isSigningOutRef = useRef(false);
-	const hasPendingExpirationRef = useRef(false);
-	const refreshPromiseRef = useRef<ReturnType<typeof refreshSessionAction> | null>(null);
+	const refreshControllerRef = useRef<AbortController | null>(null);
 
-	const expireSession = useCallback(async () => {
-		if (isSigningOutRef.current) {
-			hasPendingExpirationRef.current = true;
-			return;
-		}
-
-		hasPendingExpirationRef.current = false;
-		isSigningOutRef.current = true;
-		try {
-			await refreshPromiseRef.current;
-		} catch {
-			// Continue with sign-out after a failed refresh.
-		}
-
-		try {
-			await signOutAction();
-		} catch {
-			// Local expiry must complete even if server invalidation fails.
-		} finally {
-			try {
-				localStorage.removeItem(SESSION_ACTIVITY_STORAGE_KEY);
-			} catch {
-				// Continue redirecting when browser storage is unavailable.
-			}
-			router.replace("/signin");
-			router.refresh();
-		}
-	}, [router]);
+	const expireSession = useCallback(() => beginLogout("idle"), [beginLogout]);
 
 	useEffect(() => {
 		const now = Date.now();
@@ -78,41 +47,15 @@ export const SessionActivityController = () => {
 		lastActivityWriteRef.current = now;
 		writeActivityState(initialState);
 
-		const unregisterLogoutPreparation = registerSessionLogoutPreparation(async () => {
-			if (isSigningOutRef.current) {
-				try {
-					await refreshPromiseRef.current;
-				} catch {
-					// Server logout can continue after a failed refresh.
-				}
-
-				return () => undefined;
-			}
-
-			isSigningOutRef.current = true;
-			try {
-				await refreshPromiseRef.current;
-			} catch {
-				// Server logout can continue after a failed refresh.
-			}
-
-			return () => {
-				isSigningOutRef.current = false;
-				if (hasPendingExpirationRef.current) {
-					hasPendingExpirationRef.current = false;
-					void expireSession();
-				}
-			};
+		const unregisterRefreshAbort = registerSessionRefreshAbort(() => {
+			refreshControllerRef.current?.abort();
+			refreshControllerRef.current = null;
 		});
 
 		const recordActivity = () => {
-			if (isSigningOutRef.current) {
-				return;
-			}
-
 			const activityAt = Date.now();
 			if (activityAt - stateRef.current.lastActivityAt >= SESSION_IDLE_TIMEOUT_MS) {
-				void expireSession();
+				expireSession();
 				return;
 			}
 
@@ -136,7 +79,6 @@ export const SessionActivityController = () => {
 			}
 
 			if (!event.newValue) {
-				void expireSession();
 				return;
 			}
 
@@ -151,45 +93,43 @@ export const SessionActivityController = () => {
 		};
 
 		const checkSession = async () => {
-			if (isSigningOutRef.current) {
-				return;
-			}
-
 			const currentTime = Date.now();
 			const state = stateRef.current;
 
 			if (currentTime - state.lastActivityAt >= SESSION_IDLE_TIMEOUT_MS) {
-				await expireSession();
+				expireSession();
 				return;
 			}
 
 			const hasUnrefreshedActivity = state.lastActivityAt > state.lastRefreshAt;
 			const canRefresh = currentTime - state.lastRefreshAt >= SESSION_REFRESH_INTERVAL_MS;
 
-			if (!hasUnrefreshedActivity || !canRefresh || isRefreshingRef.current) {
+			if (!hasUnrefreshedActivity || !canRefresh || refreshControllerRef.current) {
 				return;
 			}
 
-			isRefreshingRef.current = true;
 			const reservedState = { ...state, lastRefreshAt: currentTime };
 			stateRef.current = reservedState;
 			writeActivityState(reservedState);
 
-			const refreshPromise = refreshSessionAction();
-			refreshPromiseRef.current = refreshPromise;
+			const controller = new AbortController();
+			refreshControllerRef.current = controller;
 
 			try {
-				const result = await refreshPromise;
-				if (!result.success) {
-					await expireSession();
+				const response = await requestSessionRefresh(controller.signal);
+				if (!response.ok) {
+					expireSession();
 				}
-			} catch {
-				await expireSession();
+			} catch (error: unknown) {
+				if (error instanceof DOMException && error.name === "AbortError") {
+					return;
+				}
+				// A transport failure does not prove that the authenticated session is invalid.
+				// Keep the current session so a later activity check can retry the refresh.
 			} finally {
-				if (refreshPromiseRef.current === refreshPromise) {
-					refreshPromiseRef.current = null;
+				if (refreshControllerRef.current === controller) {
+					refreshControllerRef.current = null;
 				}
-				isRefreshingRef.current = false;
 			}
 		};
 
@@ -206,7 +146,9 @@ export const SessionActivityController = () => {
 		}, SESSION_CHECK_INTERVAL_MS);
 
 		return () => {
-			unregisterLogoutPreparation();
+			unregisterRefreshAbort();
+			refreshControllerRef.current?.abort();
+			refreshControllerRef.current = null;
 			window.clearInterval(sessionCheck);
 			window.removeEventListener("keydown", recordActivity);
 			window.removeEventListener("pointerdown", recordActivity);

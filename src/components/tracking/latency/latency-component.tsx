@@ -1,13 +1,14 @@
-import { LatencyAccordion } from "@/components/accord-util";
+import { DashboardFilter } from "@/components/dashboard/dashboard-filter";
 
 import { LatencyForm } from "./latency-form";
 import { LatencyTable } from "./latency-table";
 
-const MainLatencyComponent = ({ mode }: { mode: string }) => {
+const MainLatencyComponent = () => {
 	return (
 		<div className="flex flex-col">
-			<LatencyAccordion mode={mode} />
-			<LatencyForm />
+			<DashboardFilter>
+				<LatencyForm />
+			</DashboardFilter>
 			<LatencyTable />
 		</div>
 	);

@@ -1,100 +1,106 @@
 import Link from "next/link";
-import React from "react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import type { StatusValue } from "@/utils/common-types";
 
-export function StatusDetailDrawer({ ...props }) {
+interface StatusDetailDrawerProps {
+	data: StatusValue | null;
+	onOpenChange: (open: boolean) => void;
+	open: boolean;
+}
+
+export function StatusDetailDrawer({ data, onOpenChange, open }: StatusDetailDrawerProps) {
 	return (
-		<div className="flex items-center justify-center">
-			<Sheet>
-				<SheetTrigger asChild>
-					<Button variant={props.variant}>{props.buttonTitle}</Button>
-				</SheetTrigger>
-				<SheetContent>
-					<SheetHeader>
-						<SheetTitle>{props.title}</SheetTitle>
-					</SheetHeader>
-					<SheetCustomContent data={props.data} />
-				</SheetContent>
-			</Sheet>
-		</div>
+		<Sheet onOpenChange={onOpenChange} open={open}>
+			<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
+				<SheetHeader className="dashboard-detail-header">
+					<SheetTitle>Status Details</SheetTitle>
+					<SheetDescription>
+						Service notice, operational impact, and resolution information.
+					</SheetDescription>
+				</SheetHeader>
+				{data ? <StatusDetailContent data={data} /> : null}
+			</SheetContent>
+		</Sheet>
 	);
 }
 
-function SheetCustomContent({ ...props }) {
+function StatusDetailContent({ data }: { data: StatusValue }) {
 	const jiraLinks = React.useMemo(
-		() => (props.data.jiraLink ? props.data.jiraLink : []),
-		[props.data.jiraLink],
+		() =>
+			Array.from(
+				new Set(
+					(data.jiraLink ?? "")
+						.split(",")
+						.map((link) => link.trim())
+						.filter(Boolean),
+				),
+			),
+		[data.jiraLink],
 	);
+
 	return (
-		<ScrollArea className="my-scroll mt-5 w-full">
-			<div className="p-1">
-				{props.data.carrier && <StatusInput label="Carrier" value={props.data.carrier} />}
-				<StatusInput label="Status" value={props.data.status} />
-				<StatusInput label="Status Type" value={props.data.statusType} />
-				<StatusTextArea label="Issue" value={props.data.issue} />
-				<StatusTextArea label="Impact" value={props.data.impact} />
-				<StatusInput
-					label="Expected Resolution Date"
-					value={props.data.expectedResolutionDate}
-				/>
-				<StatusInput label="Resolution" value={props.data.resolution} />
-				{props.data.closedAt && (
-					<StatusInput label="Closed At" value={props.data.closedAt} />
-				)}
-				{jiraLinks.length > 0 && (
-					<div className="mt-3">
-						<Label className="text-base">Jira Links</Label>
-						<CustomLinkInput value={jiraLinks} />
-					</div>
-				)}
+		<ScrollArea className="dashboard-detail-scroll dashboard-status-detail-scroll">
+			<div className="dashboard-status-detail-fields">
+				{data.carrier ? <StatusInput label="Carrier" value={data.carrier} /> : null}
+				<StatusInput label="Status" value={data.status} />
+				<StatusInput label="Status Type" value={data.statusType} />
+				<StatusTextArea label="Issue" value={data.issue} />
+				<StatusTextArea label="Impact" value={data.impact} />
+				<StatusInput label="Expected Resolution Date" value={data.expectedResolutionDate} />
+				<StatusInput label="Resolution" value={data.resolution} />
+				{data.closedAt ? <StatusInput label="Closed At" value={data.closedAt} /> : null}
+				{jiraLinks.length > 0 ? <StatusLinks links={jiraLinks} /> : null}
 			</div>
 		</ScrollArea>
 	);
 }
 
-const StatusInput = ({ label, value }: { label: string; value: string | number }) => {
+function StatusInput({ label, value }: { label: string; value: string | number }) {
+	const id = React.useId();
 	return (
-		<div className="mt-3">
-			<Label className="text-base">{label}</Label>
-			<Input className="mt-2" value={value} readOnly />
+		<div className="dashboard-status-detail-field">
+			<Label htmlFor={id}>{label}</Label>
+			<Input id={id} value={value} readOnly />
 		</div>
 	);
-};
+}
 
-const StatusTextArea = ({ label, value }: { label: string; value: string | number }) => {
+function StatusTextArea({ label, value }: { label: string; value: string | number }) {
+	const id = React.useId();
 	return (
-		<div className="mt-3">
-			<Label className="text-base">{label}</Label>
-			<Textarea className="mt-2 h-40" value={value} readOnly />
+		<div className="dashboard-status-detail-field">
+			<Label htmlFor={id}>{label}</Label>
+			<Textarea id={id} value={value} readOnly />
 		</div>
 	);
-};
+}
 
-const CustomLinkInput = ({ value }: { value: any }) => {
+function StatusLinks({ links }: { links: string[] }) {
 	return (
-		<ul className="mt-2">
-			{value.includes(",") ? (
-				value.split(",").map((link: string, index: number) => (
-					<Link key={link} href={link} target="_blank">
-						<li className="p-2">
-							{index + 1}.{" "}
-							<span className="underline hover:text-indigo-500">{link}</span>
-						</li>
-					</Link>
-				))
-			) : (
-				<Link href={value} target="_blank">
-					<li className="p-2">
-						1. <span className="underline hover:text-indigo-500">{value}</span>
+		<div className="dashboard-status-detail-field">
+			<Label>Jira Links</Label>
+			<ul className="dashboard-status-detail-links">
+				{links.map((link, index) => (
+					<li key={link}>
+						<span>{index + 1}.</span>
+						<Link href={link} rel="noopener noreferrer" target="_blank">
+							{link}
+						</Link>
 					</li>
-				</Link>
-			)}
-		</ul>
+				))}
+			</ul>
+		</div>
 	);
-};
+}

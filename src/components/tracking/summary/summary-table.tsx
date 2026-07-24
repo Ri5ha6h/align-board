@@ -1,11 +1,11 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import { useDashboardQueryReport } from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
@@ -14,9 +14,14 @@ import {
 } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
 import type { ParamType, SummaryType } from "@/utils/common-types";
+import { formatUtcDateTime } from "@/utils/format-date";
 import { useSummaryQuery } from "@/utils/query";
 
 export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
+	return useSummaryTableContent(isAlignUser);
+}
+
+function useSummaryTableContent(isAlignUser: boolean) {
 	const params = useParams<ParamType>();
 	const searchParams = useSearchParams();
 	const queryCarriers = React.useMemo(
@@ -48,8 +53,9 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: true,
 			sortDescFirst: false,
 			sortUndefined: "last",
@@ -70,7 +76,7 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 
 				return (
 					<TableCellCustom>
-						<Badge className="bg-stone-500 capitalize">{qType}</Badge>
+						<Badge className="dashboard-data-tag capitalize">{qType}</Badge>
 					</TableCellCustom>
 				);
 			},
@@ -333,9 +339,7 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 			header: () => <TableHeadCustom>Start Time</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<TableCellCustom>
-						{format(toDate(row.original.start_time), "do MMM yyyy, HH:mm:ss")}
-					</TableCellCustom>
+					<TableCellCustom>{formatUtcDateTime(row.original.start_time)}</TableCellCustom>
 				);
 			},
 			enableSorting: true,
@@ -348,9 +352,7 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 			header: () => <TableHeadCustom>End Time</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<TableCellCustom>
-						{format(toDate(row.original.end_time), "do MMM yyyy, HH:mm:ss")}
-					</TableCellCustom>
+					<TableCellCustom>{formatUtcDateTime(row.original.end_time)}</TableCellCustom>
 				);
 			},
 			enableSorting: true,
@@ -360,13 +362,16 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 	];
 
 	const summaryQuery = useSummaryQuery(params, newCarrOpt, searchParams, isAlignUser);
+	useDashboardQueryReport({
+		data: summaryQuery.data,
+		error: summaryQuery.error,
+		isFetching: summaryQuery.isFetching,
+		isPending: summaryQuery.isPending,
+		success: summaryQuery.data?.success,
+	});
 
 	if (summaryQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (summaryQuery.isError || summaryQuery.error) {
@@ -385,5 +390,20 @@ export function SummaryTable({ isAlignUser }: { isAlignUser: boolean }) {
 		);
 	}
 
-	return <TableDataStaticComponent data={summaryQuery.data} columns={columns} />;
+	return (
+		<TableDataStaticComponent
+			data={summaryQuery.data}
+			columns={columns}
+			preferenceKey={`summary-${params.mode}`}
+			defaultVisibleColumnIds={[
+				params.mode === "terminal" ? "terminal" : "carrier",
+				"queue",
+				"active",
+				"success",
+				"rnf",
+				"fail",
+				"last-run",
+			]}
+		/>
+	);
 }

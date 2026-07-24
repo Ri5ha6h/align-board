@@ -2,9 +2,13 @@
 
 import { format, millisecondsToHours, startOfDay, subDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -25,31 +29,29 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { HistoryFormType, ParamType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList, getHistoryType } from "@/utils/default-data/default-data";
-import { useHistoryForm } from "@/utils/schema";
+import { useHistoryForm, type HistoryFormValues } from "@/utils/schema";
 
 export const HistoryForm = () => {
 	const id = useId();
+	const [calendarToday, setCalendarToday] = React.useState<Date | null>(null);
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const historyOptions = getHistoryType();
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
+	const filterNavigation = useDashboardFilterNavigation();
+	React.useEffect(() => setCalendarToday(new Date()), []);
 
 	const form = useHistoryForm(searchParams);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: HistoryFormValues) => {
 		//console.log("submit data", data);
-		setBtnLoad(true);
 		if (!data.range || !data.range.from || !data.range.to) {
 			form.setError("range", {
 				type: "custom",
 				message: "Start date and End date are required.",
 			});
-			setBtnLoad(false);
 			return;
 		}
 
@@ -66,35 +68,29 @@ export const HistoryForm = () => {
 					type: "custom",
 					message: "Invalid carrier present in subscription id.",
 				});
-				setBtnLoad(false);
 				return;
 			}
 		}
 
-		const subTract = data.range.to - data.range.from;
+		const subTract = data.range.to.getTime() - data.range.from.getTime();
 
 		if (millisecondsToHours(subTract) > 360) {
 			form.setError("range", {
 				type: "custom",
 				message: "Date range should be less than or equal to 15 days.",
 			});
-			setBtnLoad(false);
 		} else {
-			setTimeout(() => {
-				const q = createQueryString(data);
-				router.push(`${pathname}?${q}`);
-				setBtnLoad(false);
-			}, 400);
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
 	const createQueryString = React.useCallback(
-		(data: HistoryFormType) => {
+		(data: HistoryFormValues) => {
 			const historyParams = new URLSearchParams(searchParams.toString());
 			historyParams.set("subId", data.subId);
 			historyParams.set("historyType", data.historyType);
 			historyParams.set("includeRange", data.includeRange);
-			if (data.subId.length > 1 && data.includeRange === "YES") {
+			if (data.subId.length > 1 && data.includeRange === "YES" && data.range) {
 				historyParams.set("from", format(data.range.from, "yyyy-MM-dd"));
 				historyParams.set("to", format(data.range.to, "yyyy-MM-dd"));
 			} else {
@@ -113,7 +109,7 @@ export const HistoryForm = () => {
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className={cn(
-						"mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2",
+						"dashboard-filter-form grid-cols-1 sm:grid-cols-2",
 						form.watch("includeRange") === "YES" ? "md:grid-cols-3" : "md:grid-cols-4",
 					)}
 				>
@@ -141,13 +137,13 @@ export const HistoryForm = () => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-historyType`}>Crawl Status</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl id={`${id}-historyType`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a history type..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{historyOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label} HISTORY
@@ -168,16 +164,13 @@ export const HistoryForm = () => {
 									<FormLabel htmlFor={`${id}-includeRange`}>
 										Include Range
 									</FormLabel>
-									<Select
-										onValueChange={field.onChange}
-										defaultValue={field.value}
-									>
+									<Select onValueChange={field.onChange} value={field.value}>
 										<FormControl id={`${id}-includeRange`}>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Does range needed..." />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent>
+										<SelectContent className="dashboard-select-content">
 											<SelectItem value="NO">No</SelectItem>
 											<SelectItem value="YES">Yes</SelectItem>
 										</SelectContent>
@@ -229,7 +222,10 @@ export const HistoryForm = () => {
 												</Button>
 											</FormControl>
 										</PopoverTrigger>
-										<PopoverContent className="w-auto p-0" align="start">
+										<PopoverContent
+											className="dashboard-popover w-auto p-0"
+											align="start"
+										>
 											<Calendar
 												mode="range"
 												max={90}
@@ -238,10 +234,16 @@ export const HistoryForm = () => {
 												selected={field.value}
 												onSelect={field.onChange}
 												numberOfMonths={1}
-												disabled={{
-													before: startOfDay(subDays(new Date(), 89)),
-													after: new Date(),
-												}}
+												disabled={
+													calendarToday
+														? {
+																before: startOfDay(
+																	subDays(calendarToday, 89),
+																),
+																after: calendarToday,
+															}
+														: undefined
+												}
 											/>
 										</PopoverContent>
 									</Popover>
@@ -250,11 +252,23 @@ export const HistoryForm = () => {
 							)}
 						/>
 					)}
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() =>
+								form.reset({
+									subId: "",
+									historyType: "DIFF",
+									includeRange: "NO",
+									range: {
+										from: subDays(new Date(), 1),
+										to: new Date(),
+									},
+								}),
+							)
+						}
+					/>
 				</form>
 			</Form>
 		</>

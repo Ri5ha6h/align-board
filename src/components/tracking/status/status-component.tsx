@@ -2,28 +2,24 @@
 
 import React from "react";
 
-import { StatusAccordion } from "@/components/accord-util";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { StatusTable } from "./status-table";
 
 const disabledActionClassName =
-	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100";
+	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-[#444449] disabled:bg-[#2d2d31] disabled:text-[#71717a] disabled:opacity-100";
 
 const MainStatusComponent = ({ isAlignUser }: { isAlignUser: boolean }) => {
 	const [tabVal, setTabVal] = React.useState("active");
 	return (
 		<div className="w-full">
-			<div className="rounded-md bg-white p-4">
-				<StatusAccordion />
-			</div>
 			<Tabs
 				value={tabVal}
 				onValueChange={(value) => {
 					setTabVal(value);
 				}}
-				className="mt-4 flex h-full flex-col"
+				className="flex flex-col"
 			>
 				<div className="flex items-center justify-between">
 					<TabsList>
@@ -52,16 +48,10 @@ const MainStatusComponent = ({ isAlignUser }: { isAlignUser: boolean }) => {
 						</>
 					) : null}
 				</div>
-				<TabsContent
-					value="active"
-					className="mt-6 mb-6 flex-1 rounded-md bg-white p-4 text-primary"
-				>
+				<TabsContent value="active" className="mt-6 mb-6">
 					<StatusTable type="active" isAlignUser={isAlignUser} />
 				</TabsContent>
-				<TabsContent
-					value="closed"
-					className="mt-6 mb-6 flex-1 rounded-md bg-white p-4 text-primary"
-				>
+				<TabsContent value="closed" className="mt-6 mb-6">
 					<StatusTable type="closed" isAlignUser={isAlignUser} />
 				</TabsContent>
 			</Tabs>

@@ -1,10 +1,13 @@
 "use client";
 
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
-import MultipleSelector from "@/components/multi-select";
-import { Button } from "@/components/ui/button";
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
+import MultipleSelector, { type Option } from "@/components/multi-select";
 import {
 	Form,
 	FormControl,
@@ -20,70 +23,43 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { InducedFormType, ParamType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList, getYearList } from "@/utils/default-data/default-data";
-import { useInducedForm } from "@/utils/schema";
+import { useInducedForm, type InducedFormValues } from "@/utils/schema";
 
 export const InducedForm = () => {
 	const id = useId();
 	const params = useParams<ParamType>();
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
+	const filterNavigation = useDashboardFilterNavigation();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const yearOptions = React.useMemo(() => getYearList(), []);
-	const [btnLoad, setBtnLoad] = React.useState(false);
-	const queryCarriers = React.useMemo(
-		() => (searchParams.get("carriers") ? searchParams.get("carriers")?.split(",") : []),
+	const newCarrOpt = React.useMemo<Option[]>(
+		() =>
+			(searchParams.get("carriers") ?? "")
+				.split(",")
+				.filter(Boolean)
+				.map((carrier) => ({ label: carrier, value: carrier })),
 		[searchParams],
 	);
 
-	const newCarrOpt: any = [];
-
-	if (queryCarriers !== undefined && queryCarriers.length > 0) {
-		queryCarriers.map((carrier) => {
-			if (carrier) {
-				const carrObj = {
-					label: carrier,
-					value: carrier,
-				};
-				newCarrOpt.push(carrObj);
-			}
-		});
-	}
-
 	const form = useInducedForm(newCarrOpt, searchParams);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: InducedFormValues) => {
 		//console.log("submit data", data);
-		setBtnLoad(true);
 		if (data.carriers.length === 0) {
 			form.setError("carriers", {
 				type: "custom",
 				message: "Select at least one carrier.",
 			});
-			setBtnLoad(false);
 		} else {
-			setTimeout(() => {
-				const q = createQueryString(data);
-				router.push(`${pathname}?${q}`);
-				setBtnLoad(false);
-			}, 400);
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
 	const createQueryString = React.useCallback(
-		(data: InducedFormType) => {
-			let carrStr = "";
-			if (data.carriers.length > 0) {
-				data.carriers.map((carrier: any, index: number) => {
-					if (index === data.carriers.length - 1) {
-						carrStr += carrier.value;
-					} else {
-						carrStr += carrier.value + ",";
-					}
-				});
-			}
+		(data: InducedFormValues) => {
+			const carrStr = data.carriers.map((carrier) => carrier.value).join(",");
 
 			const inducedParams = new URLSearchParams(searchParams.toString());
 			if (carrStr !== "") {
@@ -104,7 +80,7 @@ export const InducedForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 md:grid-cols-3"
+					className="dashboard-filter-form grid-cols-1 md:grid-cols-2"
 				>
 					<FormField
 						control={form.control}
@@ -124,7 +100,6 @@ export const InducedForm = () => {
 												? "Select Terminals you like..."
 												: "Select Carriers you like..."
 										}
-										hidePlaceholderWhenSelected
 										maxSelected={3}
 										emptyIndicator={
 											<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
@@ -143,13 +118,13 @@ export const InducedForm = () => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-year`}>Year</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl id={`${id}-year`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a year..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{yearOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -161,11 +136,18 @@ export const InducedForm = () => {
 							</FormItem>
 						)}
 					/>
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() =>
+								form.reset({
+									carriers: [],
+									year: new Date().getFullYear().toString(),
+								}),
+							)
+						}
+					/>
 				</form>
 			</Form>
 		</>

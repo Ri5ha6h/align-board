@@ -2,9 +2,13 @@
 
 import { format, startOfDay, subDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
 import MultipleSelector from "@/components/multi-select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -45,13 +49,13 @@ type SummaryFormValues = {
 
 export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 	const id = useId();
+	const [calendarToday, setCalendarToday] = React.useState<Date | null>(null);
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const queueOptions = React.useMemo(() => getQueueList(params.mode), [params.mode]);
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
+	const filterNavigation = useDashboardFilterNavigation();
+	React.useEffect(() => setCalendarToday(new Date()), []);
 	const queryCarriers = React.useMemo(
 		() => (searchParams.get("carriers") ? searchParams.get("carriers")?.split(",") : []),
 		[searchParams],
@@ -73,7 +77,6 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 	const form = useSummaryForm(newCarrOpt, searchParams);
 
 	const onSubmit = (data: SummaryFormValues) => {
-		setBtnLoad(true);
 		if (
 			isAlignUser &&
 			data.carriers.length === 1 &&
@@ -83,13 +86,8 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 				type: "custom",
 				message: "Start date and End date are required.",
 			});
-			setBtnLoad(false);
 		} else {
-			setTimeout(() => {
-				const q = createQueryString(data);
-				router.push(`${pathname}?${q}`);
-				setBtnLoad(false);
-			}, 400);
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
@@ -130,7 +128,7 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2 lg:grid-cols-4"
+					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
 				>
 					<FormField
 						control={form.control}
@@ -150,7 +148,6 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 												? "Select Terminals you like..."
 												: "Select Carriers you like..."
 										}
-										hidePlaceholderWhenSelected
 										maxSelected={5}
 										emptyIndicator={
 											<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
@@ -169,13 +166,13 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-queue`}>Queue</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl id={`${id}-queue`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a queue..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{queueOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -232,7 +229,10 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 												</Button>
 											</FormControl>
 										</PopoverTrigger>
-										<PopoverContent className="w-auto p-0" align="start">
+										<PopoverContent
+											className="dashboard-popover w-auto p-0"
+											align="start"
+										>
 											<Calendar
 												mode="range"
 												max={45}
@@ -241,10 +241,16 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 												selected={field.value}
 												onSelect={field.onChange}
 												numberOfMonths={1}
-												disabled={{
-													before: startOfDay(subDays(new Date(), 44)),
-													after: new Date(),
-												}}
+												disabled={
+													calendarToday
+														? {
+																before: startOfDay(
+																	subDays(calendarToday, 44),
+																),
+																after: calendarToday,
+															}
+														: undefined
+												}
 											/>
 										</PopoverContent>
 									</Popover>
@@ -253,11 +259,22 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 							)}
 						/>
 					) : null}
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() =>
+								form.reset({
+									carriers: [],
+									queue: "NORMAL",
+									range: {
+										from: subDays(new Date(), 1),
+										to: new Date(),
+									},
+								}),
+							)
+						}
+					/>
 				</form>
 			</Form>
 		</>

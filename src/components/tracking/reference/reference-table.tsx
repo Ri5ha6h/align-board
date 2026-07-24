@@ -1,15 +1,19 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import * as React from "react";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import {
+	DashboardWaitingState,
+	useDashboardQueryReport,
+} from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
 import type { ParamType, ReferenceTableType } from "@/utils/common-types";
+import { formatUtcDateTime } from "@/utils/format-date";
 import { useReferenceQuery } from "@/utils/query";
 
 export function ReferenceTable() {
@@ -18,9 +22,9 @@ export function ReferenceTable() {
 
 	if (!searchParams.get("refCarrier") && !searchParams.get("reference")) {
 		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-bold">
+			<DashboardWaitingState>
 				Select a carrier and enter a reference to view data.
-			</div>
+			</DashboardWaitingState>
 		);
 	}
 
@@ -44,8 +48,9 @@ const ReferenceData = ({ ...props }) => {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: false,
 		},
 		{
@@ -67,11 +72,9 @@ const ReferenceData = ({ ...props }) => {
 			header: () => <TableHeadCustom>Reference Type</TableHeadCustom>,
 			cell: ({ row }) => {
 				const ref = row.original.referenceType;
-				const rType = "bg-blue-500";
-
 				return (
 					<TableCellCustom>
-						<Badge className={`${rType}`}>{ref}</Badge>
+						<Badge className="dashboard-data-tag">{ref}</Badge>
 					</TableCellCustom>
 				);
 			},
@@ -121,7 +124,7 @@ const ReferenceData = ({ ...props }) => {
 				const time = row.original.createdAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -137,7 +140,7 @@ const ReferenceData = ({ ...props }) => {
 				const time = row.original.lastCrawledAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -153,7 +156,7 @@ const ReferenceData = ({ ...props }) => {
 				const time = row.original.updatedAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -168,13 +171,16 @@ const ReferenceData = ({ ...props }) => {
 		props.searchParams.get("category"),
 		referenceId,
 	);
+	useDashboardQueryReport({
+		data: referenceQuery.data,
+		error: referenceQuery.error,
+		isFetching: referenceQuery.isFetching,
+		isPending: referenceQuery.isPending,
+		success: referenceQuery.data?.success,
+	});
 
 	if (referenceQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (referenceQuery.isError || referenceQuery.error) {
@@ -193,5 +199,19 @@ const ReferenceData = ({ ...props }) => {
 		);
 	}
 
-	return <TableDataStaticComponent data={referenceQuery.data} columns={columns} />;
+	return (
+		<TableDataStaticComponent
+			data={referenceQuery.data}
+			columns={columns}
+			preferenceKey={`references-reference-${props.params.mode}`}
+			defaultVisibleColumnIds={[
+				"subscription-id",
+				props.params.mode === "terminal" ? "terminal" : "carrier",
+				"ref-type",
+				"ref-num",
+				"status",
+				"last-crawled-at",
+			]}
+		/>
+	);
 };

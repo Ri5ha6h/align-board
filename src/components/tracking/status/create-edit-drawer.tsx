@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 import type { ParamType } from "@/utils/common-types";
 import { getCarriersList } from "@/utils/default-data/default-data";
 import { useStatusCUMutation } from "@/utils/mutation";
-import { useStatusForm } from "@/utils/schema";
+import { useStatusForm, type StatusFormValues } from "@/utils/schema";
 
 export function CreateEditStatusDrawer({ ...props }) {
 	const [open, setOpen] = React.useState(false);
@@ -65,12 +65,26 @@ export function CreateEditStatusDrawer({ ...props }) {
 	);
 }
 
-const AddStatusForm = ({ ...props }) => {
+const AddStatusForm = (props: StatusFormContentProps) => {
+	return useStatusFormContent(props);
+};
+
+interface StatusFormContentProps {
+	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	state: string;
+	statusKey: string;
+	statusValue: Parameters<typeof useStatusForm>[2];
+	tableType: string;
+}
+
+function useStatusFormContent(props: StatusFormContentProps) {
 	const id = React.useId();
+	const [calendarToday, setCalendarToday] = React.useState<Date | null>(null);
 	const params = useParams<ParamType>();
 	const form = useStatusForm(props.state, params, props.statusValue);
 
 	const carrierOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
+	React.useEffect(() => setCalendarToday(new Date()), []);
 
 	const { mutate: server_CUStatus, isPending: isPending_CUStatus } = useStatusCUMutation(
 		params,
@@ -81,7 +95,7 @@ const AddStatusForm = ({ ...props }) => {
 		props.setOpen,
 	);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: StatusFormValues) => {
 		if (!data.carrier) {
 			form.setError("carrier", {
 				type: "custom",
@@ -109,9 +123,10 @@ const AddStatusForm = ({ ...props }) => {
 			data.resolution &&
 			data.expectedResolutionDate
 		) {
-			data.expectedResolutionDate = format(data.expectedResolutionDate, "yyyy-MM-dd");
-			//console.log("submit data", data);
-			server_CUStatus(data);
+			server_CUStatus({
+				...data,
+				expectedResolutionDate: format(data.expectedResolutionDate, "yyyy-MM-dd"),
+			});
 		}
 	};
 
@@ -347,9 +362,11 @@ const AddStatusForm = ({ ...props }) => {
 											selected={field.value}
 											onSelect={field.onChange}
 											numberOfMonths={1}
-											disabled={{
-												before: new Date(),
-											}}
+											disabled={
+												calendarToday
+													? { before: calendarToday }
+													: undefined
+											}
 										/>
 									</PopoverContent>
 								</Popover>
@@ -403,4 +420,4 @@ const AddStatusForm = ({ ...props }) => {
 			</Form>
 		</>
 	);
-};
+}

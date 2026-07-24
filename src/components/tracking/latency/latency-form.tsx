@@ -1,10 +1,13 @@
 "use client";
 
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
-import MultipleSelector from "@/components/multi-select";
-import { Button } from "@/components/ui/button";
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
+import MultipleSelector, { type Option } from "@/components/multi-select";
 import {
 	Form,
 	FormControl,
@@ -20,9 +23,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { LatencyFormType, ParamType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList, getQueueList, getRefList } from "@/utils/default-data/default-data";
-import { useLatencyForm } from "@/utils/schema";
+import { useLatencyForm, type LatencyFormValues } from "@/utils/schema";
 
 export const LatencyForm = () => {
 	const id = useId();
@@ -30,52 +33,26 @@ export const LatencyForm = () => {
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
 	const queueOptions = React.useMemo(() => getQueueList(params.mode), [params.mode]);
 	const refOptions = React.useMemo(() => getRefList(params.mode), [params.mode]);
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
-	const queryCarriers = React.useMemo(
-		() => (searchParams.get("carriers") ? searchParams.get("carriers")?.split(",") : []),
+	const filterNavigation = useDashboardFilterNavigation();
+	const newCarrOpt = React.useMemo<Option[]>(
+		() =>
+			(searchParams.get("carriers") ?? "")
+				.split(",")
+				.filter(Boolean)
+				.map((carrier) => ({ label: carrier, value: carrier })),
 		[searchParams],
 	);
-	const newCarrOpt: any = [];
-
-	if (queryCarriers !== undefined && queryCarriers.length > 0) {
-		queryCarriers.map((carrier) => {
-			if (carrier) {
-				const carrObj = {
-					label: carrier,
-					value: carrier,
-				};
-				newCarrOpt.push(carrObj);
-			}
-		});
-	}
 
 	const form = useLatencyForm(newCarrOpt, searchParams);
 
-	const onSubmit = (data: any) => {
-		//console.log("submit data", data);
-		setBtnLoad(true);
-		setTimeout(() => {
-			const q = createQueryString(data);
-			router.push(`${pathname}?${q}`);
-			setBtnLoad(false);
-		}, 400);
+	const onSubmit = (data: LatencyFormValues) => {
+		filterNavigation.apply(createQueryString(data), () => form.reset(data));
 	};
 
 	const createQueryString = React.useCallback(
-		(data: LatencyFormType) => {
-			let str = "";
-			if (data.carriers.length > 0) {
-				data.carriers.map((carrier: any, index: number) => {
-					if (index === data.carriers.length - 1) {
-						str += carrier.value;
-					} else {
-						str += carrier.value + ",";
-					}
-				});
-			}
+		(data: LatencyFormValues) => {
+			const str = data.carriers.map((carrier) => carrier.value).join(",");
 			const latencyParams = new URLSearchParams(searchParams.toString());
 			if (str !== "") {
 				latencyParams.set("carriers", str);
@@ -95,7 +72,7 @@ export const LatencyForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2 lg:grid-cols-4"
+					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
 				>
 					<FormField
 						control={form.control}
@@ -115,7 +92,6 @@ export const LatencyForm = () => {
 												? "Select Terminals you like..."
 												: "Select Carriers you like..."
 										}
-										hidePlaceholderWhenSelected
 										maxSelected={5}
 										emptyIndicator={
 											<p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
@@ -134,13 +110,13 @@ export const LatencyForm = () => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-queue`}>Queue</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl id={`${id}-queue`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a queue..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										{queueOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -158,13 +134,13 @@ export const LatencyForm = () => {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel htmlFor={`${id}-refType`}>Reference Type</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl id={`${id}-refType`}>
 										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select a reference type..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent>
+									<SelectContent className="dashboard-select-content">
 										<SelectItem value="ALL">All</SelectItem>
 										{refOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
@@ -177,11 +153,15 @@ export const LatencyForm = () => {
 							</FormItem>
 						)}
 					/>
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() =>
+								form.reset({ carriers: [], queue: "NORMAL", refType: "ALL" }),
+							)
+						}
+					/>
 				</form>
 			</Form>
 		</>

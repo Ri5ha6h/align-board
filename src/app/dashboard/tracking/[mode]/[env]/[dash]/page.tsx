@@ -12,13 +12,13 @@ interface DashPageProps {
 }
 
 const SlugPage = async ({ params }: DashPageProps) => {
-	const param = await params;
-	const { data, success } = await getUserAction();
+	const [param, userResult] = await Promise.all([params, getUserAction()]);
+	const { data, success } = userResult;
 	const isAlignUser = success ? isAlignUsername(data?.username) : false;
 
 	return (
 		<>
-			<DashboardPage mode={param.mode} dash={param.dash} isAlignUser={isAlignUser} />
+			<DashboardPage dash={param.dash} isAlignUser={isAlignUser} />
 		</>
 	);
 };

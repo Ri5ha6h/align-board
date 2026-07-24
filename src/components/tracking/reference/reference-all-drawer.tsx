@@ -1,67 +1,107 @@
-import JsonView from "@uiw/react-json-view";
-import { vscodeTheme } from "@uiw/react-json-view/vscode";
-import { Loader2 } from "lucide-react";
+import type { ReadonlyURLSearchParams } from "next/navigation";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { DashboardDetailBody } from "@/components/dashboard/dashboard-detail-sheet";
+import { findDetailValue } from "@/components/dashboard/dashboard-detail-utils";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
+import type { ParamType } from "@/utils/common-types";
 import { useReferenceInfoQuery } from "@/utils/query";
+import { sanitizeHistoryDataForDisplay } from "@/utils/sanitize-history-data";
 
-import { ScrollArea } from "../../ui/scroll-area";
+interface ReferenceDrawerProps {
+	onOpenChange: (open: boolean) => void;
+	open: boolean;
+	params: ParamType;
+	resource: string;
+	searchParams: Pick<ReadonlyURLSearchParams, "get">;
+	title: string;
+}
 
-export function ReferenceDrawer({ ...props }) {
+export function ReferenceDrawer(props: ReferenceDrawerProps) {
 	return (
-		<div className="flex items-center justify-center">
-			<Sheet>
-				<SheetTrigger asChild>
-					<Button variant={props.variant}>{props.buttonTitle}</Button>
-				</SheetTrigger>
-				<SheetContent>
-					<SheetHeader>
-						<SheetTitle>{props.title}</SheetTitle>
-					</SheetHeader>
-					<SheetCustomContent {...props} />
-				</SheetContent>
-			</Sheet>
-		</div>
+		<Sheet onOpenChange={props.onOpenChange} open={props.open}>
+			<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
+				<SheetHeader className="dashboard-detail-header">
+					<SheetTitle>{props.title}</SheetTitle>
+					<SheetDescription>
+						Tracking reference summary and source payload.
+					</SheetDescription>
+				</SheetHeader>
+				<ReferenceDetailContent {...props} enabled={props.open} />
+			</SheetContent>
+		</Sheet>
 	);
 }
 
-function SheetCustomContent({ ...props }) {
-	const resId = props.resource;
+function ReferenceDetailContent({
+	enabled,
+	params,
+	resource,
+	searchParams,
+}: ReferenceDrawerProps & { enabled: boolean }) {
+	const query = useReferenceInfoQuery(params, searchParams, resource, enabled);
+	const responseError =
+		query.error?.message || (query.data && !query.data.success ? String(query.data.data) : "");
+	const rawValue = query.data?.success ? query.data.data : undefined;
+	const data = sanitizeHistoryDataForDisplay(rawValue);
 
-	const referenceInfoQuery = useReferenceInfoQuery(props.params, props.searchParams, resId);
-
-	if (referenceInfoQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
-	}
-
-	if (referenceInfoQuery.isError || referenceInfoQuery.error) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<p className="text-red-500">Error: {referenceInfoQuery.error?.message}</p>
-			</div>
-		);
-	}
-
-	if (referenceInfoQuery.data && !referenceInfoQuery.data?.success) {
-		return (
-			<div className="mt-10 flex h-full flex-col items-center justify-center">
-				<p className="text-red-500">{referenceInfoQuery.data?.data}</p>
-			</div>
-		);
-	}
-
-	return <CustomView data={referenceInfoQuery.data} />;
-}
-
-function CustomView({ ...props }) {
 	return (
-		<ScrollArea className="my-scroll mt-5 w-full rounded-md">
-			<JsonView value={props.data.data} style={vscodeTheme} className="rounded-md p-2" />
-		</ScrollArea>
+		<DashboardDetailBody
+			error={responseError}
+			fields={[
+				{
+					label: "Subscription ID",
+					value: findDetailValue(data, ["subscriptionId", "subscription_id"]) ?? resource,
+				},
+				{
+					label: params.mode === "terminal" ? "Terminal" : "Carrier",
+					value:
+						findDetailValue(data, ["carrier", "carrierCode", "terminal"]) ??
+						searchParams.get("carrier"),
+				},
+				{
+					label: "Reference Type",
+					value: findDetailValue(data, ["referenceType", "refType"]),
+				},
+				{
+					label: "Reference Number",
+					value: findDetailValue(data, ["referenceNumber", "reference", "refNum"]),
+				},
+				{
+					label: "Queue",
+					value:
+						findDetailValue(data, ["queue", "queueName"]) ?? searchParams.get("queue"),
+				},
+				{
+					label: "Status",
+					value:
+						findDetailValue(data, ["status", "referenceStatus"]) ??
+						searchParams.get("refStatus"),
+				},
+				{
+					label: "Created",
+					value: findDetailValue(data, ["createdAt", "created_at"]),
+				},
+				{
+					label: "Updated",
+					value: findDetailValue(data, ["updatedAt", "modifiedAt", "updated_at"]),
+				},
+				{
+					label: "Last Crawled",
+					value: findDetailValue(data, ["lastCrawledAt", "last_crawled_at"]),
+				},
+				{ label: "Error", value: findDetailValue(data, ["error", "errorMessage"]) },
+			]}
+			isLoading={query.isPending}
+			isRefreshing={query.isFetching && !query.isPending}
+			onRetry={() => void query.refetch()}
+			rawValue={data}
+		/>
 	);
 }

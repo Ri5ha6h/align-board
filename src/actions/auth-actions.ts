@@ -4,21 +4,19 @@ import bcryptjs from "bcryptjs";
 import { cookies } from "next/headers";
 
 import {
-	clearSessionCookie,
 	createSessionToken,
 	setSessionCookie,
 	verifySessionToken,
 	type SessionPayload,
 } from "@/lib/session";
 import { SESSION_COOKIE_NAME } from "@/lib/session-constants";
+import { getErrorMessage } from "@/utils/action-result";
 import type { AuthType } from "@/utils/common-types";
 
 import { mainRequestAction } from "./main-actions";
 
-const TEST_USER_ALIAS_USERNAME = "testuser";
-const TEST_USER_ALIAS_PASSWORD = "user@test123";
-
 type GetUserResult = { data: SessionPayload; success: true } | { data: string; success: false };
+type SignInRecord = SessionPayload & { password: string };
 
 // auth actions
 
@@ -35,7 +33,7 @@ export const signUpAction = async ({ username, password }: AuthType) => {
 			password: hashedPassword,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<unknown>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -49,9 +47,9 @@ export const signUpAction = async ({ username, password }: AuthType) => {
 			data: "User created successfully",
 			success: true,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
+			data: getErrorMessage(error),
 			success: false,
 		};
 	}
@@ -61,8 +59,12 @@ export const signUpAction = async ({ username, password }: AuthType) => {
 export const signInAction = async ({ username, password }: AuthType) => {
 	try {
 		const cookieStore = await cookies();
+		const testUserAliasUsername = process.env.TEST_USER_ALIAS_USERNAME;
+		const testUserAliasPassword = process.env.TEST_USER_ALIAS_PASSWORD;
 		const isTestUserAlias =
-			username === TEST_USER_ALIAS_USERNAME && password === TEST_USER_ALIAS_PASSWORD;
+			Boolean(testUserAliasUsername && testUserAliasPassword) &&
+			username === testUserAliasUsername &&
+			password === testUserAliasPassword;
 		let requestUsername = username;
 		let passwordToCompare = password;
 
@@ -83,7 +85,7 @@ export const signInAction = async ({ username, password }: AuthType) => {
 			username: requestUsername,
 		};
 
-		const res: any = await mainRequestAction(reqData);
+		const res = await mainRequestAction<SignInRecord>(reqData);
 
 		if (!res?.success && (res?.data.includes("timed") || res?.data.includes("trusted"))) {
 			throw new Error(res.data);
@@ -115,9 +117,9 @@ export const signInAction = async ({ username, password }: AuthType) => {
 			data: "Sign in Successful.",
 			success: true,
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			data: error.message,
+			data: getErrorMessage(error),
 			success: false,
 		};
 	}
@@ -136,46 +138,6 @@ export const getUserAction = async (): Promise<GetUserResult> => {
 	} catch {
 		return {
 			data: "User not found.",
-			success: false,
-		};
-	}
-};
-
-// refresh session action
-export const refreshSessionAction = async () => {
-	const cookieStore = await cookies();
-	const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
-	if (!token) {
-		return { data: "Session expired.", success: false };
-	}
-
-	let session: SessionPayload;
-	try {
-		session = await verifySessionToken(token);
-	} catch {
-		return { data: "Session expired.", success: false };
-	}
-
-	const refreshedToken = await createSessionToken(session);
-	setSessionCookie(cookieStore, refreshedToken);
-
-	return { data: "Session refreshed.", success: true };
-};
-
-// sign out action
-export const signOutAction = async () => {
-	try {
-		const cookieStore = await cookies();
-		// delete cookie
-		clearSessionCookie(cookieStore);
-		return {
-			data: "Sign out Successful.",
-			success: true,
-		};
-	} catch (error: any) {
-		return {
-			data: error.message,
 			success: false,
 		};
 	}

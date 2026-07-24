@@ -1,9 +1,12 @@
 "use client";
 
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import React, { useId } from "react";
 
-import { Button } from "@/components/ui/button";
+import {
+	DashboardFilterActions,
+	useDashboardFilterNavigation,
+} from "@/components/dashboard/dashboard-filter-actions";
 import {
 	Form,
 	FormControl,
@@ -13,24 +16,21 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { ParamType, ReferenceSubscriptionFormType } from "@/utils/common-types";
+import type { ParamType } from "@/utils/common-types";
 import { getCarriersList } from "@/utils/default-data/default-data";
-import { useReferenceSubscriptionForm } from "@/utils/schema";
+import { useReferenceSubscriptionForm, type ReferenceSubscriptionFormValues } from "@/utils/schema";
 
 export const ReferenceSubscriptionForm = () => {
 	const id = useId();
 	const params = useParams<ParamType>();
 	const carriersOptions = React.useMemo(() => getCarriersList(params.mode), [params.mode]);
-	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const router = useRouter();
-	const [btnLoad, setBtnLoad] = React.useState(false);
+	const filterNavigation = useDashboardFilterNavigation();
 
 	const form = useReferenceSubscriptionForm(searchParams);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: ReferenceSubscriptionFormValues) => {
 		//console.log("submit data", data);
-		setBtnLoad(true);
 		if (data.subscriptionId) {
 			let carrierCheck = data.subscriptionId.split("_")[0];
 			if (data.subscriptionId.includes("EXPORT") || data.subscriptionId.includes("IMPORT")) {
@@ -44,22 +44,17 @@ export const ReferenceSubscriptionForm = () => {
 					type: "custom",
 					message: "Invalid carrier present in subscription id.",
 				});
-				setBtnLoad(false);
 				return;
 			}
 		}
 
 		if (data.subscriptionId) {
-			setTimeout(() => {
-				const q = createQueryString(data);
-				router.push(`${pathname}?${q}`);
-				setBtnLoad(false);
-			}, 400);
+			filterNavigation.apply(createQueryString(data), () => form.reset(data));
 		}
 	};
 
 	const createQueryString = React.useCallback(
-		(data: ReferenceSubscriptionFormType) => {
+		(data: ReferenceSubscriptionFormValues) => {
 			const refParams = new URLSearchParams(searchParams.toString());
 
 			refParams.set("subscriptionId", data.subscriptionId);
@@ -74,7 +69,7 @@ export const ReferenceSubscriptionForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-5 grid grid-flow-row auto-rows-auto grid-cols-1 items-center justify-center gap-4 rounded-md border border-gray-200 p-3 sm:grid-cols-2"
+					className="dashboard-filter-form grid-cols-1"
 				>
 					<FormField
 						control={form.control}
@@ -94,11 +89,13 @@ export const ReferenceSubscriptionForm = () => {
 							</FormItem>
 						)}
 					/>
-					<div className="mt-5 flex items-center justify-center">
-						<Button type="submit" className="w-[120px] capitalize" disabled={btnLoad}>
-							{btnLoad ? "Submitting..." : "Submit"}
-						</Button>
-					</div>
+					<DashboardFilterActions
+						canApply={form.formState.isDirty}
+						isPending={filterNavigation.isPending}
+						onReset={() =>
+							filterNavigation.reset(() => form.reset({ subscriptionId: "" }))
+						}
+					/>
 				</form>
 			</Form>
 		</>

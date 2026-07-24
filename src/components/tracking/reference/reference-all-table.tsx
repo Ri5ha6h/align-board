@@ -1,15 +1,21 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
+import * as React from "react";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import {
+	DashboardWaitingState,
+	useDashboardQueryReport,
+} from "@/components/dashboard/dashboard-runtime";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ParamType, ReferenceTableType } from "@/utils/common-types";
+import { formatUtcDateTime } from "@/utils/format-date";
 import { useReferenceAllQuery } from "@/utils/query";
 
 import { ReferenceDrawer } from "./reference-all-drawer";
@@ -19,17 +25,14 @@ export function ReferenceAllTable() {
 	const searchParams = useSearchParams();
 
 	if (!searchParams.get("carrier")) {
-		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-bold">
-				Select a carrier to view references.
-			</div>
-		);
+		return <DashboardWaitingState>Select a carrier to view references.</DashboardWaitingState>;
 	}
 
 	return <ReferenceAllData params={params} searchParams={searchParams} />;
 }
 
 const ReferenceAllData = ({ ...props }) => {
+	const [selectedReference, setSelectedReference] = React.useState<string | null>(null);
 	const columns: ColumnDef<ReferenceTableType>[] = [
 		{
 			id: "subscription-id",
@@ -41,8 +44,9 @@ const ReferenceAllData = ({ ...props }) => {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: false,
 		},
 		{
@@ -86,11 +90,9 @@ const ReferenceAllData = ({ ...props }) => {
 														? "FTL"
 														: "IMPORT";
 
-				const rType = "bg-blue-500";
-
 				return (
 					<TableCellCustom>
-						<Badge className={`${rType}`}>{ref}</Badge>
+						<Badge className="dashboard-data-tag">{ref}</Badge>
 					</TableCellCustom>
 				);
 			},
@@ -110,14 +112,10 @@ const ReferenceAllData = ({ ...props }) => {
 			accessorKey: "status",
 			header: () => <TableHeadCustom>Status</TableHeadCustom>,
 			cell: () => {
-				const status = props.searchParams.get("refStatus")!;
+				const status = props.searchParams.get("refStatus") ?? "ACTIVE";
 
 				return (
-					<TableCellCustom
-						className={cn(status === "ACTIVE" ? "text-green-500" : "text-red-500")}
-					>
-						{status}
-					</TableCellCustom>
+					<TableCellCustom className={cn("dashboard-data-tag")}>{status}</TableCellCustom>
 				);
 			},
 			enableSorting: false,
@@ -127,7 +125,7 @@ const ReferenceAllData = ({ ...props }) => {
 			accessorKey: "queueType",
 			header: () => <TableHeadCustom>Queue</TableHeadCustom>,
 			cell: () => {
-				const queue = props.searchParams.get("queue")!;
+				const queue = props.searchParams.get("queue") ?? "";
 				const qType = queue.includes("NORMAL")
 					? "Normal"
 					: queue.includes("ADAPTIVE")
@@ -148,7 +146,7 @@ const ReferenceAllData = ({ ...props }) => {
 				const time = row.original.lastCrawledAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -162,14 +160,14 @@ const ReferenceAllData = ({ ...props }) => {
 			header: () => <TableHeadCustom>More Info</TableHeadCustom>,
 			cell: ({ row }) => {
 				return (
-					<ReferenceDrawer
-						variant="normal"
-						buttonTitle="more info"
-						title="Reference Information"
-						params={props.params}
-						searchParams={props.searchParams}
-						resource={row.original.subscriptionId}
-					/>
+					<Button
+						className="dashboard-row-action"
+						onClick={() => setSelectedReference(row.original.subscriptionId)}
+						type="button"
+						variant="outline"
+					>
+						View Details
+					</Button>
 				);
 			},
 			enableSorting: false,
@@ -181,13 +179,16 @@ const ReferenceAllData = ({ ...props }) => {
 	}
 
 	const referenceAllQuery = useReferenceAllQuery(props.params, props.searchParams);
+	useDashboardQueryReport({
+		data: referenceAllQuery.data,
+		error: referenceAllQuery.error,
+		isFetching: referenceAllQuery.isFetching,
+		isPending: referenceAllQuery.isPending,
+		success: referenceAllQuery.data?.success,
+	});
 
 	if (referenceAllQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (referenceAllQuery.isError || referenceAllQuery.error) {
@@ -206,5 +207,34 @@ const ReferenceAllData = ({ ...props }) => {
 		);
 	}
 
-	return <TableDataStaticComponent data={referenceAllQuery.data} columns={columns} />;
+	return (
+		<>
+			<TableDataStaticComponent
+				data={referenceAllQuery.data}
+				columns={columns}
+				preferenceKey={`references-all-${props.params.mode}`}
+				defaultVisibleColumnIds={[
+					"subscription-id",
+					props.params.mode === "terminal" ? "terminal" : "carrier",
+					"ref-type",
+					"ref-num",
+					"status",
+					"last-crawled-at",
+					"more-info",
+				]}
+			/>
+			{selectedReference ? (
+				<ReferenceDrawer
+					onOpenChange={(open) => {
+						if (!open) setSelectedReference(null);
+					}}
+					open
+					params={props.params}
+					resource={selectedReference}
+					searchParams={props.searchParams}
+					title="Reference Information"
+				/>
+			) : null}
+		</>
+	);
 };

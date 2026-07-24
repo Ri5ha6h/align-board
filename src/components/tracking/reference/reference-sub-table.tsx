@@ -1,14 +1,18 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { format, toDate } from "date-fns";
-import { Loader2 } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 
+import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
+import {
+	DashboardWaitingState,
+	useDashboardQueryReport,
+} from "@/components/dashboard/dashboard-runtime";
 import { TableDataDefaultComponent } from "@/components/data-table-default";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
 import type { ParamType, ReferenceTableType } from "@/utils/common-types";
+import { formatUtcDateTime } from "@/utils/format-date";
 import { useReferenceSubscriptionQuery } from "@/utils/query";
 
 export function ReferenceSubscriptionTable() {
@@ -16,17 +20,13 @@ export function ReferenceSubscriptionTable() {
 	const searchParams = useSearchParams();
 
 	if (!searchParams.get("subscriptionId")) {
-		return (
-			<div className="mt-10 flex items-center justify-center text-xl font-bold">
-				Enter a subscription id to view data.
-			</div>
-		);
+		return <DashboardWaitingState>Enter a subscription id to view data.</DashboardWaitingState>;
 	}
 
 	return <ReferenceSubscriptionData params={params} searchParams={searchParams} />;
 }
 
-export function ReferenceSubscriptionData({ ...props }) {
+function ReferenceSubscriptionData({ ...props }) {
 	const columns: ColumnDef<ReferenceTableType>[] = [
 		{
 			id: "subscription-id",
@@ -38,8 +38,9 @@ export function ReferenceSubscriptionData({ ...props }) {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "sticky left-0 bg-white",
+				className: "dashboard-sticky-column",
 			},
+			enableHiding: false,
 			enableSorting: false,
 		},
 		{
@@ -61,11 +62,9 @@ export function ReferenceSubscriptionData({ ...props }) {
 			header: () => <TableHeadCustom>Reference Type</TableHeadCustom>,
 			cell: ({ row }) => {
 				const ref = row.original.referenceType;
-				const rType = "bg-blue-500";
-
 				return (
 					<TableCellCustom>
-						<Badge className={`${rType}`}>{ref}</Badge>
+						<Badge className="dashboard-data-tag">{ref}</Badge>
 					</TableCellCustom>
 				);
 			},
@@ -115,7 +114,7 @@ export function ReferenceSubscriptionData({ ...props }) {
 				const time = row.original.createdAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -129,7 +128,7 @@ export function ReferenceSubscriptionData({ ...props }) {
 				const time = row.original.lastCrawledAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -143,7 +142,7 @@ export function ReferenceSubscriptionData({ ...props }) {
 				const time = row.original.updatedAt;
 				let showT = "";
 				if (time !== null && time !== "" && time !== "null") {
-					showT = format(toDate(time), "do MMM yyyy, HH:mm:ss");
+					showT = formatUtcDateTime(time);
 				}
 				return <TableCellCustom>{showT}</TableCellCustom>;
 			},
@@ -156,13 +155,16 @@ export function ReferenceSubscriptionData({ ...props }) {
 		props.searchParams.get("category"),
 		props.searchParams.get("subscriptionId"),
 	);
+	useDashboardQueryReport({
+		data: referenceQuery.data,
+		error: referenceQuery.error,
+		isFetching: referenceQuery.isFetching,
+		isPending: referenceQuery.isPending,
+		success: referenceQuery.data?.success,
+	});
 
 	if (referenceQuery.isPending) {
-		return (
-			<div className="mt-6 flex h-full flex-col items-center justify-center">
-				<Loader2 className="animate-spin text-lg" />
-			</div>
-		);
+		return <DashboardTableSkeleton />;
 	}
 
 	if (referenceQuery.isError || referenceQuery.error) {
@@ -181,5 +183,19 @@ export function ReferenceSubscriptionData({ ...props }) {
 		);
 	}
 
-	return <TableDataDefaultComponent data={referenceQuery.data} columns={columns} />;
+	return (
+		<TableDataDefaultComponent
+			data={referenceQuery.data}
+			columns={columns}
+			preferenceKey={`references-subscription-${props.params.mode}`}
+			defaultVisibleColumnIds={[
+				"subscription-id",
+				props.params.mode === "terminal" ? "terminal" : "carrier",
+				"ref-type",
+				"ref-num",
+				"status",
+				"last-crawled-at",
+			]}
+		/>
+	);
 }

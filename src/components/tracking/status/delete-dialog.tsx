@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { ParamType } from "@/utils/common-types";
 import { useDeleteStatusMutation } from "@/utils/mutation";
-import { useCloseDeleteStatusForm } from "@/utils/schema";
+import { useCloseDeleteStatusForm, type CloseDeleteStatusFormValues } from "@/utils/schema";
 
 export const DeleteStatusForm = ({ ...props }) => {
 	const id = React.useId();
@@ -39,7 +39,7 @@ export const DeleteStatusForm = ({ ...props }) => {
 		props.tableType,
 	);
 
-	const onSubmit = (data: any) => {
+	const onSubmit = (data: CloseDeleteStatusFormValues) => {
 		if (data.statusKey === props.statusKey) {
 			//console.log("onSubmit", data);
 			server_delete(data.statusKey);
