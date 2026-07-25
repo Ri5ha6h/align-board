@@ -33,11 +33,18 @@
    TOKEN_SECRET=<jwt-signing-secret>
    TEST_USER_BACKEND_USERNAME=<test-user-backend-username>
    TEST_USER_BACKEND_PASSWORD=<test-user-backend-password>
+   # Optional: both values are required to enable the test-user alias
+   TEST_USER_ALIAS_USERNAME=<test-user-alias-username>
+   TEST_USER_ALIAS_PASSWORD=<test-user-alias-password>
    ```
 
    Set `APP_ORIGIN` to the browser-facing application origin in deployed environments, for
    example `https://tracking.alignbits.com`. This keeps authentication redirects on the public
    host when Next.js runs behind a reverse proxy.
+
+   `TEST_USER_ALIAS_USERNAME` and `TEST_USER_ALIAS_PASSWORD` are optional, but must be set
+   together. When configured, the alias credentials sign in as the account identified by
+   `TEST_USER_BACKEND_USERNAME` and `TEST_USER_BACKEND_PASSWORD`.
 
    Obtain the real values through the project's approved secure channel. Do not commit
    `.env.local` or share its secrets.
@@ -59,7 +66,6 @@ src/
   components/          # Shared and feature-specific React components
     ui/                # Canonical shadcn/ui components
   custom-wrappers/     # Application providers and wrappers
-  hooks/               # Reusable React hooks
   lib/                 # Shared libraries and access helpers
   utils/               # Schemas, types, queries, mutations, and default data
 public/                 # Static assets
@@ -73,5 +79,5 @@ styles/                 # Global styles
 - Keep canonical shadcn/ui primitives in `src/components/ui` unchanged and extend them
   through feature components or wrappers.
 - Place feature-specific components in focused subdirectories under `src/components`.
-- Put reusable hooks in `src/hooks` and shared utilities in `src/lib` or `src/utils`.
+- Put shared utilities in `src/lib` or `src/utils`.
 - Run `npm run lint` and `npm run build` before submitting changes.

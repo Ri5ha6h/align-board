@@ -35,8 +35,6 @@ const SignIn = () => {
 					<AuthFormActions
 						actionLabel="Continue to board"
 						isPending={signInPending}
-						linkHref="/signup"
-						linkLabel="Create account"
 						metadataText="Secure workspace access"
 						pendingLabel="Signing in..."
 					/>
