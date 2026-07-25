@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
 	if (hasValidSession && (path === "/" || isAuthPath)) {
 		response = redirectTo("/dashboard", request);
-	} else if (!hasValidSession && !isAuthPath) {
+	} else if (!hasValidSession && path !== "/signin") {
 		response = redirectTo("/signin", request);
 	}
 
