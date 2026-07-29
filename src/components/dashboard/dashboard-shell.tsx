@@ -64,6 +64,15 @@ import {
 import { DashboardFilterTransactionProvider } from "./dashboard-filter-transaction";
 import { DashboardSkeleton } from "./dashboard-loading";
 import { DashboardRuntimeProvider, useDashboardRuntime } from "./dashboard-runtime";
+import {
+	dashboardContent,
+	dashboardDialog,
+	dashboardEyebrow,
+	dashboardFocusRing,
+	dashboardSelectContent,
+	dashboardSheet,
+	dashboardUtilityButton,
+} from "./dashboard-styles";
 import { SummaryPrefetcher } from "./summary-prefetcher";
 
 interface DashboardShellProps {
@@ -79,6 +88,14 @@ const QUERY_STATE_LABEL = {
 	live: "Live data",
 	empty: "No results",
 	error: "Query error",
+} as const;
+
+const QUERY_STATE_DOT = {
+	waiting: "bg-dashboard-mist",
+	loading: "animate-dashboard-pulse bg-dashboard-mist motion-reduce:animate-none",
+	live: "bg-dashboard-white shadow-[0_0_0_3px_rgba(250,250,250,0.1)]",
+	empty: "bg-dashboard-mist",
+	error: "bg-dashboard-danger",
 } as const;
 
 const NUMBER_FORMATTER = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
@@ -273,12 +290,12 @@ function HelpDialog({
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button className="dashboard-utility-button" size="sm" variant="outline">
+				<Button className={dashboardUtilityButton} size="sm" variant="outline">
 					<HelpCircle />
 					Help
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="dashboard-dialog">
+			<DialogContent className={dashboardDialog} data-dashboard-surface>
 				<DialogHeader>
 					<DialogTitle>{DASHBOARD_VIEW_CONFIG[view].label} guide</DialogTitle>
 					<DialogDescription>
@@ -294,12 +311,14 @@ function HelpDialog({
 function QueryState() {
 	const { error, phase } = useDashboardRuntime();
 	return (
-		<div className="dashboard-query-state">
-			<div className="flex items-center gap-2">
-				<span className={cn("dashboard-state-dot", `dashboard-state-dot--${phase}`)} />
+		<div className="rounded-[2px] border border-dashboard-line bg-dashboard-ink p-3.5 font-dashboard-code text-[10px] tracking-[0.04em] uppercase">
+			<div className="flex items-center gap-2 font-medium text-dashboard-white">
+				<span className={cn("size-1.5 rounded-full", QUERY_STATE_DOT[phase])} />
 				<span>{QUERY_STATE_LABEL[phase]}</span>
 			</div>
-			<p>{error || "Reflects the active dashboard request only."}</p>
+			<p className="mt-2 font-dashboard-body text-[10px] leading-[1.45] tracking-normal text-dashboard-mist normal-case">
+				{error || "Reflects the active dashboard request only."}
+			</p>
 		</div>
 	);
 }
@@ -309,22 +328,31 @@ function DashboardNavigation({
 	mode,
 	view,
 	onNavigate,
+	className,
 }: {
+	className?: string;
 	env: DashboardEnv;
 	mode: DashboardMode;
 	onNavigate?: () => void;
 	view: DashboardView;
 }) {
 	return (
-		<nav aria-label="Dashboard views" className="dashboard-nav">
-			<p>Dashboards</p>
+		<nav aria-label="Dashboard views" className={cn("flex flex-col gap-[3px]", className)}>
+			<p className="mx-3 mt-0 mb-[11px] font-dashboard-code text-[9px] font-medium tracking-[0.12em] text-dashboard-mist uppercase">
+				Dashboards
+			</p>
 			{getDashboardViews(mode).map((item) => {
 				const config = DASHBOARD_VIEW_CONFIG[item];
 				const Icon = config.icon;
 				return (
 					<Link
 						aria-current={item === view ? "page" : undefined}
-						className={cn("dashboard-nav-link", item === view && "is-active")}
+						className={cn(
+							"flex h-[42px] items-center gap-3 rounded-[2px] border border-transparent px-3 text-[13px] font-semibold text-dashboard-mist transition-[color,background,border-color] duration-150 hover:text-dashboard-white [&_svg]:w-[15px]",
+							dashboardFocusRing,
+							item === view &&
+								"border-dashboard-line bg-dashboard-ink text-dashboard-white",
+						)}
 						href={dashboardPath(mode, env, item)}
 						key={item}
 						onClick={onNavigate}
@@ -361,7 +389,10 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 	};
 
 	return (
-		<div className="dashboard-dispatch">
+		<div
+			className="min-h-screen bg-dashboard-night font-dashboard-body text-dashboard-white [color-scheme:dark]"
+			data-dashboard-root
+		>
 			<SummaryPrefetcher
 				enabled={
 					mode === "ocean" &&
@@ -370,27 +401,28 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 					!["loading", "waiting"].includes(runtime.phase)
 				}
 			/>
-			<header className="dashboard-topbar">
-				<div className="dashboard-brand">
+			<header className="sticky top-0 z-40 grid h-[70px] grid-cols-[230px_minmax(0,1fr)_auto] items-stretch border-b border-dashboard-line bg-[rgba(32,32,35,0.96)] backdrop-blur-[12px] max-[951px]:grid-cols-[auto_minmax(0,1fr)_auto] max-[761px]:grid-cols-[50px_minmax(0,1fr)_auto]">
+				<div className="flex items-center gap-3 border-r border-dashboard-line px-5 font-dashboard-code text-[13px] font-medium tracking-[0.14em] uppercase max-[951px]:border-r-0 max-[761px]:px-2">
 					<Sheet onOpenChange={setMenuOpen} open={menuOpen}>
 						<SheetTrigger asChild>
 							<Button
 								aria-label="Open dashboard navigation"
-								className="dashboard-menu-button"
+								className="hidden text-dashboard-white max-[951px]:inline-flex"
 								size="icon"
 								variant="ghost"
 							>
 								<Menu />
 							</Button>
 						</SheetTrigger>
-						<SheetContent className="dashboard-sheet" side="left">
+						<SheetContent className={dashboardSheet} data-dashboard-surface side="left">
 							<SheetHeader>
-								<SheetTitle>Tracking dashboards</SheetTitle>
+								<SheetTitle>Tracking Dashboards</SheetTitle>
 								<SheetDescription>
 									Choose a view for {mode} tracking.
 								</SheetDescription>
 							</SheetHeader>
 							<DashboardNavigation
+								className="px-4 py-1"
 								env={env}
 								mode={mode}
 								onNavigate={() => setMenuOpen(false)}
@@ -404,47 +436,53 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 					<Image
 						alt=""
 						aria-hidden
-						className="size-7 object-cover"
+						className="size-7 object-cover max-[761px]:hidden"
 						height={28}
 						priority
 						src="/alignbits-logo.jpg"
 						width={28}
 					/>
-					<Link href="/dashboard">Alignbits</Link>
+					<Link
+						className={cn(dashboardFocusRing, "max-[761px]:hidden")}
+						href="/dashboard"
+					>
+						Alignbits
+					</Link>
 				</div>
 
-				<nav className="dashboard-mode-tabs" aria-label="Tracking modes">
-					{DASHBOARD_MODES.map((item) => (
-						<button
-							aria-current={item === mode ? "page" : undefined}
-							className={cn(item === mode && "is-active")}
-							key={item}
-							onClick={() => switchMode(item)}
-							type="button"
+				<div className="flex min-w-0 items-center px-4 max-[761px]:px-2">
+					<Select
+						onValueChange={(value) => switchMode(value as DashboardMode)}
+						value={mode}
+					>
+						<SelectTrigger
+							aria-label="Tracking mode"
+							className="w-full min-w-0 rounded-[2px] border-dashboard-line bg-dashboard-ink font-dashboard-code text-[10px] tracking-[0.08em] text-dashboard-white"
 						>
-							{item}
-						</button>
-					))}
-				</nav>
-				<Select onValueChange={(value) => switchMode(value as DashboardMode)} value={mode}>
-					<SelectTrigger aria-label="Tracking mode" className="dashboard-mode-select">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent className="dashboard-select-content">
-						{DASHBOARD_MODES.map((item) => (
-							<SelectItem key={item} value={item}>
-								{item.toUpperCase()}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent className={dashboardSelectContent}>
+							{DASHBOARD_MODES.map((item) => (
+								<SelectItem key={item} value={item}>
+									{item.toUpperCase()}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
 
-				<div className="dashboard-topbar-actions">
-					<div className="dashboard-env-switch" aria-label="Environment">
+				<div className="flex items-center gap-2.5 border-l border-dashboard-line px-[18px] max-[761px]:px-2.5 max-[401px]:gap-1 max-[401px]:px-1.5 [&>button]:h-[34px] [&>button]:rounded-[2px] [&>button]:border [&>button]:border-dashboard-line [&>button]:font-dashboard-code [&>button]:text-[10px] [&>button]:tracking-[0.08em] [&>button]:text-dashboard-panel [&>button]:uppercase max-[761px]:[&>button]:w-9 max-[761px]:[&>button]:p-0 max-[761px]:[&>button_span]:hidden [&>button:hover]:bg-dashboard-panel [&>button:hover]:text-dashboard-night">
+					<div
+						className="flex h-[34px] rounded-[2px] border border-dashboard-line [&_button]:min-w-12 [&_button]:px-2.5 [&_button]:font-dashboard-code [&_button]:text-[9px] [&_button]:font-medium [&_button]:tracking-[0.1em] [&_button]:text-dashboard-mist [&_button]:uppercase [&_button]:transition-colors max-[651px]:[&_button]:min-w-10 max-[651px]:[&_button]:px-[7px] max-[401px]:[&_button]:min-w-8 max-[401px]:[&_button]:px-1 [&_button+button]:border-l [&_button+button]:border-dashboard-line"
+						aria-label="Environment"
+					>
 						{DASHBOARD_ENVS.map((item) => (
 							<button
 								aria-pressed={item === env}
-								className={cn(item === env && "is-active")}
+								className={cn(
+									dashboardFocusRing,
+									item === env && "bg-dashboard-panel text-dashboard-night",
+								)}
 								key={item}
 								onClick={() => switchEnvironment(item)}
 								type="button"
@@ -457,26 +495,30 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 				</div>
 			</header>
 
-			<div className="dashboard-body">
-				<aside className="dashboard-sidebar">
+			<div className="grid min-h-[calc(100vh-70px)] grid-cols-[230px_minmax(0,1fr)] max-[951px]:block">
+				<aside className="sticky top-[70px] flex h-[calc(100vh-70px)] flex-col border-r border-dashboard-line bg-dashboard-night [background-image:linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] [background-size:32px_32px] p-[26px_16px_18px] max-[951px]:hidden">
 					<DashboardNavigation env={env} mode={mode} view={view} />
 					<div className="mt-auto">
 						<QueryState />
 					</div>
 				</aside>
-				<main className="dashboard-main">
-					<section className="dashboard-masthead">
+				<main className="min-w-0 overflow-hidden px-[clamp(24px,4vw,64px)] pt-11 pb-[60px] max-[951px]:px-[clamp(18px,4vw,38px)] max-[651px]:px-3.5 max-[651px]:pt-7 max-[651px]:pb-[42px]">
+					<section className="flex items-start justify-between gap-6 pb-8 max-[651px]:flex-col max-[651px]:pb-6">
 						<div>
-							<p className="dashboard-eyebrow">
+							<p className={dashboardEyebrow}>
 								{mode} / {env} / {view}
 							</p>
-							<h1>{viewConfig.title}</h1>
-							<p>{viewConfig.description}</p>
+							<h1 className="text-[clamp(30px,4vw,48px)] leading-none font-semibold tracking-[-0.045em] max-[651px]:text-[32px]">
+								{viewConfig.title}
+							</h1>
+							<p className="mt-3.5 max-w-[620px] text-sm leading-[1.6] text-dashboard-mist">
+								{viewConfig.description}
+							</p>
 						</div>
-						<div className="dashboard-masthead-actions">
+						<div className="flex items-center gap-2.5 max-[651px]:w-full max-[651px]:justify-between">
 							{runtime.isFetching && runtime.phase !== "loading" ? (
-								<span className="dashboard-updating">
-									<RefreshCw />
+								<span className="relative flex h-[34px] items-center gap-[7px] overflow-hidden border border-dashboard-line px-2.5 font-dashboard-code text-[9px] tracking-[0.08em] text-dashboard-mist uppercase after:absolute after:inset-0 after:-translate-x-full after:animate-dashboard-shimmer after:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)] after:content-[''] motion-reduce:after:animate-none">
+									<RefreshCw className="w-3" />
 									Updating
 								</span>
 							) : null}
@@ -488,14 +530,27 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 						</div>
 					</section>
 
-					<section aria-label={`${viewConfig.label} metrics`} className="dashboard-kpis">
-						{kpis.map(([label, value]) => (
-							<div className="dashboard-kpi" key={label}>
-								<p>{label}</p>
+					<section
+						aria-label={`${viewConfig.label} metrics`}
+						className="grid grid-cols-4 border border-dashboard-line max-[651px]:grid-cols-2"
+					>
+						{kpis.map(([label, value], index) => (
+							<div
+								className={cn(
+									"min-h-28 px-[22px] py-5 max-[651px]:min-h-[92px] max-[651px]:p-4",
+									index > 0 && "border-l border-dashboard-line",
+									index === 2 && "max-[651px]:border-t max-[651px]:border-l-0",
+									index === 3 && "max-[651px]:border-t",
+								)}
+								key={label}
+							>
+								<p className="font-dashboard-code text-[9px] font-medium tracking-[0.1em] text-dashboard-mist uppercase">
+									{label}
+								</p>
 								{runtime.phase === "loading" ? (
 									<DashboardSkeleton className="mt-3 h-8 w-24" />
 								) : (
-									<strong>
+									<strong className="mt-3 block font-dashboard-code text-[clamp(24px,3vw,34px)] font-normal tracking-[-0.05em]">
 										{runtime.phase === "waiting" ? "—" : formatKpiValue(value)}
 									</strong>
 								)}
@@ -503,7 +558,7 @@ function DashboardShellInner({ children, env, mode, view }: DashboardShellProps)
 						))}
 					</section>
 
-					<section className="dashboard-content" data-pathname={pathname}>
+					<section className={dashboardContent} data-pathname={pathname}>
 						{children}
 					</section>
 				</main>

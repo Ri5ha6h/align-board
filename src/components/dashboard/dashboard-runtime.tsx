@@ -2,6 +2,8 @@
 
 import * as React from "react";
 
+import { dashboardEmptyState } from "@/components/dashboard/dashboard-styles";
+
 type DashboardQueryPhase = "waiting" | "loading" | "live" | "empty" | "error";
 
 export interface DashboardQuerySnapshot {
@@ -114,5 +116,5 @@ export function DashboardWaitingState({ children }: { children: React.ReactNode 
 		isPending: false,
 		isWaiting: true,
 	});
-	return <output className="dashboard-empty-state">{children}</output>;
+	return <output className={dashboardEmptyState}>{children}</output>;
 }

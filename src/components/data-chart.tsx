@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import dynamic from "next/dynamic";
 import * as React from "react";
 
+import { dashboardSelectContent, dashboardShimmer } from "@/components/dashboard/dashboard-styles";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Select,
@@ -91,7 +92,7 @@ const ChartCanvas = dynamic<ChartCanvasProps>(
 									<Tooltip
 										content={({ active, label, payload }) =>
 											active && payload?.length ? (
-												<div className="dashboard-chart-tooltip grid w-[210px] gap-2 border p-3">
+												<div className="grid w-[210px] gap-2 rounded-[2px] border border-dashboard-line bg-dashboard-ink p-3 text-dashboard-white shadow-[0_12px_28px_rgba(0,0,0,0.45)]">
 													<strong>
 														{formatChartDate(
 															label,
@@ -100,12 +101,12 @@ const ChartCanvas = dynamic<ChartCanvasProps>(
 													</strong>
 													{payload.map((item) => (
 														<div
-															className="dashboard-chart-tooltip-row"
+															className="grid w-full grid-cols-[8px_minmax(0,1fr)_auto] items-center gap-2 font-dashboard-code text-[10px] text-dashboard-mist [&_strong]:text-[11px] [&_strong]:text-dashboard-white [&_strong]:[font-variant-numeric:tabular-nums]"
 															key={String(item.dataKey ?? item.name)}
 														>
 															<span
 																aria-hidden="true"
-																className="dashboard-chart-tooltip-swatch"
+																className="size-2 rounded-full"
 																style={{
 																	backgroundColor: item.color,
 																}}
@@ -161,7 +162,7 @@ const ChartCanvas = dynamic<ChartCanvasProps>(
 			},
 		),
 	{
-		loading: () => <div className="dashboard-shimmer h-[280px] w-full" />,
+		loading: () => <div className={`${dashboardShimmer} h-[280px] w-full`} />,
 		ssr: false,
 	},
 );
@@ -196,8 +197,8 @@ export default function ChartComponent({ carriers, chartData }: ChartComponentPr
 	};
 
 	return (
-		<Card className="dashboard-chart-card mt-5">
-			<CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+		<Card className="mt-5 gap-0 rounded-[2px] border-dashboard-line bg-dashboard-night py-0 text-dashboard-white shadow-none">
+			<CardHeader className="flex items-center gap-2 space-y-0 border-b border-dashboard-line bg-dashboard-ink py-5 sm:flex-row [&_[data-slot=card-description]]:text-dashboard-mist">
 				<div className="grid flex-1 gap-1 text-center sm:text-left">
 					<CardTitle className="text-xl">Latency Trend</CardTitle>
 					<CardDescription>Daily induced latency, shown in hours.</CardDescription>
@@ -206,7 +207,7 @@ export default function ChartComponent({ carriers, chartData }: ChartComponentPr
 					<SelectTrigger aria-label="Chart time range" className="w-[160px] sm:ml-auto">
 						<SelectValue placeholder="Last 7 days" />
 					</SelectTrigger>
-					<SelectContent className="dashboard-select-content">
+					<SelectContent className={dashboardSelectContent}>
 						<SelectItem value="all">All</SelectItem>
 						<SelectItem value="90d">Last 3 months</SelectItem>
 						<SelectItem value="60d">Last 2 months</SelectItem>
@@ -222,14 +223,17 @@ export default function ChartComponent({ carriers, chartData }: ChartComponentPr
 					focusedCarrier={focusedCarrier}
 					hiddenCarriers={hiddenCarriers}
 				/>
-				<div aria-label="Toggle chart series" className="dashboard-chart-legend">
+				<div
+					aria-label="Toggle chart series"
+					className="flex flex-wrap gap-2 border-t border-dashboard-line pt-3.5"
+				>
 					{carriers.map((carrier, index) => {
 						const isHidden = hiddenCarriers.has(carrier);
 						const style = SERIES_STYLES[index % SERIES_STYLES.length];
 						return (
 							<button
 								aria-pressed={!isHidden}
-								className="dashboard-chart-legend-button"
+								className="inline-flex min-h-[34px] items-center gap-2 rounded-[2px] border border-dashboard-line bg-dashboard-night px-2.5 py-[7px] font-dashboard-code text-[10px] text-dashboard-white hover:border-dashboard-mist hover:bg-dashboard-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dashboard-white data-[hidden=true]:text-dashboard-mist data-[hidden=true]:line-through data-[hidden=true]:opacity-70 [&_svg]:size-[13px]"
 								data-hidden={isHidden}
 								key={carrier}
 								onBlur={() => setFocusedCarrier(null)}
@@ -241,7 +245,7 @@ export default function ChartComponent({ carriers, chartData }: ChartComponentPr
 							>
 								<span
 									aria-hidden="true"
-									className="dashboard-chart-legend-line"
+									className="w-5 border-t-2"
 									style={{
 										borderColor: style.color,
 										borderStyle: style.dash ? "dashed" : "solid",

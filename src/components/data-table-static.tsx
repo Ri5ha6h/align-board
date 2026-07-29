@@ -18,6 +18,10 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import * as React from "react";
 
 import {
+	dashboardSelectContent,
+	dashboardStickyColumn,
+} from "@/components/dashboard/dashboard-styles";
+import {
 	DashboardColumnControls,
 	DashboardMobileCards,
 } from "@/components/dashboard/dashboard-table-tools";
@@ -44,6 +48,7 @@ import { cn } from "@/lib/utils";
 declare module "@tanstack/react-table" {
 	interface ColumnMeta<TData extends RowData, TValue> {
 		className?: string;
+		sticky?: boolean;
 	}
 }
 
@@ -130,7 +135,7 @@ function DashboardDataTable<TData>({
 			...preferenceSnapshot.preferences?.columnVisibility,
 		};
 		for (const column of columns) {
-			if (column.meta?.className?.includes("dashboard-sticky-column")) {
+			if (column.meta?.sticky) {
 				const id =
 					column.id ??
 					("accessorKey" in column && typeof column.accessorKey === "string"
@@ -249,7 +254,7 @@ function DashboardDataTable<TData>({
 
 	return (
 		<div className="mt-6 w-full">
-			<div className="dashboard-table-toolbar">
+			<div className="mb-2.5 flex min-h-[42px] items-center justify-between gap-3 [&>button]:rounded-[2px] [&>button]:border-dashboard-line [&>button]:bg-transparent [&>button]:font-dashboard-code [&>button]:text-[9px] [&>button]:tracking-[0.05em] [&>button]:text-dashboard-white [&>button]:uppercase [&>button:hover]:bg-dashboard-panel [&>button:hover]:text-dashboard-night">
 				{tableType === "history" ? (
 					<Input
 						aria-label="Filter by scheduler ID"
@@ -266,19 +271,28 @@ function DashboardDataTable<TData>({
 				)}
 				<DashboardColumnControls table={table} />
 			</div>
-			<div className="dashboard-desktop-table overflow-x-auto rounded-[2px] border">
+			<div className="overflow-x-auto rounded-[2px] border border-dashboard-line max-[651px]:hidden">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
 									<TableHead
-										className={cn(header.column.columnDef.meta?.className)}
+										className={cn(
+											header.column.columnDef.meta?.className,
+											header.column.columnDef.meta?.sticky &&
+												dashboardStickyColumn,
+											header.column.columnDef.meta?.sticky &&
+												"z-14 bg-dashboard-ink",
+										)}
 										key={header.id}
 									>
 										{header.isPlaceholder ? null : header.column.getCanSort() ? (
 											<button
-												className="dashboard-sort-button"
+												className={cn(
+													"dashboard-sort-button flex min-h-[38px] w-full items-center justify-center gap-1.5 text-inherit [&_svg]:w-[11px]",
+													"focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-dashboard-white",
+												)}
 												onClick={header.column.getToggleSortingHandler()}
 												type="button"
 											>
@@ -311,7 +325,11 @@ function DashboardDataTable<TData>({
 								<TableRow key={row.id}>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell
-											className={cn(cell.column.columnDef.meta?.className)}
+											className={cn(
+												cell.column.columnDef.meta?.className,
+												cell.column.columnDef.meta?.sticky &&
+													dashboardStickyColumn,
+											)}
 											key={cell.id}
 										>
 											{flexRender(
@@ -333,12 +351,15 @@ function DashboardDataTable<TData>({
 				</Table>
 			</div>
 			<DashboardMobileCards table={table} />
-			<div className="dashboard-pagination" aria-label="Table pagination">
+			<div
+				className="flex items-center justify-between gap-4 pt-3.5 font-dashboard-code text-[10px] tracking-[0.03em] text-dashboard-mist [font-variant-numeric:tabular-nums] max-[651px]:flex-col max-[651px]:items-start"
+				aria-label="Table pagination"
+			>
 				<p>
 					{rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of{" "}
 					{data.length.toLocaleString()}
 				</p>
-				<div className="dashboard-pagination-controls">
+				<div className="flex items-center gap-2 max-[651px]:w-full max-[651px]:flex-wrap [&_[data-slot=select-trigger]]:rounded-[2px] [&_[data-slot=select-trigger]]:border-dashboard-line [&_[data-slot=select-trigger]]:bg-transparent [&_[data-slot=select-trigger]]:font-dashboard-code [&_[data-slot=select-trigger]]:text-[9px] [&_[data-slot=select-trigger]]:tracking-[0.05em] [&_[data-slot=select-trigger]]:text-dashboard-white [&_[data-slot=select-trigger]]:uppercase [&_button]:rounded-[2px] [&_button]:border-dashboard-line [&_button]:bg-transparent [&_button]:font-dashboard-code [&_button]:text-[9px] [&_button]:tracking-[0.05em] [&_button]:text-dashboard-white [&_button]:uppercase max-[651px]:[&_button]:flex-1 [&_button:disabled]:border-[rgba(68,68,73,0.65)] [&_button:disabled]:bg-transparent [&_button:disabled]:text-[#71717a] [&_button:disabled]:opacity-100 [&_button:hover:not(:disabled)]:bg-dashboard-panel [&_button:hover:not(:disabled)]:text-dashboard-night">
 					<Select
 						onValueChange={(value) => table.setPageSize(Number(value))}
 						value={String(pagination.pageSize)}
@@ -346,7 +367,7 @@ function DashboardDataTable<TData>({
 						<SelectTrigger aria-label="Rows per page" className="w-[84px]">
 							<SelectValue />
 						</SelectTrigger>
-						<SelectContent className="dashboard-select-content">
+						<SelectContent className={dashboardSelectContent}>
 							{PAGE_SIZES.map((size) => (
 								<SelectItem key={size} value={String(size)}>
 									{size} rows

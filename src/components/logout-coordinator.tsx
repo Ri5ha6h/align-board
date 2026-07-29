@@ -124,31 +124,39 @@ export function LogoutCoordinator({ children }: { children: React.ReactNode }) {
 				<main
 					aria-busy={!failed}
 					aria-live="assertive"
-					className="dashboard-logout-quarantine"
+					className="fixed inset-0 z-100 grid min-h-dvh place-items-center bg-dashboard-night [background-image:linear-gradient(rgba(68,68,73,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(68,68,73,0.2)_1px,transparent_1px)] [background-size:32px_32px] p-6 font-dashboard-body text-dashboard-white"
+					data-dashboard-surface
 					role={failed ? "alert" : "status"}
 				>
-					<div className="dashboard-logout-card">
+					<div className="flex w-full max-w-[420px] flex-col items-center border border-dashboard-line bg-dashboard-night px-8 py-[38px] text-center shadow-[0_24px_80px_rgba(0,0,0,0.36)] [&>svg]:mb-[18px] [&>svg]:size-[22px] [&>svg]:text-dashboard-mist">
 						{failed ? (
 							<RefreshCw aria-hidden="true" />
 						) : (
-							<Loader2 aria-hidden="true" className="dashboard-logout-spinner" />
+							<Loader2
+								aria-hidden="true"
+								className="animate-dashboard-spin motion-reduce:animate-none"
+							/>
 						)}
-						<p className="dashboard-eyebrow">Secure session</p>
-						<h1>{failed ? "Sign out interrupted" : "Signing out…"}</h1>
-						<p>
+						<p className="mb-2.5 font-dashboard-code text-[9px] font-medium tracking-[0.12em] text-dashboard-mist uppercase">
+							Secure session
+						</p>
+						<h1 className="text-2xl font-semibold tracking-[-0.025em] text-dashboard-white">
+							{failed ? "Sign out interrupted" : "Signing out…"}
+						</h1>
+						<p className="mt-[9px] max-w-[330px] text-xs leading-[1.6] text-dashboard-mist">
 							{failed
 								? "The server did not confirm that your session was cleared."
 								: "Closing this session and clearing dashboard data."}
 						</p>
 						{failed ? (
-							<div className="dashboard-logout-actions">
+							<div className="mt-6 flex w-full gap-2 [&_button]:min-w-0 [&_button]:flex-1 [&_button]:rounded-[2px] [&_button]:border-dashboard-line [&_button]:bg-dashboard-white [&_button]:font-dashboard-code [&_button]:text-[9px] [&_button]:tracking-[0.06em] [&_button]:text-dashboard-night [&_button]:uppercase [&_button:focus-visible]:outline-2 [&_button:focus-visible]:outline-offset-2 [&_button:focus-visible]:outline-dashboard-white">
 								<Button onClick={() => void performLogout(logoutState.origin)}>
 									<RefreshCw aria-hidden="true" />
 									Retry
 								</Button>
 								{logoutState.origin === "manual" ? (
 									<Button
-										className="dashboard-logout-return"
+										className="bg-dashboard-ink text-dashboard-white"
 										onClick={() => window.location.reload()}
 										variant="outline"
 									>

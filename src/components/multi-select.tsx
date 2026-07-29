@@ -3,6 +3,7 @@
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import * as React from "react";
 
+import { dashboardPopover } from "@/components/dashboard/dashboard-styles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,12 +86,15 @@ const MultipleSelector = React.forwardRef<HTMLButtonElement, MultipleSelectorPro
 						aria-expanded={open}
 						aria-haspopup="listbox"
 						aria-controls={listboxId}
-						className={cn("dashboard-carrier-trigger", className)}
+						className={cn(
+							"min-h-[38px] w-full justify-between gap-2.5 rounded-[2px] border-dashboard-line bg-dashboard-night px-3 font-normal text-dashboard-white [&_svg]:w-3.5 [&_svg]:text-dashboard-mist",
+							className,
+						)}
 						disabled={disabled}
 						type="button"
 						variant="outline"
 					>
-						<span className="dashboard-carrier-trigger-copy">
+						<span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
 							{value.length ? `${value.length} selected` : placeholder}
 						</span>
 						<ChevronsUpDown aria-hidden="true" />
@@ -98,7 +102,10 @@ const MultipleSelector = React.forwardRef<HTMLButtonElement, MultipleSelectorPro
 				</PopoverTrigger>
 				<PopoverContent
 					align="start"
-					className="dashboard-popover dashboard-carrier-popover p-0"
+					className={cn(
+						dashboardPopover,
+						"w-(--radix-popover-trigger-width) min-w-[260px] p-0 [color-scheme:dark] [&_[data-slot=command-input-wrapper]]:border-dashboard-line [&_[data-slot=command-input]]:text-dashboard-white [&_[data-slot=command]]:bg-dashboard-night [&_[data-slot=command]]:text-dashboard-white",
+					)}
 					onOpenAutoFocus={(event) => event.preventDefault()}
 				>
 					<Command>
@@ -112,7 +119,7 @@ const MultipleSelector = React.forwardRef<HTMLButtonElement, MultipleSelectorPro
 									return (
 										<CommandItem
 											aria-selected={isSelected}
-											className="dashboard-carrier-option"
+											className="rounded-none text-dashboard-white data-[disabled=true]:text-dashboard-mist data-[disabled=true]:opacity-45 data-[selected=true]:bg-dashboard-ink data-[selected=true]:text-dashboard-white"
 											disabled={option.disable || limitReached}
 											key={option.value}
 											onSelect={() => toggleOption(option)}
@@ -121,9 +128,9 @@ const MultipleSelector = React.forwardRef<HTMLButtonElement, MultipleSelectorPro
 											<span
 												aria-hidden="true"
 												className={cn(
-													"dashboard-carrier-check",
+													"inline-grid size-[15px] place-items-center border border-dashboard-line text-transparent [&_svg]:w-[11px]",
 													isSelected &&
-														"dashboard-carrier-check--selected",
+														"border-dashboard-white bg-dashboard-panel text-dashboard-night",
 												)}
 											>
 												<Check />
@@ -134,7 +141,7 @@ const MultipleSelector = React.forwardRef<HTMLButtonElement, MultipleSelectorPro
 								})}
 							</CommandGroup>
 						</CommandList>
-						<div className="dashboard-carrier-footer">
+						<div className="flex min-h-[42px] items-center justify-between gap-3 border-t border-dashboard-line px-[9px] py-[7px] pl-3 font-dashboard-code text-[9px] tracking-[0.04em] text-dashboard-mist [&_button]:h-7 [&_button]:text-[9px] [&_button]:text-dashboard-white [&_button]:uppercase">
 							<span aria-live="polite">
 								{value.length} of {maxSelected} selected
 							</span>
@@ -151,9 +158,15 @@ const MultipleSelector = React.forwardRef<HTMLButtonElement, MultipleSelectorPro
 					</Command>
 				</PopoverContent>
 				{value.length ? (
-					<div aria-label="Selected carriers" className="dashboard-carrier-chips">
+					<div
+						aria-label="Selected carriers"
+						className="mt-[7px] flex flex-wrap gap-[5px]"
+					>
 						{value.map((option) => (
-							<Badge className="dashboard-carrier-chip" key={option.value}>
+							<Badge
+								className="gap-[5px] rounded-[2px] border border-dashboard-line bg-dashboard-ink font-dashboard-code text-[9px] font-normal text-dashboard-white [&_button]:inline-grid [&_button]:size-[15px] [&_button]:place-items-center [&_button]:text-dashboard-mist [&_button:focus-visible]:outline [&_button:focus-visible]:outline-offset-1 [&_button:focus-visible]:outline-dashboard-white [&_svg]:w-[11px]"
+								key={option.value}
+							>
 								<span>{option.label}</span>
 								<button
 									aria-label={`Remove ${option.label}`}

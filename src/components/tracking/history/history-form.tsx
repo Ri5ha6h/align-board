@@ -9,6 +9,11 @@ import {
 	DashboardFilterActions,
 	useDashboardFilterNavigation,
 } from "@/components/dashboard/dashboard-filter-actions";
+import {
+	dashboardFilterForm,
+	dashboardPopover,
+	dashboardSelectContent,
+} from "@/components/dashboard/dashboard-styles";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -109,7 +114,8 @@ export const HistoryForm = () => {
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className={cn(
-						"dashboard-filter-form grid-cols-1 sm:grid-cols-2",
+						dashboardFilterForm,
+						"grid-cols-1 sm:grid-cols-2",
 						form.watch("includeRange") === "YES" ? "md:grid-cols-3" : "md:grid-cols-4",
 					)}
 				>
@@ -143,7 +149,7 @@ export const HistoryForm = () => {
 											<SelectValue placeholder="Select a history type..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent className="dashboard-select-content">
+									<SelectContent className={dashboardSelectContent}>
 										{historyOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label} HISTORY
@@ -170,7 +176,7 @@ export const HistoryForm = () => {
 												<SelectValue placeholder="Does range needed..." />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent className="dashboard-select-content">
+										<SelectContent className={dashboardSelectContent}>
 											<SelectItem value="NO">No</SelectItem>
 											<SelectItem value="YES">Yes</SelectItem>
 										</SelectContent>
@@ -223,7 +229,7 @@ export const HistoryForm = () => {
 											</FormControl>
 										</PopoverTrigger>
 										<PopoverContent
-											className="dashboard-popover w-auto p-0"
+											className={cn(dashboardPopover, "w-auto p-0")}
 											align="start"
 										>
 											<Calendar

@@ -3,6 +3,11 @@
 import { flexRender, type Table as TanStackTable } from "@tanstack/react-table";
 import { Columns3, Ellipsis } from "lucide-react";
 
+import {
+	dashboardDialog,
+	dashboardEmptyState,
+	dashboardSheet,
+} from "@/components/dashboard/dashboard-styles";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -37,22 +42,22 @@ export function DashboardColumnControls<TData>({ table }: { table: TanStackTable
 					Columns
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="dashboard-dialog">
+			<DialogContent className={dashboardDialog} data-dashboard-surface>
 				<DialogHeader>
 					<DialogTitle>Visible columns</DialogTitle>
 					<DialogDescription>
 						Choose the operational fields shown in the desktop table.
 					</DialogDescription>
 				</DialogHeader>
-				<div className="grid max-h-[55vh] grid-cols-1 gap-px overflow-y-auto border border-[#444449] sm:grid-cols-2">
+				<div className="grid max-h-[55vh] grid-cols-1 gap-px overflow-y-auto border border-dashboard-line sm:grid-cols-2">
 					{columns.map((column) => (
 						<label
-							className="flex cursor-pointer items-center gap-3 bg-[#2d2d31] px-3 py-2.5 text-xs text-[#d4d4d8]"
+							className="flex cursor-pointer items-center gap-3 bg-dashboard-ink px-3 py-2.5 text-xs text-[#d4d4d8]"
 							key={column.id}
 						>
 							<input
 								checked={column.getIsVisible()}
-								className="accent-[#fafafa]"
+								className="accent-dashboard-white"
 								onChange={column.getToggleVisibilityHandler()}
 								type="checkbox"
 							/>
@@ -68,7 +73,7 @@ export function DashboardColumnControls<TData>({ table }: { table: TanStackTable
 export function DashboardMobileCards<TData>({ table }: { table: TanStackTable<TData> }) {
 	const rows = table.getRowModel().rows;
 	return (
-		<div className="dashboard-mobile-cards gap-2">
+		<div className="grid gap-2 min-[651px]:hidden">
 			{rows.length ? (
 				rows.map((row) => {
 					const priorityCells = row
@@ -76,12 +81,20 @@ export function DashboardMobileCards<TData>({ table }: { table: TanStackTable<TD
 						.filter((cell) => !["edit", "close", "delete"].includes(cell.column.id))
 						.slice(0, 5);
 					return (
-						<article className="dashboard-mobile-card" key={row.id}>
+						<article
+							className="rounded-[2px] border border-dashboard-line bg-dashboard-ink p-3.5"
+							key={row.id}
+						>
 							<div className="space-y-px">
 								{priorityCells.map((cell) => (
-									<div className="dashboard-mobile-field" key={cell.id}>
-										<span>{labelFromId(cell.column.id)}</span>
-										<div>
+									<div
+										className="grid grid-cols-[minmax(90px,0.75fr)_minmax(0,1.25fr)] items-center gap-3 border-b border-[rgba(68,68,73,0.65)] py-2"
+										key={cell.id}
+									>
+										<span className="font-dashboard-code text-[8px] tracking-[0.07em] text-dashboard-mist uppercase">
+											{labelFromId(cell.column.id)}
+										</span>
+										<div className="min-w-0 overflow-hidden text-right font-dashboard-code text-[10px] text-dashboard-white">
 											{flexRender(
 												cell.column.columnDef.cell,
 												cell.getContext(),
@@ -98,7 +111,8 @@ export function DashboardMobileCards<TData>({ table }: { table: TanStackTable<TD
 									</Button>
 								</SheetTrigger>
 								<SheetContent
-									className="dashboard-sheet overflow-y-auto"
+									className={`${dashboardSheet} overflow-y-auto`}
+									data-dashboard-surface
 									side="right"
 								>
 									<SheetHeader>
@@ -107,13 +121,13 @@ export function DashboardMobileCards<TData>({ table }: { table: TanStackTable<TD
 											All available fields for this result.
 										</SheetDescription>
 									</SheetHeader>
-									<div className="divide-y divide-[#444449] border border-[#444449]">
+									<div className="divide-y divide-dashboard-line border border-dashboard-line">
 										{row.getAllCells().map((cell) => (
 											<div className="grid gap-2 p-3" key={cell.id}>
-												<span className="font-mono text-[9px] tracking-[0.08em] text-[#a1a1aa] uppercase">
+												<span className="font-dashboard-code text-[9px] tracking-[0.08em] text-dashboard-mist uppercase">
 													{labelFromId(cell.column.id)}
 												</span>
-												<div className="min-w-0 text-sm text-[#fafafa]">
+												<div className="min-w-0 text-sm text-dashboard-white">
 													{flexRender(
 														cell.column.columnDef.cell,
 														cell.getContext(),
@@ -128,7 +142,7 @@ export function DashboardMobileCards<TData>({ table }: { table: TanStackTable<TD
 					);
 				})
 			) : (
-				<div className="dashboard-empty-state">No results.</div>
+				<div className={dashboardEmptyState}>No results.</div>
 			)}
 		</div>
 	);

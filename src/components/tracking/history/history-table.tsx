@@ -10,6 +10,7 @@ import {
 	DashboardWaitingState,
 	useDashboardQueryReport,
 } from "@/components/dashboard/dashboard-runtime";
+import { dashboardDangerDataTag, dashboardDataTag } from "@/components/dashboard/dashboard-styles";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
@@ -88,7 +89,7 @@ function HistoryData({ params, searchParams }: HistoryDataProps) {
 				cell: () => (
 					<TableCellCustom className="font-semibold">{subscriptionId}</TableCellCustom>
 				),
-				meta: { className: "dashboard-sticky-column" },
+				meta: { sticky: true },
 				enableHiding: false,
 				enableSorting: false,
 			},
@@ -133,8 +134,8 @@ function HistoryData({ params, searchParams }: HistoryDataProps) {
 							<TableCellTooltip tip={tip}>
 								<Badge
 									className={cn(
-										"dashboard-data-tag",
-										status !== "SUCCESS" && "dashboard-data-tag--danger",
+										dashboardDataTag,
+										status !== "SUCCESS" && dashboardDangerDataTag,
 									)}
 								>
 									{status}

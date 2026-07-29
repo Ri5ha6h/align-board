@@ -8,6 +8,10 @@ import {
 	useDashboardFilterNavigation,
 } from "@/components/dashboard/dashboard-filter-actions";
 import {
+	dashboardFilterForm,
+	dashboardSelectContent,
+} from "@/components/dashboard/dashboard-styles";
+import {
 	Form,
 	FormControl,
 	FormField,
@@ -73,7 +77,7 @@ export const ReferenceAllForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+					className={`${dashboardFilterForm} grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`}
 				>
 					<FormField
 						control={form.control}
@@ -95,7 +99,7 @@ export const ReferenceAllForm = () => {
 											/>
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent className="dashboard-select-content">
+									<SelectContent className={dashboardSelectContent}>
 										{carriersOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -119,7 +123,7 @@ export const ReferenceAllForm = () => {
 											<SelectValue placeholder="Select a status..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent className="dashboard-select-content">
+									<SelectContent className={dashboardSelectContent}>
 										<SelectItem value="ACTIVE">Active</SelectItem>
 										<SelectItem value="CLOSED">Closed</SelectItem>
 									</SelectContent>
@@ -145,7 +149,7 @@ export const ReferenceAllForm = () => {
 											<SelectValue placeholder="Select a reference type..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent className="dashboard-select-content">
+									<SelectContent className={dashboardSelectContent}>
 										{refOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -173,7 +177,7 @@ export const ReferenceAllForm = () => {
 											<SelectValue placeholder="Select a queue..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent className="dashboard-select-content">
+									<SelectContent className={dashboardSelectContent}>
 										{queueOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}

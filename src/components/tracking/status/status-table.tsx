@@ -5,6 +5,11 @@ import * as React from "react";
 
 import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
 import { useDashboardQueryReport } from "@/components/dashboard/dashboard-runtime";
+import {
+	dashboardDataTag,
+	dashboardEmptyState,
+	dashboardRowAction,
+} from "@/components/dashboard/dashboard-styles";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Button } from "@/components/ui/button";
@@ -14,8 +19,7 @@ import { useStatusQuery } from "@/utils/query";
 
 import { StatusDetailDrawer } from "./status-detail-drawer";
 
-const disabledActionClassName =
-	"disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-[#444449] disabled:bg-[#2d2d31] disabled:text-[#71717a] disabled:opacity-100";
+const disabledActionClassName = `${dashboardRowAction} disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-dashboard-line disabled:bg-dashboard-ink disabled:text-[#71717a] disabled:opacity-100`;
 
 const sortCreated: SortingFn<StatusColumnType> = (rowA, rowB) =>
 	Number(rowA.original.created_at) - Number(rowB.original.created_at);
@@ -38,7 +42,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 				return <TableCellCustom>{carrier ? carrier : "-"}</TableCellCustom>;
 			},
 			meta: {
-				className: "dashboard-sticky-column",
+				sticky: true,
 			},
 			enableHiding: false,
 			enableSorting: false,
@@ -49,7 +53,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Status</TableHeadCustom>,
 			cell: ({ row }) => {
 				const status = row.original.value.status;
-				return <TableCellCustom className="dashboard-data-tag">{status}</TableCellCustom>;
+				return <TableCellCustom className={dashboardDataTag}>{status}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
@@ -81,7 +85,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			header: () => <TableHeadCustom>Type</TableHeadCustom>,
 			cell: ({ row }) => {
 				const type = row.original.value.statusType;
-				return <TableCellCustom className="dashboard-data-tag">{type}</TableCellCustom>;
+				return <TableCellCustom className={dashboardDataTag}>{type}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
@@ -116,7 +120,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 			cell: ({ row }) => {
 				return (
 					<Button
-						className="dashboard-row-action"
+						className={dashboardRowAction}
 						onClick={() => setSelectedStatus(row.original.value)}
 						type="button"
 						variant="outline"
@@ -250,7 +254,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 						{statusQuery.isFetching ? "Fetching..." : "Refresh"}
 					</Button>
 				</div>
-				<div className="dashboard-empty-state">
+				<div className={dashboardEmptyState}>
 					<p className="capitalize">{statusQuery.data?.data}</p>
 				</div>
 			</div>

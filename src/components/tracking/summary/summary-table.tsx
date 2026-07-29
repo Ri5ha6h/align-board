@@ -6,6 +6,7 @@ import * as React from "react";
 
 import { DashboardTableSkeleton } from "@/components/dashboard/dashboard-loading";
 import { useDashboardQueryReport } from "@/components/dashboard/dashboard-runtime";
+import { dashboardDataTag } from "@/components/dashboard/dashboard-styles";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import {
 	TableCellCustom,
@@ -53,7 +54,7 @@ function useSummaryTableContent(isAlignUser: boolean) {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "dashboard-sticky-column",
+				sticky: true,
 			},
 			enableHiding: false,
 			enableSorting: true,
@@ -76,7 +77,7 @@ function useSummaryTableContent(isAlignUser: boolean) {
 
 				return (
 					<TableCellCustom>
-						<Badge className="dashboard-data-tag capitalize">{qType}</Badge>
+						<Badge className={`${dashboardDataTag} capitalize`}>{qType}</Badge>
 					</TableCellCustom>
 				);
 			},

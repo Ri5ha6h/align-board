@@ -72,7 +72,7 @@ export default function MainReferenceComponent() {
 
 	return (
 		<Tabs className="w-full" value={tabValue}>
-			<TabsList className="dashboard-reference-tabs grid w-full grid-cols-3">
+			<TabsList className="grid w-full grid-cols-3 [&_[data-slot=tabs-trigger]]:px-3">
 				{row1.map((tab) => (
 					<TabsTrigger asChild key={tab.value} value={tab.value}>
 						<Link

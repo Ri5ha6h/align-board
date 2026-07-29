@@ -1,5 +1,6 @@
 "use client";
 
+import { dashboardRowAction } from "@/components/dashboard/dashboard-styles";
 import { TableCellCustom, TableCellTooltipScroll } from "@/components/table/table-component";
 import { Button } from "@/components/ui/button";
 import type { HistoryType } from "@/utils/common-types";
@@ -23,7 +24,7 @@ function resourceButton(
 ) {
 	return (
 		<Button
-			className="dashboard-row-action"
+			className={dashboardRowAction}
 			onClick={() => onOpen(selection)}
 			type="button"
 			variant="outline"

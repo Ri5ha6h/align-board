@@ -1,6 +1,11 @@
 import Link from "next/link";
 import * as React from "react";
 
+import {
+	dashboardDetailHeader,
+	dashboardDetailSheet,
+	dashboardSheet,
+} from "@/components/dashboard/dashboard-styles";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,8 +28,12 @@ interface StatusDetailDrawerProps {
 export function StatusDetailDrawer({ data, onOpenChange, open }: StatusDetailDrawerProps) {
 	return (
 		<Sheet onOpenChange={onOpenChange} open={open}>
-			<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
-				<SheetHeader className="dashboard-detail-header">
+			<SheetContent
+				className={`${dashboardSheet} ${dashboardDetailSheet}`}
+				data-dashboard-surface
+				side="right"
+			>
+				<SheetHeader className={dashboardDetailHeader}>
 					<SheetTitle>Status Details</SheetTitle>
 					<SheetDescription>
 						Service notice, operational impact, and resolution information.
@@ -51,8 +60,8 @@ function StatusDetailContent({ data }: { data: StatusValue }) {
 	);
 
 	return (
-		<ScrollArea className="dashboard-detail-scroll dashboard-status-detail-scroll">
-			<div className="dashboard-status-detail-fields">
+		<ScrollArea className="min-h-0 flex-1 pt-[18px]">
+			<div className="grid gap-4 px-px pt-px pb-[22px]">
 				{data.carrier ? <StatusInput label="Carrier" value={data.carrier} /> : null}
 				<StatusInput label="Status" value={data.status} />
 				<StatusInput label="Status Type" value={data.statusType} />
@@ -70,9 +79,19 @@ function StatusDetailContent({ data }: { data: StatusValue }) {
 function StatusInput({ label, value }: { label: string; value: string | number }) {
 	const id = React.useId();
 	return (
-		<div className="dashboard-status-detail-field">
-			<Label htmlFor={id}>{label}</Label>
-			<Input id={id} value={value} readOnly />
+		<div className="grid gap-[7px]">
+			<Label
+				className="font-dashboard-code text-[9px] font-medium tracking-[0.08em] text-dashboard-mist uppercase"
+				htmlFor={id}
+			>
+				{label}
+			</Label>
+			<Input
+				className="h-10 rounded-[2px] border-dashboard-line bg-dashboard-ink font-dashboard-code text-[11px] leading-[1.55] text-dashboard-white focus-visible:border-dashboard-white focus-visible:ring-1 focus-visible:ring-dashboard-white"
+				id={id}
+				value={value}
+				readOnly
+			/>
 		</div>
 	);
 }
@@ -80,22 +99,42 @@ function StatusInput({ label, value }: { label: string; value: string | number }
 function StatusTextArea({ label, value }: { label: string; value: string | number }) {
 	const id = React.useId();
 	return (
-		<div className="dashboard-status-detail-field">
-			<Label htmlFor={id}>{label}</Label>
-			<Textarea id={id} value={value} readOnly />
+		<div className="grid gap-[7px]">
+			<Label
+				className="font-dashboard-code text-[9px] font-medium tracking-[0.08em] text-dashboard-mist uppercase"
+				htmlFor={id}
+			>
+				{label}
+			</Label>
+			<Textarea
+				className="min-h-[132px] resize-y rounded-[2px] border-dashboard-line bg-dashboard-ink font-dashboard-code text-[11px] leading-[1.55] text-dashboard-white focus-visible:border-dashboard-white focus-visible:ring-1 focus-visible:ring-dashboard-white"
+				id={id}
+				value={value}
+				readOnly
+			/>
 		</div>
 	);
 }
 
 function StatusLinks({ links }: { links: string[] }) {
 	return (
-		<div className="dashboard-status-detail-field">
-			<Label>Jira Links</Label>
-			<ul className="dashboard-status-detail-links">
+		<div className="grid gap-[7px]">
+			<Label className="font-dashboard-code text-[9px] font-medium tracking-[0.08em] text-dashboard-mist uppercase">
+				Jira Links
+			</Label>
+			<ul className="grid gap-px border border-dashboard-line bg-dashboard-line">
 				{links.map((link, index) => (
-					<li key={link}>
+					<li
+						className="grid grid-cols-[auto_minmax(0,1fr)] gap-[9px] bg-dashboard-ink px-3 py-[11px] font-dashboard-code text-[10px] text-dashboard-mist"
+						key={link}
+					>
 						<span>{index + 1}.</span>
-						<Link href={link} rel="noopener noreferrer" target="_blank">
+						<Link
+							className="[overflow-wrap:anywhere] text-dashboard-white underline underline-offset-3 hover:text-dashboard-mist focus-visible:rounded-[1px] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-dashboard-white"
+							href={link}
+							rel="noopener noreferrer"
+							target="_blank"
+						>
 							{link}
 						</Link>
 					</li>

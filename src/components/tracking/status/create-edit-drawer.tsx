@@ -50,7 +50,7 @@ export function CreateEditStatusDrawer({ ...props }) {
 					<SheetHeader>
 						<SheetTitle>{props.title}</SheetTitle>
 					</SheetHeader>
-					<ScrollArea className="my-scroll w-full py-5">
+					<ScrollArea className="min-h-0 w-full flex-1 py-5">
 						<AddStatusForm
 							state={props.state}
 							tableType={props.tableType}
