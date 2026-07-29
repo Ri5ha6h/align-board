@@ -17,9 +17,9 @@ export function DashboardFilterActions({
 	onReset,
 }: DashboardFilterActionsProps) {
 	return (
-		<div className="dashboard-filter-actions">
+		<div className="col-span-full mt-0.5 flex items-center justify-end gap-2 border-t border-dashboard-line pt-4 max-[651px]:w-full [&_button]:h-[38px] [&_button]:rounded-[2px] [&_button]:font-dashboard-code [&_button]:text-[9px] [&_button]:tracking-[0.06em] [&_button]:uppercase max-[651px]:[&_button]:flex-1 [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-45 [&_svg]:w-[13px]">
 			<Button
-				className="dashboard-filter-reset"
+				className="min-w-[88px] border-dashboard-line bg-transparent text-dashboard-mist"
 				disabled={isPending}
 				onClick={onReset}
 				type="button"
@@ -30,7 +30,7 @@ export function DashboardFilterActions({
 			</Button>
 			<Button
 				aria-busy={isPending}
-				className="dashboard-filter-apply"
+				className="min-w-[152px]"
 				disabled={!canApply || isPending}
 				type="submit"
 			>

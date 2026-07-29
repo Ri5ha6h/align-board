@@ -91,13 +91,24 @@ export function DashboardDetailBody({
 
 	if (error) {
 		return (
-			<div className="dashboard-detail-error" role="alert">
+			<div
+				className="mt-3 flex gap-3 border border-[color-mix(in_srgb,var(--color-dashboard-danger)_55%,transparent)] p-3.5 text-dashboard-danger [&_svg]:w-4 [&_svg]:shrink-0"
+				role="alert"
+			>
 				<AlertTriangle aria-hidden="true" />
 				<div>
-					<strong>Details unavailable</strong>
-					<p>{error} Try opening this result again.</p>
+					<strong className="text-[13px]">Details unavailable</strong>
+					<p className="mt-1 text-xs text-dashboard-mist">
+						{error} Try opening this result again.
+					</p>
 					{onRetry ? (
-						<Button onClick={onRetry} size="sm" type="button" variant="outline">
+						<Button
+							className="mt-3 border-dashboard-line bg-dashboard-night text-dashboard-white"
+							onClick={onRetry}
+							size="sm"
+							type="button"
+							variant="outline"
+						>
 							<RefreshCw aria-hidden="true" />
 							Retry
 						</Button>
@@ -108,25 +119,37 @@ export function DashboardDetailBody({
 	}
 
 	return (
-		<ScrollArea className="dashboard-detail-scroll">
+		<ScrollArea className="min-h-0 flex-1">
 			{isRefreshing ? (
-				<div aria-live="polite" className="dashboard-detail-updating">
-					<Loader2 aria-hidden="true" />
+				<div
+					aria-live="polite"
+					className="mt-3.5 flex items-center gap-[7px] font-dashboard-code text-[9px] tracking-[0.06em] text-dashboard-mist uppercase"
+				>
+					<Loader2
+						aria-hidden="true"
+						className="size-[13px] animate-dashboard-spin motion-reduce:animate-none"
+					/>
 					Updating details…
 				</div>
 			) : null}
-			<div className="dashboard-detail-grid">
+			<div className="mt-2 grid grid-cols-2 gap-px border border-dashboard-line bg-dashboard-line max-[651px]:grid-cols-1">
 				{fields.map((field) => (
-					<div className="dashboard-detail-field" key={field.label}>
-						<span>{field.label}</span>
-						<strong>{displayValue(field.value)}</strong>
+					<div className="min-w-0 bg-dashboard-ink p-[13px]" key={field.label}>
+						<span className="block font-dashboard-code text-[8px] tracking-[0.08em] text-dashboard-mist uppercase">
+							{field.label}
+						</span>
+						<strong className="mt-1.5 block font-dashboard-code text-[11px] leading-[1.45] font-normal [overflow-wrap:anywhere] text-dashboard-white">
+							{displayValue(field.value)}
+						</strong>
 					</div>
 				))}
 			</div>
-			<Accordion collapsible className="dashboard-raw-payload" type="single">
-				<AccordionItem value="payload">
-					<div className="dashboard-raw-payload-header">
-						<AccordionTrigger>Raw JSON</AccordionTrigger>
+			<Accordion collapsible className="mt-[18px] border border-dashboard-line" type="single">
+				<AccordionItem className="border-0" value="payload">
+					<div className="flex items-center [&>:first-child]:min-w-0 [&>:first-child]:flex-1">
+						<AccordionTrigger className="p-[13px] font-dashboard-code text-[9px] tracking-[0.08em] text-dashboard-white uppercase">
+							Raw JSON
+						</AccordionTrigger>
 						<Button
 							aria-label={
 								copyState === "copied"
@@ -135,7 +158,7 @@ export function DashboardDetailBody({
 										? "Raw JSON copy failed"
 										: "Copy raw JSON"
 							}
-							className="dashboard-raw-copy"
+							className="mr-2 min-w-[92px] rounded-[2px] border border-transparent font-dashboard-code text-[9px] tracking-[0.04em] text-dashboard-mist hover:border-dashboard-line hover:bg-dashboard-night hover:text-dashboard-white focus-visible:border-dashboard-white focus-visible:ring-2 focus-visible:ring-[rgba(250,250,250,0.18)] [&_svg]:size-[13px]"
 							onClick={handleCopy}
 							size="sm"
 							type="button"
@@ -157,8 +180,10 @@ export function DashboardDetailBody({
 							</span>
 						</Button>
 					</div>
-					<AccordionContent>
-						<pre>{rawJson}</pre>
+					<AccordionContent className="[&>div]:p-0">
+						<pre className="max-h-[45vh] overflow-auto border-t border-dashboard-line bg-[#18181b] p-3.5 font-dashboard-code text-[10px] leading-[1.55] [overflow-wrap:anywhere] whitespace-pre-wrap text-[#d4d4d8]">
+							{rawJson}
+						</pre>
 					</AccordionContent>
 				</AccordionItem>
 			</Accordion>

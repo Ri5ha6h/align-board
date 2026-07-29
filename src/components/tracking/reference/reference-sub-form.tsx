@@ -7,6 +7,7 @@ import {
 	DashboardFilterActions,
 	useDashboardFilterNavigation,
 } from "@/components/dashboard/dashboard-filter-actions";
+import { dashboardFilterForm } from "@/components/dashboard/dashboard-styles";
 import {
 	Form,
 	FormControl,
@@ -69,7 +70,7 @@ export const ReferenceSubscriptionForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="dashboard-filter-form grid-cols-1"
+					className={`${dashboardFilterForm} grid-cols-1`}
 				>
 					<FormField
 						control={form.control}

@@ -9,11 +9,11 @@ import {
 	DashboardWaitingState,
 	useDashboardQueryReport,
 } from "@/components/dashboard/dashboard-runtime";
+import { dashboardDataTag, dashboardRowAction } from "@/components/dashboard/dashboard-styles";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { ParamType, ReferenceTableType } from "@/utils/common-types";
 import { formatUtcDateTime } from "@/utils/format-date";
 import { useReferenceAllQuery } from "@/utils/query";
@@ -92,7 +92,7 @@ const ReferenceAllData = ({ ...props }) => {
 
 				return (
 					<TableCellCustom>
-						<Badge className="dashboard-data-tag">{ref}</Badge>
+						<Badge className={dashboardDataTag}>{ref}</Badge>
 					</TableCellCustom>
 				);
 			},
@@ -114,9 +114,7 @@ const ReferenceAllData = ({ ...props }) => {
 			cell: () => {
 				const status = props.searchParams.get("refStatus") ?? "ACTIVE";
 
-				return (
-					<TableCellCustom className={cn("dashboard-data-tag")}>{status}</TableCellCustom>
-				);
+				return <TableCellCustom className={dashboardDataTag}>{status}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
@@ -161,7 +159,7 @@ const ReferenceAllData = ({ ...props }) => {
 			cell: ({ row }) => {
 				return (
 					<Button
-						className="dashboard-row-action"
+						className={dashboardRowAction}
 						onClick={() => setSelectedReference(row.original.subscriptionId)}
 						type="button"
 						variant="outline"

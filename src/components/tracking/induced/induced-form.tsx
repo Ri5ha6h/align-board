@@ -7,6 +7,10 @@ import {
 	DashboardFilterActions,
 	useDashboardFilterNavigation,
 } from "@/components/dashboard/dashboard-filter-actions";
+import {
+	dashboardFilterForm,
+	dashboardSelectContent,
+} from "@/components/dashboard/dashboard-styles";
 import MultipleSelector, { type Option } from "@/components/multi-select";
 import {
 	Form,
@@ -80,7 +84,7 @@ export const InducedForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="dashboard-filter-form grid-cols-1 md:grid-cols-2"
+					className={`${dashboardFilterForm} grid-cols-1 md:grid-cols-2`}
 				>
 					<FormField
 						control={form.control}
@@ -124,7 +128,7 @@ export const InducedForm = () => {
 											<SelectValue placeholder="Select a year..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent className="dashboard-select-content">
+									<SelectContent className={dashboardSelectContent}>
 										{yearOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}

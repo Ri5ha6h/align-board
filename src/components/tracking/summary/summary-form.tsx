@@ -9,6 +9,11 @@ import {
 	DashboardFilterActions,
 	useDashboardFilterNavigation,
 } from "@/components/dashboard/dashboard-filter-actions";
+import {
+	dashboardFilterForm,
+	dashboardPopover,
+	dashboardSelectContent,
+} from "@/components/dashboard/dashboard-styles";
 import MultipleSelector from "@/components/multi-select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -128,7 +133,7 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+					className={`${dashboardFilterForm} grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`}
 				>
 					<FormField
 						control={form.control}
@@ -172,7 +177,7 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 											<SelectValue placeholder="Select a queue..." />
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent className="dashboard-select-content">
+									<SelectContent className={dashboardSelectContent}>
 										{queueOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}
@@ -230,7 +235,7 @@ export const SummaryForm = ({ isAlignUser }: { isAlignUser: boolean }) => {
 											</FormControl>
 										</PopoverTrigger>
 										<PopoverContent
-											className="dashboard-popover w-auto p-0"
+											className={cn(dashboardPopover, "w-auto p-0")}
 											align="start"
 										>
 											<Calendar

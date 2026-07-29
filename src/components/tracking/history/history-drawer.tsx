@@ -3,6 +3,11 @@ import * as React from "react";
 import { DashboardDetailBody } from "@/components/dashboard/dashboard-detail-sheet";
 import { findDetailValue } from "@/components/dashboard/dashboard-detail-utils";
 import {
+	dashboardDetailHeader,
+	dashboardDetailSheet,
+	dashboardSheet,
+} from "@/components/dashboard/dashboard-styles";
+import {
 	Sheet,
 	SheetContent,
 	SheetDescription,
@@ -30,8 +35,12 @@ interface HistoryDrawerProps extends HistoryDrawerSelection {
 export function HistoryDrawer(props: HistoryDrawerProps) {
 	return (
 		<Sheet onOpenChange={props.onOpenChange} open={props.open}>
-			<SheetContent className="dashboard-sheet dashboard-detail-sheet" side="right">
-				<SheetHeader className="dashboard-detail-header">
+			<SheetContent
+				className={`${dashboardSheet} ${dashboardDetailSheet}`}
+				data-dashboard-surface
+				side="right"
+			>
+				<SheetHeader className={dashboardDetailHeader}>
 					<SheetTitle>{props.title}</SheetTitle>
 					<SheetDescription>
 						Crawl outcome summary and sanitized source payload.

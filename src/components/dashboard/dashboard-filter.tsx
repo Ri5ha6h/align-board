@@ -11,15 +11,22 @@ import {
 
 export function DashboardFilter({ children }: { children: React.ReactNode }) {
 	return (
-		<Accordion className="dashboard-filter" collapsible defaultValue="filters" type="single">
-			<AccordionItem value="filters">
-				<AccordionTrigger>
+		<Accordion
+			className="mb-[18px] border border-dashboard-line bg-dashboard-ink"
+			collapsible
+			defaultValue="filters"
+			type="single"
+		>
+			<AccordionItem className="border-0" value="filters">
+				<AccordionTrigger className="px-4 py-[13px] font-dashboard-code text-[10px] tracking-[0.08em] text-dashboard-white uppercase">
 					<span className="flex items-center gap-2">
 						<SlidersHorizontal className="size-3.5" />
 						Filter data
 					</span>
 				</AccordionTrigger>
-				<AccordionContent>{children}</AccordionContent>
+				<AccordionContent className="border-t border-dashboard-line data-[state=open]:overflow-visible [&>div]:p-0">
+					{children}
+				</AccordionContent>
 			</AccordionItem>
 		</Accordion>
 	);

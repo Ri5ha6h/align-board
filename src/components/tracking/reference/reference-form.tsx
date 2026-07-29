@@ -8,6 +8,10 @@ import {
 	useDashboardFilterNavigation,
 } from "@/components/dashboard/dashboard-filter-actions";
 import {
+	dashboardFilterForm,
+	dashboardSelectContent,
+} from "@/components/dashboard/dashboard-styles";
+import {
 	Form,
 	FormControl,
 	FormField,
@@ -70,7 +74,7 @@ export const ReferenceForm = () => {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="dashboard-filter-form grid-cols-1 sm:grid-cols-2"
+					className={`${dashboardFilterForm} grid-cols-1 sm:grid-cols-2`}
 				>
 					<FormField
 						control={form.control}
@@ -92,7 +96,7 @@ export const ReferenceForm = () => {
 											/>
 										</SelectTrigger>
 									</FormControl>
-									<SelectContent className="dashboard-select-content">
+									<SelectContent className={dashboardSelectContent}>
 										{carriersOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
 												{option.label}

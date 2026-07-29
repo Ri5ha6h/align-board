@@ -9,6 +9,7 @@ import {
 	DashboardWaitingState,
 	useDashboardQueryReport,
 } from "@/components/dashboard/dashboard-runtime";
+import { dashboardDataTag } from "@/components/dashboard/dashboard-styles";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +75,7 @@ const ReferenceData = ({ ...props }) => {
 				const ref = row.original.referenceType;
 				return (
 					<TableCellCustom>
-						<Badge className="dashboard-data-tag">{ref}</Badge>
+						<Badge className={dashboardDataTag}>{ref}</Badge>
 					</TableCellCustom>
 				);
 			},

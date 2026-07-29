@@ -9,6 +9,7 @@ import {
 	DashboardWaitingState,
 	useDashboardQueryReport,
 } from "@/components/dashboard/dashboard-runtime";
+import { dashboardDataTag } from "@/components/dashboard/dashboard-styles";
 import { TableDataStaticComponent } from "@/components/data-table-static";
 import { TableCellCustom, TableHeadCustom } from "@/components/table/table-component";
 import type { LatencyTableType, ParamType } from "@/utils/common-types";
@@ -78,7 +79,7 @@ const LatencyData = ({ ...props }) => {
 			cell: ({ row }) => {
 				const ref = row.original.refType;
 
-				return <TableCellCustom className="dashboard-data-tag">{ref}</TableCellCustom>;
+				return <TableCellCustom className={dashboardDataTag}>{ref}</TableCellCustom>;
 			},
 			enableSorting: false,
 		},
