@@ -24,7 +24,10 @@ export function DashboardFilter({ children }: { children: React.ReactNode }) {
 						Filter data
 					</span>
 				</AccordionTrigger>
-				<AccordionContent className="border-t border-dashboard-line data-[state=open]:overflow-visible [&>div]:p-0">
+				<AccordionContent
+					className="[&>div]:p-0"
+					rootClassName="border-t border-dashboard-line data-[state=open]:overflow-visible"
+				>
 					{children}
 				</AccordionContent>
 			</AccordionItem>

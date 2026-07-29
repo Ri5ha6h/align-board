@@ -39,7 +39,7 @@ function ReferenceSubscriptionData({ ...props }) {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "dashboard-sticky-column",
+				sticky: true,
 			},
 			enableHiding: false,
 			enableSorting: false,

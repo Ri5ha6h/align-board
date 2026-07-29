@@ -48,6 +48,7 @@ import { cn } from "@/lib/utils";
 declare module "@tanstack/react-table" {
 	interface ColumnMeta<TData extends RowData, TValue> {
 		className?: string;
+		sticky?: boolean;
 	}
 }
 
@@ -134,7 +135,7 @@ function DashboardDataTable<TData>({
 			...preferenceSnapshot.preferences?.columnVisibility,
 		};
 		for (const column of columns) {
-			if (column.meta?.className?.includes("dashboard-sticky-column")) {
+			if (column.meta?.sticky) {
 				const id =
 					column.id ??
 					("accessorKey" in column && typeof column.accessorKey === "string"
@@ -279,12 +280,10 @@ function DashboardDataTable<TData>({
 									<TableHead
 										className={cn(
 											header.column.columnDef.meta?.className,
-											header.column.columnDef.meta?.className?.includes(
-												"dashboard-sticky-column",
-											) && dashboardStickyColumn,
-											header.column.columnDef.meta?.className?.includes(
-												"dashboard-sticky-column",
-											) && "z-14 bg-dashboard-ink",
+											header.column.columnDef.meta?.sticky &&
+												dashboardStickyColumn,
+											header.column.columnDef.meta?.sticky &&
+												"z-14 bg-dashboard-ink",
 										)}
 										key={header.id}
 									>
@@ -328,9 +327,8 @@ function DashboardDataTable<TData>({
 										<TableCell
 											className={cn(
 												cell.column.columnDef.meta?.className,
-												cell.column.columnDef.meta?.className?.includes(
-													"dashboard-sticky-column",
-												) && dashboardStickyColumn,
+												cell.column.columnDef.meta?.sticky &&
+													dashboardStickyColumn,
 											)}
 											key={cell.id}
 										>

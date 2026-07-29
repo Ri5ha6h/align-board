@@ -42,7 +42,7 @@ export function StatusTable({ ...props }: { type: string; isAlignUser: boolean }
 				return <TableCellCustom>{carrier ? carrier : "-"}</TableCellCustom>;
 			},
 			meta: {
-				className: "dashboard-sticky-column",
+				sticky: true,
 			},
 			enableHiding: false,
 			enableSorting: false,

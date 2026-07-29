@@ -54,7 +54,7 @@ function useSummaryTableContent(isAlignUser: boolean) {
 				</TableCellCustom>
 			),
 			meta: {
-				className: "dashboard-sticky-column",
+				sticky: true,
 			},
 			enableHiding: false,
 			enableSorting: true,

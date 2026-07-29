@@ -196,6 +196,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	[data-dashboard-root],
+	[data-dashboard-surface],
 	[data-dashboard-root] *,
 	[data-dashboard-root] *::before,
 	[data-dashboard-root] *::after,

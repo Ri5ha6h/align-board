@@ -89,7 +89,7 @@ function HistoryData({ params, searchParams }: HistoryDataProps) {
 				cell: () => (
 					<TableCellCustom className="font-semibold">{subscriptionId}</TableCellCustom>
 				),
-				meta: { className: "dashboard-sticky-column" },
+				meta: { sticky: true },
 				enableHiding: false,
 				enableSorting: false,
 			},

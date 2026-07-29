@@ -197,7 +197,7 @@ export default function ChartComponent({ carriers, chartData }: ChartComponentPr
 	};
 
 	return (
-		<Card className="mt-5 rounded-[2px] border-dashboard-line bg-dashboard-night text-dashboard-white shadow-none">
+		<Card className="mt-5 gap-0 rounded-[2px] border-dashboard-line bg-dashboard-night py-0 text-dashboard-white shadow-none">
 			<CardHeader className="flex items-center gap-2 space-y-0 border-b border-dashboard-line bg-dashboard-ink py-5 sm:flex-row [&_[data-slot=card-description]]:text-dashboard-mist">
 				<div className="grid flex-1 gap-1 text-center sm:text-left">
 					<CardTitle className="text-xl">Latency Trend</CardTitle>

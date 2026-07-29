@@ -27,7 +27,7 @@ export const dashboardFilterForm =
 	"mt-0 grid items-start gap-4 rounded-none border-0 p-[18px] [&_label]:font-dashboard-code [&_label]:text-[9px] [&_label]:tracking-[0.07em] [&_label]:text-dashboard-mist [&_label]:uppercase";
 
 export const dashboardStickyColumn =
-	"dashboard-sticky-column sticky left-0 z-12 min-w-[150px] bg-dashboard-night shadow-[10px_0_12px_-12px_rgba(0,0,0,0.95)]";
+	"sticky left-0 z-12 min-w-[150px] bg-dashboard-night shadow-[10px_0_12px_-12px_rgba(0,0,0,0.95)]";
 
 export const dashboardDataTag =
 	"inline-flex w-fit items-center rounded-[2px] border border-dashboard-line bg-dashboard-ink px-[7px] py-1 font-dashboard-code text-[9px] font-medium tracking-[0.05em] text-dashboard-white uppercase";
